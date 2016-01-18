@@ -70,6 +70,8 @@
     NSUInteger bufferUsed;
     
     bool inuse[SJAudioQueueBufferCount];
+    
+    NSTimer *_pauseTimer;
 }
 
 @end
@@ -87,7 +89,7 @@
     self = [super init];
     if (self) {
         _format = format;
-        _volume = 1.0f;
+        _volume = 0.0f;
         _bufferSize = bufferSize;
 
         [self createAudioOutputQueue:macgicCookie];
@@ -263,6 +265,9 @@
 - (BOOL)start
 {
     OSStatus status = AudioQueueStart(_audioQueue, NULL);
+    
+    [self setVolume:1.0];
+    
     _started = status == noErr;
     return _started;
 }
@@ -291,12 +296,24 @@
  */
 - (BOOL)pause
 {
-    OSStatus status = AudioQueuePause(_audioQueue);
-    _started = NO;
-    return status == noErr;
+    [self setVolume:0];
+    
+    _pauseTimer = [NSTimer scheduledTimerWithTimeInterval:2.0 target:self selector:@selector(doPause) userInfo:nil repeats:NO];
+    
+//    OSStatus status = AudioQueuePause(_audioQueue);
+//    
+//    _started = NO;
+//    return status == noErr;
+    
+    return YES;
 }
 
-
+- (void)doPause
+{
+    AudioQueuePause(_audioQueue);
+    
+    _started = NO;
+}
 
 
 // 停止播放
@@ -305,9 +322,12 @@
   OSStatus AudioQueueStop(AudioQueueRef inAQ, Boolean inImmediate);
  
   第二个参数如果传入true的话会立即停止播放（同步），如果传入false的话AudioQueue会播放完已经 Enqueue 的所有 buffer 后再停止播放（异步）。使用时注意根据需要传入适合的参数。
+ 
  */
 - (BOOL)stop:(BOOL)immediately
 {
+    [self setVolume:0];
+    
     OSStatus status = noErr;
     if (immediately) {
         status = AudioQueueStop(_audioQueue, true);
@@ -315,6 +335,7 @@
     {
         status = AudioQueueStop(_audioQueue, false);
     }
+    
     _started = NO;
     _playedTime = 0;
     return status == noErr;
@@ -509,6 +530,7 @@
 - (BOOL)setParameter:(AudioQueueParameterID)parameterID value:(AudioQueueParameterValue)value error:(NSError *__autoreleasing *)outError
 {
     OSStatus status = AudioQueueSetParameter(_audioQueue, parameterID, value);
+    
     [self errorForOSStatus:status error:outError];
     return status == noErr;
 }
@@ -578,6 +600,8 @@
 
 - (void)setVolumeParameter
 {
+    // 音频淡入淡出， 首先设置音量渐变过程使用的时间。
+    [self setParameter:kAudioQueueParam_VolumeRampTime value:2.0 error:NULL];
     [self setParameter:kAudioQueueParam_Volume value:_volume error:NULL];
 }
 
