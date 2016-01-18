@@ -70,8 +70,6 @@
     NSUInteger bufferUsed;
     
     bool inuse[SJAudioQueueBufferCount];
-    
-    NSTimer *_pauseTimer;
 }
 
 @end
@@ -298,11 +296,19 @@
 {
     [self setVolume:0];
     
-    _pauseTimer = [NSTimer scheduledTimerWithTimeInterval:2.0 target:self selector:@selector(doPause) userInfo:nil repeats:NO];
+    OSStatus status;
     
-//    OSStatus status = AudioQueuePause(_audioQueue);
-//    
-//    _started = NO;
+    // 采用gcd方式延迟执行（可以在子线程执行并且不阻塞当前线程线程）
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC));
+    
+    dispatch_after(popTime, dispatch_get_main_queue(), ^{
+            
+        AudioQueuePause(_audioQueue);
+        
+    });
+    
+    _started = NO;
+    
 //    return status == noErr;
     
     return YES;
@@ -601,7 +607,7 @@
 - (void)setVolumeParameter
 {
     // 音频淡入淡出， 首先设置音量渐变过程使用的时间。
-    [self setParameter:kAudioQueueParam_VolumeRampTime value:2.0 error:NULL];
+    [self setParameter:kAudioQueueParam_VolumeRampTime value:_started ? 1.0:2.0 error:NULL];
     [self setParameter:kAudioQueueParam_Volume value:_volume error:NULL];
 }
 
