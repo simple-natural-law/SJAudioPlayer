@@ -225,7 +225,8 @@
     if (magicCookie) {
         AudioQueueSetProperty(_audioQueue, kAudioQueueProperty_MagicCookie, [magicCookie bytes], (UInt32)[magicCookie length]);
     }
-    [self setVolumeParameter];
+    
+    [self setParameter:kAudioQueueParam_Volume value:_volume error:NULL];
 }
 
 
@@ -292,33 +293,20 @@
   这个方法一旦调用后播放就会立即暂停，这就意味着 AudioQueueOutputCallback 回调也会暂停，这时需要特别关注线程的调度以防止线程陷入无限等待。
  
  */
-- (BOOL)pause
+- (void)pause
 {
     [self setVolume:0];
-    
-    OSStatus status;
     
     // 采用gcd方式延迟执行（可以在子线程执行并且不阻塞当前线程线程）
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC));
     
     dispatch_after(popTime, dispatch_get_main_queue(), ^{
             
-        AudioQueuePause(_audioQueue);
+        OSStatus status = AudioQueuePause(_audioQueue);
+        
+        _started = status == noErr;
         
     });
-    
-    _started = NO;
-    
-//    return status == noErr;
-    
-    return YES;
-}
-
-- (void)doPause
-{
-    AudioQueuePause(_audioQueue);
-    
-    _started = NO;
 }
 
 
@@ -607,7 +595,7 @@
 - (void)setVolumeParameter
 {
     // 音频淡入淡出， 首先设置音量渐变过程使用的时间。
-    [self setParameter:kAudioQueueParam_VolumeRampTime value:_started ? 1.0:2.0 error:NULL];
+    [self setParameter:kAudioQueueParam_VolumeRampTime value:_started ? 1.0:1.5 error:NULL];
     [self setParameter:kAudioQueueParam_Volume value:_volume error:NULL];
 }
 

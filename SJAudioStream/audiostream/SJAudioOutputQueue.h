@@ -47,7 +47,8 @@
 /*
  pause & resume
  */
-- (BOOL)pause;
+- (void)pause;
+
 - (BOOL)resume;
 
 /*

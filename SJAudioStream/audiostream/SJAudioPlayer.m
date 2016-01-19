@@ -125,10 +125,8 @@
     // network
     CFReadStreamRef _readStream;
     NSDictionary *_httpHeaders;
-//    unsigned long long _seekByteOffset;
     
     BOOL _isEof;
-    
 }
 
 
@@ -160,12 +158,12 @@
         _fileType = fileType;
         
 
-        [self isLocalOrHttpDataSourceFormURL:_url];
+        [self isUseAudioFileFromURL:_url];
     }
     return self;
 }
 
-- (void)isLocalOrHttpDataSourceFormURL:(NSURL *)url
+- (void)isUseAudioFileFromURL:(NSURL *)url
 {
     if ([url.scheme isEqualToString:@"file"]) {
         
@@ -307,9 +305,9 @@
     {
         // 设置bufferSize为近似0.2秒的数据量。 audioDataByteCount / duration －》每 1 秒的数据量大小
         
-        _bufferSize = (audioDataByteCount / duration) * 0.2;
+//        _bufferSize = (audioDataByteCount / duration) * 0.2;
         
-//        _bufferSize = _usingAudioFile ? _audioFile.maxPacketSize : _audioFileStream.maxPacketSize;
+        _bufferSize = _usingAudioFile ? _audioFile.maxPacketSize : _audioFileStream.maxPacketSize;
     }
     
     if (_bufferSize > 0) {
