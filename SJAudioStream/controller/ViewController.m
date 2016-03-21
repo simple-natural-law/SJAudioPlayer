@@ -8,7 +8,7 @@
 
 #import "ViewController.h"
 #import "SJAudioPlayer.h"
-
+#import "TrackModel.h"
 
 @interface ViewController ()
 {

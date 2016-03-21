@@ -380,9 +380,9 @@
     }
 
     // 如果还没有开始播放
-    if (!_started && ![self start]) {
-        return NO;
-    }
+//    if (!_started && ![self start]) {
+//        return NO;
+//    }
     
     OSStatus status;
     
@@ -475,6 +475,9 @@
         
         if (status == noErr) {
             
+//            NSLog(@"----- %lu",(unsigned long)bufferUsed);
+            
+            // 等到插满 16个buffer后才开始播放
             if (bufferUsed == SJAudioQueueBufferCount - 1 || isEof) {
                 if (!_started && ![self start]) {
                     return NO;
@@ -484,7 +487,6 @@
         
         
         // go to next buffer
-        
         if (++fillBufferIndex >= SJAudioQueueBufferCount) {
             
             fillBufferIndex = 0;
@@ -514,12 +516,15 @@
     return status == noErr;
 }
 
+
 - (BOOL)getProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32 *)dataSize data:(void *)data error:(NSError *__autoreleasing *)outError
 {
     OSStatus status = AudioQueueGetProperty(_audioQueue, propertyID, data, dataSize);
     [self errorForOSStatus:status error:outError];
     return status == noErr;
 }
+
+
 
 - (BOOL)setParameter:(AudioQueueParameterID)parameterID value:(AudioQueueParameterValue)value error:(NSError *__autoreleasing *)outError
 {
@@ -528,6 +533,8 @@
     [self errorForOSStatus:status error:outError];
     return status == noErr;
 }
+
+
 
 - (BOOL)getParameter:(AudioQueueParameterID)parameterID value:(AudioQueueParameterValue *)value error:(NSError *__autoreleasing *)outError
 {
@@ -608,13 +615,6 @@ static void SJAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ,Au
 
 - (void)handleAudioQueueOutputCallBack:(AudioQueueRef)audioQueue buffer:(AudioQueueBufferRef)buffer
 {
-//    for (int i = 0; i < _buffers.count; ++i) {
-//        if (buffer == [_buffers[i] buffer]) {
-//            [_reusableBuffers addObject:_buffers[i]];
-//            break;
-//        }
-//    }
-//    [self mutexSignal];
     
     unsigned int bufferIndex = -1;
     
@@ -634,6 +634,8 @@ static void SJAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ,Au
     inuse[bufferIndex] = false;
     
     bufferUsed--;
+    
+//    NSLog(@"buffer --        %lu",(unsigned long)bufferUsed);
     
     pthread_cond_signal(&_cond);
     

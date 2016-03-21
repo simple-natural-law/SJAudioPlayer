@@ -36,63 +36,10 @@
 #import "SJAudioBuffer.h"
 #import <pthread.h>
 #import <UIKit/UIKit.h>
-
-//static struct {
-//    pthread_t thread;
-//    pthread_mutex_t mutex;
-//    pthread_cond_t cond;
-//    CFRunLoopRef runloop;
-//} controller;
-//
-//static void *controller_main(void *info)
-//{
-//    pthread_setname_np("com.douban.simple-http-request.controller");
-//    
-//    pthread_mutex_lock(&controller.mutex);
-//    controller.runloop = CFRunLoopGetCurrent();
-//    pthread_mutex_unlock(&controller.mutex);
-//    pthread_cond_signal(&controller.cond);
-//    
-//    CFRunLoopSourceContext context;
-//    bzero(&context, sizeof(context));
-//    
-//    CFRunLoopSourceRef source = CFRunLoopSourceCreate(kCFAllocatorDefault, 0, &context);
-//    CFRunLoopAddSource(controller.runloop, source, kCFRunLoopDefaultMode);
-//    
-//    CFRunLoopRun();
-//    
-//    CFRunLoopRemoveSource(controller.runloop, source, kCFRunLoopDefaultMode);
-//    CFRelease(source);
-//    
-//    pthread_mutex_destroy(&controller.mutex);
-//    pthread_cond_destroy(&controller.cond);
-//    
-//    return NULL;
-//}
-//
-//static CFRunLoopRef controller_get_runloop()
-//{
-//    static dispatch_once_t onceToken;
-//    dispatch_once(&onceToken, ^{
-//        pthread_mutex_init(&controller.mutex, NULL);
-//        pthread_cond_init(&controller.cond, NULL);
-//        controller.runloop = NULL;
-//        
-//        pthread_create(&controller.thread, NULL, controller_main, NULL);
-//        
-//        pthread_mutex_lock(&controller.mutex);
-//        if (controller.runloop == NULL) {
-//            pthread_cond_wait(&controller.cond, &controller.mutex);
-//        }
-//        pthread_mutex_unlock(&controller.mutex);
-//    });
-//    
-//    return controller.runloop;
-//}
+#import "SJHTTPStream.h"
 
 
-
-@interface SJAudioPlayer ()<SJAudioFileStreamDelegate,NSURLConnectionDataDelegate>
+@interface SJAudioPlayer ()<SJAudioFileStreamDelegate>
 {
 @private
     NSThread *_thread;
@@ -127,6 +74,8 @@
     NSDictionary *_httpHeaders;
     
     BOOL _isEof;
+    
+    SJHTTPStream *_httpStream;
 }
 
 
@@ -305,9 +254,9 @@
     {
         // 设置bufferSize为近似0.2秒的数据量。 audioDataByteCount / duration －》每 1 秒的数据量大小
         
-//        _bufferSize = (audioDataByteCount / duration) * 0.2;
+        _bufferSize = (audioDataByteCount / duration) * 0.2;
         
-        _bufferSize = _usingAudioFile ? _audioFile.maxPacketSize : _audioFileStream.maxPacketSize;
+//        _bufferSize = _usingAudioFile ? _audioFile.maxPacketSize : _audioFileStream.maxPacketSize;
     }
     
     if (_bufferSize > 0) {
@@ -333,6 +282,8 @@
 
 - (void)threadMain
 {
+    NSLog(@"%@",[NSThread currentThread]);
+    
     _failed = YES;
     
     // 音频播放的第一步，是要创建AudioSession（set audiosession category）
@@ -350,11 +301,6 @@
         
         _failed = NO;
     }
-    
-    
-    NSThread *thread = [[NSThread alloc]initWithTarget:self selector:@selector(startNetwork) object:nil];
-    
-    [thread start];
     
     if (_failed)
     {
@@ -407,6 +353,7 @@
                     {
                         [self setStatusInternal:SJAudioPlayerStatusPaused];
                         [_audioQueue pause];
+                        
                         [self mutexWait];
                         _pauseRequired = NO;
                     }
@@ -420,11 +367,15 @@
                     {
                         UInt32 packetCount;
                         AudioStreamPacketDescription *desces = NULL;
+                        
                         NSData *data = [_buffer dequeueDataWithSize:_bufferSize packetCount:&packetCount descriptions:&desces];
+                        
                         if (packetCount != 0)
                         {
                             [self setStatusInternal:SJAudioPlayerStatusPlaying];
+                            
                             _failed = ![_audioQueue playData:data packetCount:packetCount packetDescriptions:desces isEof:_isEof];
+                            
                             free(desces);
                             
                             if (_failed)
@@ -452,6 +403,7 @@
                             _failed = YES;
                             break;
                         }
+                    
                     }
                     
                 }
@@ -469,16 +421,21 @@
 {
     _failed = ![self openReadStream];
     
+    NSLog(@"------- %@",[NSThread currentThread]);
+    
     BOOL done = YES;
     
+    NSRunLoop *runloop = [NSRunLoop currentRunLoop];
+    [runloop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];
     do {
+//        done = [[NSRunLoop currentRunLoop]
+//                runMode:NSDefaultRunLoopMode
+//                beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.25]];
         
-        done = [[NSRunLoop currentRunLoop]
-                runMode:NSDefaultRunLoopMode
-                beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.25]];
+        [runloop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.25]];
         
         @synchronized(self) {
-            
+        
             //seek
             if (_seekRequired && self.duration != 0)
             {
@@ -569,8 +526,25 @@
     if (!_started)
     {
         _started = YES;
+        
         [self mutexInit];
+        
+        // 创建一个全局并发队列来 进行音频数据的请求.
+        dispatch_queue_t globalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+        
+        dispatch_async(globalQueue, ^{
+            
+            [self startNetwork];
+            
+        });
+        
+//        NSThread *networkThread = [[NSThread alloc]initWithTarget:self selector:@selector(startNetwork) object:nil];
+//        
+//        [networkThread start];
+        
+        
         _thread = [[NSThread alloc] initWithTarget:self selector:@selector(threadMain) object:nil];
+        
         [_thread start];
         
     }else
@@ -591,6 +565,8 @@
         }
     }
 }
+
+
 
 
 - (void)resume
@@ -770,6 +746,8 @@ static void SJReadStreamCallBack(CFReadStreamRef aStream, CFStreamEventType even
     
 }
 
+
+
 - (void)handleReadFromStream:(CFReadStreamRef)stream eventType:(CFStreamEventType)eventType
 {
     if (stream != _readStream) {
@@ -809,6 +787,8 @@ static void SJReadStreamCallBack(CFReadStreamRef aStream, CFStreamEventType even
                 
                 NSLog(@"--------------- %llu",_fileSize);
             }
+            
+            NSLog(@"%@",[NSThread currentThread]);
         }
         
         if (!_audioFileStream) {
@@ -825,7 +805,7 @@ static void SJReadStreamCallBack(CFReadStreamRef aStream, CFStreamEventType even
     
     CFIndex length;
     
-    @synchronized(self) {
+//    @synchronized(self) {
     
         if (!CFReadStreamHasBytesAvailable(_readStream)) {
             return;
@@ -844,10 +824,12 @@ static void SJReadStreamCallBack(CFReadStreamRef aStream, CFStreamEventType even
             return;
         }
     
-    }
+//    }
     
+    NSLog(@"+++++++++++++++");
+
     @synchronized(self) {
-        
+    
         // 解析数据
         NSData *data = [NSData dataWithBytes:bytes length:length];
         
@@ -857,15 +839,11 @@ static void SJReadStreamCallBack(CFReadStreamRef aStream, CFStreamEventType even
             
             _isEof = YES;
         }
-        
-        [_audioFileStream parseData:data error:&error];
-        
-    }
     
+    [_audioFileStream parseData:data error:&error];
+    
+    }
 }
-
-
-
 
 
 @end

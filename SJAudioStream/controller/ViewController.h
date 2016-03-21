@@ -7,9 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
+@class TrackModel;
+
 
 @interface ViewController : UIViewController
 
+@property (nonatomic, strong) TrackModel *currentTrack;
 
 @end
 

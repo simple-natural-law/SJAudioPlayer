@@ -421,8 +421,8 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
             [self calculateBitRate];
             [self calculateDuration];
         }
+        
     }
-    
     
     [_delegate audioFileStream:self audioDataParsed:parsedDataArray];
     
@@ -460,6 +460,8 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
 
 - (BOOL)parseData:(NSData *)data error:(NSError **)error
 {
+//    NSLog(@"--%@",[NSThread currentThread]);
+    
     if (self.readyToProducePackets && _packetDuration == 0) {
         [self errorForOSStatus:-1 error:error];
         return NO;
