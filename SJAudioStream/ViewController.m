@@ -29,6 +29,14 @@
 //                                                                          kCFStringEncodingUTF8));
 }
 
+- (IBAction)play:(id)sender {
+}
+
+- (IBAction)pause:(id)sender {
+}
+
+- (IBAction)stop:(id)sender {
+}
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
