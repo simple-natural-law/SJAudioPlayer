@@ -32,8 +32,6 @@
 
 @property (nonatomic, strong) NSString *cachePath;
 
-@property (nonatomic, strong) NSMutableData *audioData;
-
 @property (nonatomic, assign) NSUInteger byteOffset;
 
 @property (nonatomic, assign) NSUInteger bufferSize;
@@ -101,7 +99,6 @@
     
     self.started   = NO;
     self.completed = NO;
-    self.audioData = nil;
     self.contentLength = 0;
     self.buffer        = nil;
     self.byteOffset    = 0;
@@ -142,10 +139,16 @@
     self.started = YES;
     
     NSThread  *readDataThread = [[NSThread alloc] initWithTarget:self selector:@selector(enqueneAudioData) object:nil];
+    
+    [readDataThread setName:@"Read Data Thread"];
+    
     [readDataThread start];
     
-    NSThread  *playAudiothread = [[NSThread alloc] initWithTarget:self selector:@selector(playAudioData) object:nil];
-    [playAudiothread start];
+    NSThread *playAudioThread = [[NSThread alloc] initWithTarget:self selector:@selector(playAudioData) object:nil];
+    
+    [playAudioThread setName:@"Play Audio Thread"];
+    
+    [playAudioThread start];
 }
 
 - (void)pause
@@ -186,7 +189,7 @@
         self.byteOffset = [self.audioFileStream seekToTime:&_seekTime];
     }else
     {
-        if (self.byteOffset < [self.audioData length])
+        if (self.byteOffset < [self.buffer bufferedSize])
         {
             self.byteOffset = [self.audioFileStream seekToTime:&_seekTime];
         }else
@@ -207,8 +210,7 @@
     
     NSError *error = nil;
     NSError *readDataError = nil;
-    
-    self.audioData = [[NSMutableData alloc] init];
+    NSError *parseDataError = nil;
     
     while (!self.completed && !self.userStop)
     {
@@ -254,7 +256,10 @@
                 
             }
             
-            [self.audioData appendData:data];
+            if (self.audioFileStream)
+            {
+                [self.audioFileStream parseData:data error:&parseDataError];
+            }
         }
     }
 }
@@ -262,8 +267,8 @@
 
 - (void)playAudioData
 {
-    NSError *error = nil;
-    
+    //NSError *error = nil;
+
     while (!self.userStop && self.byteOffset <= self.contentLength && self.status != SJAudioPlayerStatusFinished) {
         
         @synchronized (self) {
@@ -271,7 +276,9 @@
             if (self.userStop)
             {
                 [self.audioQueue stop:YES];
+                
                 NSLog(@"play audio: stop");
+                
                 break;
             }
             
@@ -288,17 +295,17 @@
                 pthread_mutex_unlock(&_mutex);
             }
             
-            if ([self.audioData length] >= self.bufferSize + self.byteOffset)
-            {
-                if (self.audioFileStream)
-                {
-                    NSData *data = [self.audioData subdataWithRange:NSMakeRange(self.byteOffset, self.bufferSize)];
-                    
-                    self.byteOffset += data.length;
-                    
-                    [self.audioFileStream parseData:data error:&error];
-                }
-            }
+//            if ([self.audioData length] >= self.bufferSize + self.byteOffset)
+//            {
+//                if (self.audioFileStream)
+//                {
+//                    NSData *data = [self.audioData subdataWithRange:NSMakeRange(self.byteOffset, self.bufferSize)];
+//
+//                    self.byteOffset += data.length;
+//
+//                    [self.audioFileStream parseData:data error:&error];
+//                }
+//            }
             
             if (self.audioQueue)
             {
