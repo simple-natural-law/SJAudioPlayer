@@ -113,7 +113,7 @@
 #pragma -mark
 - (void)mutexInit
 {
-    pthread_mutex_init(&_mutex, NULL); // 初始化锁
+    pthread_mutex_init(&_mutex, NULL); // 初始化 锁
     pthread_cond_init(&_cond, NULL);
 }
 
@@ -186,7 +186,7 @@
 
     for (int i = 0; i < SJAudioQueueBufferCount; ++i) {
 //            AudioQueueBufferRef buffer;
-            
+        
 /*
   OSStatus AudioQueueAllocateBuffer(AudioQueueRef inAQ,
                                   UInt32 inBufferByteSize,
@@ -298,7 +298,7 @@
     [self setVolume:0];
     
     // 采用gcd方式延迟执行（可以在子线程执行并且不阻塞当前线程线程）
-    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC));
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC));
     
     dispatch_after(popTime, dispatch_get_main_queue(), ^{
             
@@ -319,9 +319,7 @@
  
  */
 - (BOOL)stop:(BOOL)immediately
-{
-    [self setVolume:0];
-    
+{    
     OSStatus status = noErr;
     if (immediately) {
         status = AudioQueueStop(_audioQueue, true);
@@ -330,7 +328,7 @@
         status = AudioQueueStop(_audioQueue, false);
     }
     
-    _started = NO;
+    _started    = NO;
     _playedTime = 0;
     return status == noErr;
 }
@@ -602,7 +600,7 @@
 - (void)setVolumeParameter
 {
     // 音频淡入淡出， 首先设置音量渐变过程使用的时间。
-    [self setParameter:kAudioQueueParam_VolumeRampTime value:_started ? 1.0:1.5 error:NULL];
+    [self setParameter:kAudioQueueParam_VolumeRampTime value:_started ? 0.5:0.5 error:NULL];
     [self setParameter:kAudioQueueParam_Volume value:_volume error:NULL];
 }
 

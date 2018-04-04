@@ -20,7 +20,13 @@
 @optional
 - (void)audioFileStreamReadyToProducePackets:(SJAudioFileStream *)audioFileStream;
 
+
+
+
 @end
+
+
+#define kDefaultBufferSize 2048
 
 @interface SJAudioFileStream : NSObject
 

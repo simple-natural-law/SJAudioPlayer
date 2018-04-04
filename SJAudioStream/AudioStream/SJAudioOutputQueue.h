@@ -38,7 +38,7 @@
  @param      packetCount     packet count
  @param      packetDescription packet descriptions
  
- @param      eof  －》－》－》End of file  ？？？？？？？
+ @param      eof  End of file 
  
  @return whether successfully played
  */

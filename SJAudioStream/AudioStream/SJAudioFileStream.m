@@ -11,7 +11,6 @@
 #define BitRateEstimationMaxPackets 5000
 #define BitRateEstimationMinPackets 50
 
-#define kDefaultBufferSize 2048
 
 @interface SJAudioFileStream ()
 {
@@ -460,7 +459,6 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
 
 - (BOOL)parseData:(NSData *)data error:(NSError **)error
 {
-//    NSLog(@"--%@",[NSThread currentThread]);
     
     if (self.readyToProducePackets && _packetDuration == 0) {
         [self errorForOSStatus:-1 error:error];
