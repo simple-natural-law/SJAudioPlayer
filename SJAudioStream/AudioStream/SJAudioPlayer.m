@@ -326,6 +326,7 @@
                             NSData *data = [self.buffer dequeueDataWithSize:[self.buffer bufferedSize] packetCount:&packetCount descriptions:&desces];
                             
                             [self.audioQueue playData:data packetCount:packetCount packetDescriptions:desces completed:self.completed];
+                            
                             NSLog(@"yyyyyyyyyyy");
                         }
                         
