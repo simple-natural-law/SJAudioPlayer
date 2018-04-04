@@ -44,7 +44,7 @@
 
 #import "SJAudioOutputQueue.h"
 #import <pthread.h>
-
+#import <AudioToolbox/AudioToolbox.h>
 
 #define SJAudioQueueBufferCount 16
 
@@ -302,10 +302,9 @@
     
     dispatch_after(popTime, dispatch_get_main_queue(), ^{
             
-        OSStatus status = AudioQueuePause(_audioQueue);
+        OSStatus status = AudioQueuePause(self->_audioQueue);
         
-        _started = status == noErr;
-        
+        self->_started = status == noErr;
     });
 }
 
@@ -371,7 +370,7 @@
 
 
 
-- (BOOL)playData:(NSData *)data packetCount:(UInt32)packetCount packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions isEof:(BOOL)isEof
+- (BOOL)playData:(NSData *)data packetCount:(UInt32)packetCount packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions completed:(BOOL)completed
 {
     if ([data length] > _bufferSize) {
         return NO;
@@ -476,7 +475,7 @@
 //            NSLog(@"----- %lu",(unsigned long)bufferUsed);
             
             // 等到插满 16个buffer后才开始播放
-            if (bufferUsed == SJAudioQueueBufferCount - 1 || isEof) {
+            if (bufferUsed == SJAudioQueueBufferCount - 1 || completed) {
                 if (!_started && ![self start]) {
                     return NO;
                 }

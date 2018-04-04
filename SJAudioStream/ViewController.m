@@ -7,8 +7,12 @@
 //
 
 #import "ViewController.h"
+#import "SJAudioPlayer.h"
+
 
 @interface ViewController ()
+
+@property (nonatomic, strong) SJAudioPlayer *player;
 
 @end
 
@@ -18,7 +22,7 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-//    NSString *urlString = @"http://hoishow-file.b0.upaiyun.com/uploads/boom_track/file/4ba30881757c35365380dbe9c9538054_ab320.mp3";
+    NSString *urlString = @"http://hoishow-file.b0.upaiyun.com/uploads/boom_track/file/4ba30881757c35365380dbe9c9538054_ab320.mp3";
 //
 //    NSString *escapedValue =
 //    (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(
@@ -27,15 +31,23 @@
 //                                                                          NULL,
 //                                                                          NULL,
 //                                                                          kCFStringEncodingUTF8));
+    
+    self.player = [[SJAudioPlayer alloc] initWithUrlString:urlString cachePath:nil];
 }
 
-- (IBAction)play:(id)sender {
+- (IBAction)play:(id)sender
+{
+    [self.player play];
 }
 
-- (IBAction)pause:(id)sender {
+- (IBAction)pause:(id)sender
+{
+    [self.player pause];
 }
 
-- (IBAction)stop:(id)sender {
+- (IBAction)stop:(id)sender
+{
+    [self.player stop];
 }
 
 - (void)didReceiveMemoryWarning {

@@ -8,7 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreAudio/CoreAudioTypes.h>
-#import "SJParsedAudioData.h"
+
+@class SJParsedAudioData;
 
 @interface SJAudioBuffer : NSObject
 
@@ -21,7 +22,7 @@
 
 - (UInt32)bufferedSize;
 
-//description needs free
+/// description needs free
 - (NSData *)dequeueDataWithSize:(UInt32)requestSize packetCount:(UInt32 *)packetCount descriptions:(AudioStreamPacketDescription **)descriptions;
 
 - (void)clean;

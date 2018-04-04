@@ -28,12 +28,12 @@
 /**
  *  读取指定长度的数据 返回读取数据是否完毕
  *
- *  @param maxLength  最大返回数据长度
- *  @param error      BOOL对象的地址
-
- *  @return  data
+ *  param maxLength  最大返回数据长度
+ *  param error      错误信息
+ *  param completed  是否已读完
+ *  return  data
  */
-- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength isEof:(BOOL *)isEof;
+- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error completed:(BOOL *)completed;
 
 /**
  *  结束请求

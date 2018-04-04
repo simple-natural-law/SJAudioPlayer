@@ -10,13 +10,13 @@
 
 @interface SJAudioDataProvider : NSObject
 
-/**
+/*
  *  开始读取数据时的音频数据偏移量
  */
 @property (nonatomic, readonly) NSUInteger startOffset;
 
 
-/**
+/*
  *  音频数据总长度
  */
 @property (nonatomic, readonly) NSUInteger contentLength;
@@ -30,7 +30,7 @@
  *  @param cacheFilePath 缓存路径
  *  @param byteOffset    音频数据偏移(seek)
  *
- *  @return
+ *  @return SJAudioDataProvider
  */
 - (instancetype)initWithURL:(NSURL *)url cacheFilePath:(NSString *)cacheFilePath byteOffset:(NSUInteger)byteOffset;
 
@@ -38,12 +38,12 @@
 /**
  *  读取音频数据
  *
- *  @param maxLength 最大返回数据长度
- *  @param error     error地址
- *
- *  @return
+ *  param maxLength 最大返回数据长度
+ *  param error     错误信息
+ *  param completed     是否已读完
+ *  return data
  */
-- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength isEof:(BOOL *)isEof;
+- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error completed:(BOOL *)completed;
 
 
 - (void)close;

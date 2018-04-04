@@ -7,6 +7,7 @@
 //
 
 #import "SJAudioFileStream.h"
+#import "SJParsedAudioData.h"
 
 #define BitRateEstimationMaxPackets 5000
 #define BitRateEstimationMinPackets 50

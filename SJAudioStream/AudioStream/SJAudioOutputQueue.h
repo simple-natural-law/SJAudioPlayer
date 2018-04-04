@@ -34,15 +34,14 @@
  play audio data, data length must be less than bufferSize.
  will block current thread until the buffer is consumed.
  
- @param      data   data
- @param      packetCount     packet count
- @param      packetDescription packet descriptions
- 
- @param      eof  End of file 
+ @param    data               data
+ @param    packetCount        packet count
+ @param    packetDescription  packet descriptions
+ @param    completed          End of file
  
  @return whether successfully played
  */
-- (BOOL)playData:(NSData *)data packetCount:(UInt32)packetCount packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions isEof:(BOOL)isEof;
+- (BOOL)playData:(NSData *)data packetCount:(UInt32)packetCount packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions completed:(BOOL)completed;
 
 /*
  pause & resume

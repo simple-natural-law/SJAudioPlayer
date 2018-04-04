@@ -14,21 +14,32 @@
 
 @interface SJHttpStream ()
 {
-    NSUInteger _byteOffset;
     CFReadStreamRef _readStream;
+    
     pthread_mutex_t _mutex;
     pthread_cond_t  _cond;
-    CFStreamEventType _streamEvent;
-    NSDictionary *_httpHeaders;
-    
-    BOOL _closed;
 }
 
+@property (nonatomic, assign) NSUInteger byteOffset;
+
+@property (nonatomic, assign) CFStreamEventType streamEvent;
+
+@property (nonatomic, strong) NSDictionary *httpHeaders;
+
+@property (nonatomic, assign) BOOL closed;
 
 @end
 
 
 @implementation SJHttpStream
+
+#pragma mark- ReadStream callback
+void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,void * clientCallBackInfo)
+{
+    SJHttpStream *httpStream = (__bridge SJHttpStream *)(clientCallBackInfo);
+    
+    [httpStream handleReadFormStream:stream eventType:eventType];
+}
 
 - (void)dealloc
 {
@@ -43,15 +54,15 @@
     
     if (self)
     {
-        _closed = YES;
+        self.closed = YES;
         
         // 创建CHFHTTP消息对象
         CFHTTPMessageRef message = CFHTTPMessageCreateRequest(NULL, (CFStringRef)@"GET", (__bridge CFURLRef _Nonnull)(url), kCFHTTPVersion1_1);
         
         // If we are creating this request to seek to a location, set the requested byte range in the headers.
-        if (_byteOffset)
+        if (self.byteOffset)
         {
-            NSString *range = [NSString stringWithFormat:@"bytes=%lu-",(unsigned long)_byteOffset];
+            NSString *range = [NSString stringWithFormat:@"bytes=%lu-",(unsigned long)self.byteOffset];
             
             CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Range"), (__bridge CFStringRef _Nullable)(range));
         }
@@ -61,9 +72,12 @@
         
         CFRelease(message);
         
-        if (CFReadStreamSetProperty(_readStream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue) == false)
+        Boolean status = CFReadStreamSetProperty(_readStream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue);
+        
+        if (!status)
         {
             // 错误处理
+            NSLog(@"CFReadStreamSetProperty error.");
         }
         
         // Handle proxies
@@ -80,22 +94,26 @@
         }
         
         // open the readStream
-        if (!CFReadStreamOpen(_readStream))
+        
+        status = CFReadStreamOpen(_readStream);
+        
+        if (!status)
         {
             CFRelease(_readStream);
             
             // 错误处理
+            NSLog(@"CFReadStreamOpen error.");
         }
         
-        _closed = NO;
+        self.closed = NO;
         
         // set our callback function to receive the data
         CFStreamClientContext context = {0,(__bridge void *)(self),NULL,NULL,NULL};
         
         CFReadStreamSetClient(_readStream, kCFStreamEventHasBytesAvailable | kCFStreamEventErrorOccurred | kCFStreamEventEndEncountered, SJReadStreamCallBack, &context);
         
-        // 在主线程回调
-        CFReadStreamScheduleWithRunLoop(_readStream, CFRunLoopGetMain(), kCFRunLoopCommonModes);
+        // 在当前线程回调
+        CFReadStreamScheduleWithRunLoop(_readStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
         
         pthread_mutex_init(&_mutex, NULL);
         pthread_cond_init(&_cond, NULL);
@@ -104,55 +122,24 @@
     return self;
 }
 
-- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength isEof:(BOOL *)isEof
+- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error completed:(BOOL *)completed
 {
-    int                 rc;
-    struct timespec     ts;
-    struct timeval      tp;
-    
-    rc = pthread_mutex_lock(&_mutex);
-    rc = gettimeofday(&tp, NULL);
-    
-    // 把 timeval 转换成 timespec
-    ts.tv_sec  = tp.tv_sec;
-    ts.tv_nsec = tp.tv_usec * 1000;
-    ts.tv_sec += HTTP_REQUEST_TIMEOUT;  // 请求超时的时间
-    
-    // 当开始读取数据，并且还没有接收到数据时，锁住线程，等待streamCallBack所在线程唤醒此线程。或者请求超时，此线程会自动结束等待(唤醒)。
-    while (!_closed && _streamEvent == kCFStreamEventNone && !CFReadStreamHasBytesAvailable(_readStream))
+    if (self.closed)
     {
-        int status = pthread_cond_timedwait(&_cond, &_mutex, &ts);
-        
-        // 返回0表示经过一段时间解除阻塞。返回ETIMEDOUT，表示超时。出错，返回错误值.
-        if (status != 0)
-        {
-            pthread_mutex_unlock(&_mutex);
-            return nil;
-        }else if (status == ETIMEDOUT) // 请求超时
-        {
-            pthread_mutex_unlock(&_mutex);
-            return nil;
-        }
-    }
-    
-    if (_closed)
-    {
-        pthread_mutex_unlock(&_mutex);
         return nil;
     }
     
-    if (_streamEvent == kCFStreamEventEndEncountered)
+    if (self.streamEvent == kCFStreamEventEndEncountered)
     {
-        pthread_mutex_unlock(&_mutex);
-        
-        *isEof = YES;
+        *completed = YES;
         
         return nil;
     }
     
-    if (_streamEvent == kCFStreamEventErrorOccurred)
+    if (self.streamEvent == kCFStreamEventErrorOccurred)
     {
-        pthread_mutex_unlock(&_mutex);
+        *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:-1 userInfo:nil];
+        
         return nil;
     }
     
@@ -160,32 +147,27 @@
     
     CFIndex length = CFReadStreamRead(_readStream, bytes, maxLength);
     
-    _streamEvent = kCFStreamEventNone;
+    self.streamEvent = kCFStreamEventNone;
     
-    pthread_mutex_unlock(&_mutex);
-    
-    if (length == -1)
+    if (length <= 0)
     {
         // 错误处理
+        *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:-1 userInfo:nil];
         
-        return NULL;
-        
-    }else if (length == 0)
-    {
-        return NULL;
+        return nil;
     }
     
     
-    if (!_httpHeaders)
+    if (!self.httpHeaders)
     {
         CFTypeRef message = CFReadStreamCopyProperty(_readStream, kCFStreamPropertyHTTPResponseHeader);
         
-        _httpHeaders = (__bridge NSDictionary *)(CFHTTPMessageCopyAllHeaderFields((CFHTTPMessageRef)message));
+        self.httpHeaders = (__bridge NSDictionary *)(CFHTTPMessageCopyAllHeaderFields((CFHTTPMessageRef)message));
         
         CFRelease(message);
         
         // 音频文件总长度
-        _contentLength = [[_httpHeaders objectForKey:@"Content-Length"] integerValue] + _byteOffset;
+        self.contentLength = [[self.httpHeaders objectForKey:@"Content-Length"] integerValue] + self.byteOffset;
     }
     
     
@@ -200,29 +182,13 @@
 
 - (void)close
 {
-    pthread_mutex_lock(&_mutex);
-    _closed = YES;
-    pthread_cond_signal(&_cond);
-    pthread_mutex_unlock(&_mutex);
+    self.closed = YES;
 }
 
 
 - (void)handleReadFormStream:(CFReadStreamRef)stream eventType:(CFStreamEventType)eventType
 {
-    pthread_mutex_lock(&_mutex);
-    _streamEvent = eventType;
-    pthread_cond_signal(&_cond);
-    pthread_mutex_unlock(&_mutex);
+    self.streamEvent = eventType;
 }
-
-
-#pragma mark -readStream callback
-void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,void * clientCallBackInfo)
-{
-    SJHttpStream *httpStream = (__bridge SJHttpStream *)(clientCallBackInfo);
-    
-    [httpStream handleReadFormStream:stream eventType:eventType];
-}
-
 
 @end

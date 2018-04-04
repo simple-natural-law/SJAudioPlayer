@@ -8,7 +8,6 @@
 
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
-#import "SJParsedAudioData.h"
 
 @class SJAudioFileStream;
 
@@ -19,8 +18,6 @@
 
 @optional
 - (void)audioFileStreamReadyToProducePackets:(SJAudioFileStream *)audioFileStream;
-
-
 
 
 @end

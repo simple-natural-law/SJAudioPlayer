@@ -84,12 +84,12 @@
 				1A0D99FA2074671B007B5CCC /* SJAudioFileStream.m */,
 				1A0D99FB2074671B007B5CCC /* SJAudioOutputQueue.h */,
 				1A0D99FC2074671B007B5CCC /* SJAudioOutputQueue.m */,
-				1A0D99FD2074671B007B5CCC /* SJAudioPlayer.h */,
-				1A0D99FE2074671B007B5CCC /* SJAudioPlayer.m */,
-				1A0D99FF2074671B007B5CCC /* SJHttpStream.h */,
-				1A0D9A002074671B007B5CCC /* SJHttpStream.m */,
 				1A0D9A012074671B007B5CCC /* SJParsedAudioData.h */,
 				1A0D9A022074671B007B5CCC /* SJParsedAudioData.m */,
+				1A0D99FF2074671B007B5CCC /* SJHttpStream.h */,
+				1A0D9A002074671B007B5CCC /* SJHttpStream.m */,
+				1A0D99FD2074671B007B5CCC /* SJAudioPlayer.h */,
+				1A0D99FE2074671B007B5CCC /* SJAudioPlayer.m */,
 			);
 			path = AudioStream;
 			sourceTree = "<group>";

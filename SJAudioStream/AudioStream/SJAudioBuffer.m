@@ -7,6 +7,8 @@
 //
 
 #import "SJAudioBuffer.h"
+#import "SJParsedAudioData.h"
+
 
 @interface SJAudioBuffer ()
 {

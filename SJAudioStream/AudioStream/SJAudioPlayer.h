@@ -7,7 +7,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <AudioToolbox/AudioToolbox.h>
 
 typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 {
@@ -23,7 +22,7 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 @interface SJAudioPlayer : NSObject
 
-@property (nonatomic,strong) NSString *urlString;
+@property (nonatomic,readonly) NSString *urlString;
 
 @property (nonatomic,readonly) NSUInteger contentLength;
 

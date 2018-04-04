@@ -26,11 +26,6 @@
     NSURL            *_url;
 }
 
-- (void)dealloc
-{
-    
-}
-
 
 - (instancetype)initWithURL:(NSURL *)url cacheFilePath:(NSString *)cacheFilePath byteOffset:(NSUInteger)byteOffset
 {
@@ -47,7 +42,7 @@
 }
 
 
-- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength isEof:(BOOL *)isEof
+- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error completed:(BOOL *)completed
 {
     // 音频数据偏移量 大于 音频数据总长度时 返回nil
     if (self.contentLength && _byteOffset >= self.contentLength)
@@ -57,10 +52,10 @@
     
     if (!_stream && _url)
     {
-        _stream = [[SJHttpStream alloc]initWithURL:_url byteOffset:_byteOffset];
+        _stream = [[SJHttpStream alloc] initWithURL:_url byteOffset:_byteOffset];
     }
     
-    NSData *data = [_stream readDataWithMaxLength:maxLength isEof:isEof];
+    NSData *data = [_stream readDataWithMaxLength:maxLength error:error completed:completed];
     
     return data;
 }
