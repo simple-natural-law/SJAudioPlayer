@@ -84,10 +84,8 @@
     {
         self.urlString  = url;
         self.cachePath  = cachePath;
-        
         self.bufferSize = kDefaultBufferSize;
-        
-        self.started = NO;
+        self.started    = NO;
         
         pthread_mutex_init(&_mutex, NULL);
         pthread_cond_init(&_cond, NULL);
@@ -262,8 +260,6 @@
             }
         }
     }
-    
-    NSLog(@"-------------------");
 }
 
 
