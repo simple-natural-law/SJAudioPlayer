@@ -108,12 +108,12 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
         self.closed = NO;
         
         // set our callback function to receive the data
-        CFStreamClientContext context = {0,(__bridge void *)(self),NULL,NULL,NULL};
+        //CFStreamClientContext context = {0,(__bridge void *)(self),NULL,NULL,NULL};
         
-        CFReadStreamSetClient(_readStream, kCFStreamEventHasBytesAvailable | kCFStreamEventErrorOccurred | kCFStreamEventEndEncountered, SJReadStreamCallBack, &context);
+        //CFReadStreamSetClient(_readStream, kCFStreamEventHasBytesAvailable | kCFStreamEventErrorOccurred | kCFStreamEventEndEncountered, SJReadStreamCallBack, &context);
         
         // 在当前线程回调
-        CFReadStreamScheduleWithRunLoop(_readStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+        //CFReadStreamScheduleWithRunLoop(_readStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
         
         pthread_mutex_init(&_mutex, NULL);
         pthread_cond_init(&_cond, NULL);
@@ -129,34 +129,25 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
         return nil;
     }
     
-    if (self.streamEvent == kCFStreamEventEndEncountered)
+    UInt8 *bytes = (UInt8 *)malloc(maxLength);
+    
+    CFIndex length = CFReadStreamRead(_readStream, bytes, maxLength);
+    
+    if (length == -1)
+    {
+        // 错误处理
+        *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:-1 userInfo:nil];
+        
+        NSLog(@"");
+        
+        return nil;
+        
+    }else if (length == 0)
     {
         *completed = YES;
         
         return nil;
     }
-    
-    if (self.streamEvent == kCFStreamEventErrorOccurred)
-    {
-        *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:-1 userInfo:nil];
-        
-        return nil;
-    }
-    
-    UInt8 *bytes = (UInt8 *)malloc(maxLength);
-    
-    CFIndex length = CFReadStreamRead(_readStream, bytes, maxLength);
-    
-    self.streamEvent = kCFStreamEventNone;
-    
-    if (length <= 0)
-    {
-        // 错误处理
-        *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:-1 userInfo:nil];
-        
-        return nil;
-    }
-    
     
     if (!self.httpHeaders)
     {
@@ -177,7 +168,6 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
     
     return data;
 }
-
 
 
 - (void)close
