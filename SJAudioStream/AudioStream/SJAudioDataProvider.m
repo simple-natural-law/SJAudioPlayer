@@ -13,19 +13,23 @@
 
 @interface SJAudioDataProvider ()
 
+@property (nonatomic, strong) SJHttpStream *stream;
 
+@property (nonatomic, strong) SJAudioCacheDataStream *cacheDataStream;
+
+@property (nonatomic, strong) NSURL *url;
+
+@property (nonatomic, strong) NSString *cachePath;
+
+@property (nonatomic, assign) NSUInteger byteOffset;
+
+@property (nonatomic, readwrite, assign) NSUInteger startOffset;
+
+@property (nonatomic, readwrite, assign) NSUInteger contentLength;
 
 @end
 
 @implementation SJAudioDataProvider
-{
-    SJHttpStream     *_stream;
-    SJAudioCacheDataStream *_cacheDataStream;
-    NSString         *_cachePath;
-    NSUInteger        _byteOffset;
-    NSURL            *_url;
-}
-
 
 - (instancetype)initWithURL:(NSURL *)url cacheFilePath:(NSString *)cacheFilePath byteOffset:(NSUInteger)byteOffset
 {
@@ -33,10 +37,10 @@
     
     if (self)
     {
-        _url = url;
-        _cachePath   = cacheFilePath;
-        _byteOffset  = byteOffset;
-        _startOffset = byteOffset;
+        self.url = url;
+        self.cachePath   = cacheFilePath;
+        self.byteOffset  = byteOffset;
+        self.startOffset = byteOffset;
     }
     return self;
 }
@@ -45,17 +49,17 @@
 - (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error completed:(BOOL *)completed
 {
     // 音频数据偏移量 大于 音频数据总长度时 返回nil
-    if (self.contentLength && _byteOffset >= self.contentLength)
+    if (self.contentLength && self.byteOffset >= self.contentLength)
     {
         return nil;
     }
     
-    if (!_stream && _url)
+    if (!self.stream && self.url)
     {
-        _stream = [[SJHttpStream alloc] initWithURL:_url byteOffset:_byteOffset];
+        self.stream = [[SJHttpStream alloc] initWithURL:self.url byteOffset:self.byteOffset];
     }
     
-    NSData *data = [_stream readDataWithMaxLength:maxLength error:error completed:completed];
+    NSData *data = [self.stream readDataWithMaxLength:maxLength error:error completed:completed];
     
     return data;
 }
@@ -65,14 +69,14 @@
 {
     NSUInteger length = 0;
     
-    length = _cacheDataStream.contentLength;
+    length = self.cacheDataStream.contentLength;
     
     if (length)
     {
         return length;
     }
     
-    length = _stream.contentLength;
+    length = self.stream.contentLength;
     
     return length;
 }
@@ -80,7 +84,7 @@
 
 - (void)close
 {
-    [_stream close];
+    [self.stream close];
 }
 
 @end

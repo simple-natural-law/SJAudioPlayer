@@ -60,8 +60,8 @@
     BOOL _started;
     NSTimeInterval _playedTime;
     
-    pthread_mutex_t _mutex; // 互斥锁
-    pthread_cond_t _cond; // 同步条件  需要配合 mutex 使用
+    pthread_mutex_t _mutex;
+    pthread_cond_t _cond;
     
     AudioQueueBufferRef audioQueueBuffer[SJAudioQueueBufferCount];
     
