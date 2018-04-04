@@ -151,12 +151,15 @@
     [playAudioThread start];
 }
 
+
+
 - (void)pause
 {
     pthread_mutex_lock(&_mutex);
     self.pauseRequired = YES;
     pthread_mutex_unlock(&_mutex);
 }
+
 
 - (void)resume
 {
@@ -222,7 +225,7 @@
             }
             
             NSData *data = [self.dataProvider readDataWithMaxLength:self.bufferSize error:&readDataError completed:&_completed];
-            // 读取出错
+            
             if (readDataError)
             {
                 NSLog(@"read data: error");
@@ -267,8 +270,6 @@
 
 - (void)playAudioData
 {
-    //NSError *error = nil;
-
     while (!self.userStop && self.byteOffset <= self.contentLength && self.status != SJAudioPlayerStatusFinished) {
         
         @synchronized (self) {
@@ -294,18 +295,6 @@
                 pthread_cond_wait(&_cond, &_mutex); // 阻塞
                 pthread_mutex_unlock(&_mutex);
             }
-            
-//            if ([self.audioData length] >= self.bufferSize + self.byteOffset)
-//            {
-//                if (self.audioFileStream)
-//                {
-//                    NSData *data = [self.audioData subdataWithRange:NSMakeRange(self.byteOffset, self.bufferSize)];
-//
-//                    self.byteOffset += data.length;
-//
-//                    [self.audioFileStream parseData:data error:&error];
-//                }
-//            }
             
             if (self.audioQueue)
             {
