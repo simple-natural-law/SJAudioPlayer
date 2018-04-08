@@ -162,15 +162,14 @@
 
 - (void)resume
 {
-    pthread_mutex_lock(&_mutex);
+//    pthread_mutex_lock(&_mutex);
     
-    [self.audioQueue resume];
+    if (self.pauseRequired)
+    {
+        pthread_cond_signal(&_cond);    // 解除阻塞
+    }
     
-    self.status = SJAudioPlayerStatusPlaying;
-    
-    pthread_cond_signal(&_cond);    // 解除阻塞
-    
-    pthread_mutex_unlock(&_mutex);
+//    pthread_mutex_unlock(&_mutex);
 }
 
 
@@ -286,9 +285,14 @@
             [self.audioQueue pause];
             
             self.status = SJAudioPlayerStatusPaused;
+            
             pthread_cond_wait(&_cond, &_mutex); // 阻塞
             
+            [self.audioQueue resume];
+
             self.pauseRequired = NO;
+                
+            self.status = SJAudioPlayerStatusPlaying;
         }
         
         pthread_mutex_unlock(&_mutex);

@@ -268,6 +268,7 @@
     [self setVolume:1.0];
     
     _started = status == noErr;
+    
     return _started;
 }
 
@@ -297,15 +298,9 @@
 {
     [self setVolume:0];
     
-    // 采用gcd方式延迟执行（可以在子线程执行并且不阻塞当前线程线程）
-    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC));
+    OSStatus status = AudioQueuePause(self->_audioQueue);
     
-    dispatch_after(popTime, dispatch_get_main_queue(), ^{
-            
-        OSStatus status = AudioQueuePause(self->_audioQueue);
-        
-        self->_started = status == noErr;
-    });
+    self->_started = status == noErr;
 }
 
 
@@ -599,7 +594,7 @@
 - (void)setVolumeParameter
 {
     // 音频淡入淡出， 首先设置音量渐变过程使用的时间。
-    [self setParameter:kAudioQueueParam_VolumeRampTime value:_started ? 0.5:0.5 error:NULL];
+    [self setParameter:kAudioQueueParam_VolumeRampTime value:2.0 error:NULL];
     [self setParameter:kAudioQueueParam_Volume value:_volume error:NULL];
 }
 
