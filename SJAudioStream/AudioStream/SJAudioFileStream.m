@@ -475,7 +475,6 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
 
 - (BOOL)parseData:(NSData *)data error:(NSError **)error
 {
-    
     if (self.readyToProducePackets && self.packetDuration == 0) {
         [self errorForOSStatus:-1 error:error];
         return NO;

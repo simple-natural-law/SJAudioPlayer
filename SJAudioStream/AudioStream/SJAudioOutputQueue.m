@@ -592,7 +592,7 @@
 - (void)setVolumeParameter
 {
     // 音频淡入淡出， 首先设置音量渐变过程使用的时间。
-    [self setParameter:kAudioQueueParam_VolumeRampTime value:2.0 error:NULL];
+    [self setParameter:kAudioQueueParam_VolumeRampTime value:1.0 error:NULL];
     [self setParameter:kAudioQueueParam_Volume value:_volume error:NULL];
 }
 
