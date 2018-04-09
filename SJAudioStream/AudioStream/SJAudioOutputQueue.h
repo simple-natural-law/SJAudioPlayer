@@ -132,13 +132,9 @@
      kAudioQueueParam_Pan            = 13
  };
  
- 其中比较有价值的属性有:
- 
- kAudioQueueProperty_IsRunning监听它可以知道当前AudioQueue是否在运行，这个参数的作用在讲到AudioQueueDispose时已经提到过。
+ kAudioQueueProperty_IsRunning监听它可以知道当前AudioQueue是否在运行。
  
  kAudioQueueProperty_MagicCookie部分音频格式需要设置magicCookie，这个cookie可以从AudioFileStream和AudioFile中获取。
- 
- 比较有价值的参数有：
  
  kAudioQueueParam_Volume，它可以用来调节AudioQueue的播放音量，注意这个音量是AudioQueue的内部播放音量和系统音量相互独立设置并且最后叠加生效。
  

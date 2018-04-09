@@ -162,14 +162,14 @@
 
 - (void)resume
 {
-//    pthread_mutex_lock(&_mutex);
+    pthread_mutex_lock(&_mutex);
     
     if (self.pauseRequired)
     {
         pthread_cond_signal(&_cond);    // 解除阻塞
     }
     
-//    pthread_mutex_unlock(&_mutex);
+    pthread_mutex_unlock(&_mutex);
 }
 
 
@@ -293,6 +293,8 @@
             self.pauseRequired = NO;
                 
             self.status = SJAudioPlayerStatusPlaying;
+            
+            NSLog(@"play audio: play");
         }
         
         pthread_mutex_unlock(&_mutex);
@@ -302,6 +304,7 @@
             if ([self.buffer hasData])
             {
                 UInt32 packetCount;
+                
                 AudioStreamPacketDescription *desces = NULL;
                 
                 if ([self.buffer bufferedSize] >= self.bufferSize)
@@ -330,6 +333,12 @@
                 self.status = SJAudioPlayerStatusFinished;
                 
                 NSLog(@"play audio: complete");
+            }
+        }else
+        {
+            if ([self.buffer hasData])
+            {
+                [self createAudioQueue];
             }
         }
     }
@@ -362,13 +371,7 @@
 - (void)audioFileStream:(SJAudioFileStream *)audioFileStream audioDataParsed:(NSArray *)audioData
 {
     [self.buffer enqueueFromDataArray:audioData];
-    
-    if (!self.audioQueue)
-    {
-        [self createAudioQueue];
-    }
 }
-
 
 
 
