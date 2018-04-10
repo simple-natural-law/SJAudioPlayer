@@ -1,6 +1,6 @@
 //
 //  SJAudioFileStream.m
-//  AudioStreamDemo
+//  SJAudioStream
 //
 //  Created by zhangshijian on 15/12/14.
 //  Copyright © 2015年 zhangshijian. All rights reserved.

@@ -1,6 +1,6 @@
 //
 //  SJAudioPlayer.m
-//  AudioTest
+//  SJAudioStream
 //
 //  Created by 张诗健 on 16/4/29.
 //  Copyright © 2016年 张诗健. All rights reserved.
@@ -41,6 +41,8 @@
 @property (nonatomic, assign) BOOL pausedByInterrupt;
 
 @property (nonatomic, assign) BOOL readDataCompleted;
+
+@property (nonatomic, assign) BOOL stopReadDataRequired;
 
 @property (nonatomic, assign) BOOL stopRequired;
 
@@ -91,49 +93,23 @@
     return self;
 }
 
-// 在播放停止或者出错时会进入到清理流程，这里需要一大堆操作，清理各种数据，关闭AudioSession，清除各种标记等;
-- (void)cleanUp
-{
-    [self.audioFileStream close];
-    self.audioFileStream = nil;
-    
-    self.started   = NO;
-    self.readDataCompleted = NO;
-    self.stopRequired  = NO;
-    self.pauseRequired = NO;
-    self.contentLength = 0;
-    self.buffer        = nil;
-    self.byteOffset    = 0;
-    self.dataProvider  = nil;
-    self.audioQueue    = nil;
-    self.status        = SJAudioPlayerStatusIdle;
-}
-
 
 #pragma mark - methods
-/**
- *  播放
- */
 - (void)play
 {
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
-    
-    // 激活音频会话控制
-    [[AVAudioSession sharedInstance] setActive:YES error:nil];
-    
     if (!self.started)
     {
+        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+        // 激活音频会话控制
+        [[AVAudioSession sharedInstance] setActive:YES error:nil];
+        
         [self start];
         
     }else
     {
-        if (self.status == SJAudioPlayerStatusPaused)
-        {
-            [self resume];
-        }
+        [self resume];
     }
 }
-
 
 
 - (void)start
@@ -157,10 +133,7 @@
 - (void)pause
 {
     pthread_mutex_lock(&_mutex);
-    if (self.status == SJAudioPlayerStatusPlaying)
-    {
-        self.pauseRequired = YES;
-    }
+    self.pauseRequired = YES;
     pthread_mutex_unlock(&_mutex);
 }
 
@@ -168,12 +141,10 @@
 - (void)resume
 {
     pthread_mutex_lock(&_mutex);
-    
     if (self.pauseRequired)
     {
-        pthread_cond_signal(&_cond);    // 解除阻塞
+        pthread_cond_signal(&_cond);
     }
-    
     pthread_mutex_unlock(&_mutex);
 }
 
@@ -181,9 +152,17 @@
 - (void)stop
 {
     pthread_mutex_lock(&_mutex);
-    if (self.status != SJAudioPlayerStatusIdle)
+    
+    if (self.status != SJAudioPlayerStatusStopped)
     {
         self.stopRequired = YES;
+        
+        self.stopReadDataRequired = YES;
+        
+        if (self.pauseRequired)
+        {
+            pthread_cond_signal(&_cond);
+        }
     }
     pthread_mutex_unlock(&_mutex);
 }
@@ -212,13 +191,40 @@
 }
 
 
+- (void)cleanUpReadDataThread
+{
+    [self.audioFileStream close];
+    [self.dataProvider close];
+    
+    self.audioFileStream = nil;
+    self.dataProvider  = nil;
+    
+    self.readDataCompleted    = NO;
+    self.stopReadDataRequired = NO;
+    
+    self.contentLength = 0;
+}
+
+- (void)cleanUpPlayAudioThread
+{
+    self.started   = NO;
+    self.status    = SJAudioPlayerStatusStopped;
+    self.stopRequired  = NO;
+    self.pauseRequired = NO;
+    self.buffer        = nil;
+    self.byteOffset    = 0;
+    self.audioQueue    = nil;
+}
+
+
+
 - (void)enqueneAudioData
 {
     NSError *error = nil;
     NSError *readDataError = nil;
     NSError *parseDataError = nil;
     
-    while (!self.readDataCompleted && !self.stopRequired)
+    while (!self.readDataCompleted && !self.stopReadDataRequired)
     {
         if (!self.dataProvider)
         {
@@ -230,21 +236,7 @@
         if (readDataError)
         {
             NSLog(@"read data: error");
-            break;
-        }
-        
-        if (self.readDataCompleted)
-        {
-            [self.dataProvider close];
             
-            NSLog(@"read data: complete");
-        }
-        
-        if (self.stopRequired)
-        {
-            [self.dataProvider close];
-            self.dataProvider = nil;
-            NSLog(@"read data: stop");
             break;
         }
         
@@ -264,21 +256,24 @@
             [self.audioFileStream parseData:data error:&parseDataError];
         }
     }
+    
+    if (self.stopReadDataRequired)
+    {
+        NSLog(@"read data: stop");
+    }
+    
+    if (self.readDataCompleted)
+    {
+        NSLog(@"read data: completed");
+    }
+    
+    [self cleanUpReadDataThread];
 }
 
 
 - (void)playAudioData
 {
-    while (!self.stopRequired && self.byteOffset <= self.contentLength && self.status != SJAudioPlayerStatusFinished) {
-        
-        if (self.stopRequired)
-        {
-            [self.audioQueue stop:YES];
-            
-            NSLog(@"play audio: stop");
-            
-            break;
-        }
+    while (!self.stopRequired && self.status != SJAudioPlayerStatusFinished) {
         
         pthread_mutex_lock(&_mutex);
         
@@ -292,15 +287,17 @@
             
             pthread_cond_wait(&_cond, &_mutex); // 阻塞
             
-            [self.audioQueue resume];
-
-            self.pauseRequired = NO;
+            if (!self.stopRequired)
+            {
+                [self.audioQueue resume];
                 
-            self.status = SJAudioPlayerStatusPlaying;
-            
-            NSLog(@"play audio: play");
+                self.pauseRequired = NO;
+                
+                self.status = SJAudioPlayerStatusPlaying;
+                
+                NSLog(@"play audio: play");
+            }
         }
-        
         pthread_mutex_unlock(&_mutex);
         
         if (self.audioQueue)
@@ -346,7 +343,14 @@
         }
     }
     
-    [self cleanUp];
+    if (self.stopRequired)
+    {
+        [self.audioQueue stop:YES];
+        
+        NSLog(@"play audio: stop");
+    }
+    
+    [self cleanUpPlayAudioThread];
 }
 
 
@@ -377,42 +381,42 @@
 }
 
 
-
 /**
  *  根据 URL的pathExtension 识别音频格式
  */
 AudioFileTypeID hintForFileExtension(NSString *fileExtension)
 {
     AudioFileTypeID fileTypeHint = 0;
+    
     if ([fileExtension isEqual:@"mp3"])
     {
         fileTypeHint = kAudioFileMP3Type;
-    }
-    else if ([fileExtension isEqual:@"wav"])
+        
+    }else if ([fileExtension isEqual:@"wav"])
     {
         fileTypeHint = kAudioFileWAVEType;
-    }
-    else if ([fileExtension isEqual:@"aifc"])
+        
+    }else if ([fileExtension isEqual:@"aifc"])
     {
         fileTypeHint = kAudioFileAIFCType;
-    }
-    else if ([fileExtension isEqual:@"aiff"])
+        
+    }else if ([fileExtension isEqual:@"aiff"])
     {
         fileTypeHint = kAudioFileAIFFType;
-    }
-    else if ([fileExtension isEqual:@"m4a"])
+        
+    }else if ([fileExtension isEqual:@"m4a"])
     {
         fileTypeHint = kAudioFileM4AType;
-    }
-    else if ([fileExtension isEqual:@"mp4"])
+        
+    }else if ([fileExtension isEqual:@"mp4"])
     {
         fileTypeHint = kAudioFileMPEG4Type;
-    }
-    else if ([fileExtension isEqual:@"caf"])
+        
+    }else if ([fileExtension isEqual:@"caf"])
     {
         fileTypeHint = kAudioFileCAFType;
-    }
-    else if ([fileExtension isEqual:@"aac"])
+        
+    }else if ([fileExtension isEqual:@"aac"])
     {
         fileTypeHint = kAudioFileAAC_ADTSType;
     }
