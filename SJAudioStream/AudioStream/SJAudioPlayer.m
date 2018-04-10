@@ -107,7 +107,6 @@
     self.contentLength = 0;
 }
 
-// 在播放停止或者出错时会进入到清理流程，这里需要一大堆操作，清理各种数据，关闭AudioSession，清除各种标记等;
 - (void)cleanUpPlayAudioThread
 {
     self.started   = NO;
@@ -181,6 +180,7 @@
 - (void)stop
 {
     pthread_mutex_lock(&_mutex);
+    
     if (self.status != SJAudioPlayerStatusStopped)
     {
         self.stopRequired = YES;
