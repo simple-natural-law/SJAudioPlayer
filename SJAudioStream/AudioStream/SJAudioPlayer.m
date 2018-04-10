@@ -93,36 +93,8 @@
     return self;
 }
 
-- (void)cleanUpReadDataThread
-{
-    [self.audioFileStream close];
-    [self.dataProvider close];
-    
-    self.audioFileStream = nil;
-    self.dataProvider  = nil;
-    
-    self.readDataCompleted    = NO;
-    self.stopReadDataRequired = NO;
-    
-    self.contentLength = 0;
-}
-
-- (void)cleanUpPlayAudioThread
-{
-    self.started   = NO;
-    self.status    = SJAudioPlayerStatusStopped;
-    self.stopRequired  = NO;
-    self.pauseRequired = NO;
-    self.buffer        = nil;
-    self.byteOffset    = 0;
-    self.audioQueue    = nil;
-}
-
 
 #pragma mark - methods
-/**
- *  播放
- */
 - (void)play
 {
     if (!self.started)
@@ -171,7 +143,7 @@
     pthread_mutex_lock(&_mutex);
     if (self.pauseRequired)
     {
-        pthread_cond_signal(&_cond);    // 解除阻塞
+        pthread_cond_signal(&_cond);
     }
     pthread_mutex_unlock(&_mutex);
 }
@@ -189,7 +161,7 @@
         
         if (self.pauseRequired)
         {
-            pthread_cond_signal(&_cond);    // 解除阻塞
+            pthread_cond_signal(&_cond);
         }
     }
     pthread_mutex_unlock(&_mutex);
@@ -217,6 +189,33 @@
         }
     }
 }
+
+
+- (void)cleanUpReadDataThread
+{
+    [self.audioFileStream close];
+    [self.dataProvider close];
+    
+    self.audioFileStream = nil;
+    self.dataProvider  = nil;
+    
+    self.readDataCompleted    = NO;
+    self.stopReadDataRequired = NO;
+    
+    self.contentLength = 0;
+}
+
+- (void)cleanUpPlayAudioThread
+{
+    self.started   = NO;
+    self.status    = SJAudioPlayerStatusStopped;
+    self.stopRequired  = NO;
+    self.pauseRequired = NO;
+    self.buffer        = nil;
+    self.byteOffset    = 0;
+    self.audioQueue    = nil;
+}
+
 
 
 - (void)enqueneAudioData
