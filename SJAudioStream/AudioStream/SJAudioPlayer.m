@@ -382,42 +382,42 @@
 }
 
 
-
 /**
  *  根据 URL的pathExtension 识别音频格式
  */
 AudioFileTypeID hintForFileExtension(NSString *fileExtension)
 {
     AudioFileTypeID fileTypeHint = 0;
+    
     if ([fileExtension isEqual:@"mp3"])
     {
         fileTypeHint = kAudioFileMP3Type;
-    }
-    else if ([fileExtension isEqual:@"wav"])
+        
+    }else if ([fileExtension isEqual:@"wav"])
     {
         fileTypeHint = kAudioFileWAVEType;
-    }
-    else if ([fileExtension isEqual:@"aifc"])
+        
+    }else if ([fileExtension isEqual:@"aifc"])
     {
         fileTypeHint = kAudioFileAIFCType;
-    }
-    else if ([fileExtension isEqual:@"aiff"])
+        
+    }else if ([fileExtension isEqual:@"aiff"])
     {
         fileTypeHint = kAudioFileAIFFType;
-    }
-    else if ([fileExtension isEqual:@"m4a"])
+        
+    }else if ([fileExtension isEqual:@"m4a"])
     {
         fileTypeHint = kAudioFileM4AType;
-    }
-    else if ([fileExtension isEqual:@"mp4"])
+        
+    }else if ([fileExtension isEqual:@"mp4"])
     {
         fileTypeHint = kAudioFileMPEG4Type;
-    }
-    else if ([fileExtension isEqual:@"caf"])
+        
+    }else if ([fileExtension isEqual:@"caf"])
     {
         fileTypeHint = kAudioFileCAFType;
-    }
-    else if ([fileExtension isEqual:@"aac"])
+        
+    }else if ([fileExtension isEqual:@"aac"])
     {
         fileTypeHint = kAudioFileAAC_ADTSType;
     }
