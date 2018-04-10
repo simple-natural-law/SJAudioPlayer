@@ -32,7 +32,7 @@
 
 @property (nonatomic, strong) NSString *cachePath;
 
-@property (nonatomic, assign) NSUInteger byteOffset;
+@property (nonatomic, assign) SInt64 byteOffset;
 
 @property (nonatomic, assign) NSUInteger bufferSize;
 
@@ -97,14 +97,13 @@
 #pragma mark - methods
 - (void)play
 {
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+    // 激活音频会话控制
+    [[AVAudioSession sharedInstance] setActive:YES error:nil];
+    
     if (!self.started)
     {
-        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
-        // 激活音频会话控制
-        [[AVAudioSession sharedInstance] setActive:YES error:nil];
-        
         [self start];
-        
     }else
     {
         [self resume];
@@ -133,7 +132,10 @@
 - (void)pause
 {
     pthread_mutex_lock(&_mutex);
-    self.pauseRequired = YES;
+    if (self.status == SJAudioPlayerStatusPlaying)
+    {
+        self.pauseRequired = YES;
+    }
     pthread_mutex_unlock(&_mutex);
 }
 
@@ -157,9 +159,12 @@
     {
         self.stopRequired = YES;
         
-        self.stopReadDataRequired = YES;
+        if (!self.readDataCompleted)
+        {
+            self.stopReadDataRequired = YES;
+        }
         
-        if (self.pauseRequired)
+        if (self.status == SJAudioPlayerStatusPaused)
         {
             pthread_cond_signal(&_cond);
         }
@@ -191,22 +196,14 @@
 }
 
 
-- (void)cleanUpReadDataThread
+- (void)cleanUp
 {
     [self.audioFileStream close];
-    [self.dataProvider close];
-    
     self.audioFileStream = nil;
-    self.dataProvider  = nil;
-    
     self.readDataCompleted    = NO;
     self.stopReadDataRequired = NO;
-    
     self.contentLength = 0;
-}
-
-- (void)cleanUpPlayAudioThread
-{
+    
     self.started   = NO;
     self.status    = SJAudioPlayerStatusStopped;
     self.stopRequired  = NO;
@@ -267,7 +264,9 @@
         NSLog(@"read data: completed");
     }
     
-    [self cleanUpReadDataThread];
+    [self.dataProvider close];
+    
+    self.dataProvider = nil;
 }
 
 
@@ -350,7 +349,7 @@
         NSLog(@"play audio: stop");
     }
     
-    [self cleanUpPlayAudioThread];
+    [self cleanUp];
 }
 
 

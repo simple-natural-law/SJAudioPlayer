@@ -32,7 +32,7 @@
  *
  *  @return SJAudioDataProvider
  */
-- (instancetype)initWithURL:(NSURL *)url cacheFilePath:(NSString *)cacheFilePath byteOffset:(NSUInteger)byteOffset;
+- (instancetype)initWithURL:(NSURL *)url cacheFilePath:(NSString *)cacheFilePath byteOffset:(SInt64)byteOffset;
 
 
 /**
