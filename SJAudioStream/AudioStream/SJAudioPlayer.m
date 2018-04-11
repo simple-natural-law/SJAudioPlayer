@@ -115,7 +115,7 @@
 {
     self.started = YES;
     
-    NSThread  *readDataThread = [[NSThread alloc] initWithTarget:self selector:@selector(enqueneAudioData) object:nil];
+    NSThread  *readDataThread = [[NSThread alloc] initWithTarget:self selector:@selector(readAudioData) object:nil];
     
     [readDataThread setName:@"Read Data Thread"];
     
@@ -132,10 +132,7 @@
 - (void)pause
 {
     pthread_mutex_lock(&_mutex);
-    if (self.status == SJAudioPlayerStatusPlaying)
-    {
-        self.pauseRequired = YES;
-    }
+    self.pauseRequired = YES;
     pthread_mutex_unlock(&_mutex);
 }
 
@@ -155,19 +152,12 @@
 {
     pthread_mutex_lock(&_mutex);
     
-    if (self.status != SJAudioPlayerStatusStopped)
+    self.stopRequired = YES;
+    self.stopReadDataRequired = YES;
+        
+    if (self.pauseRequired)
     {
-        self.stopRequired = YES;
-        
-        if (!self.readDataCompleted)
-        {
-            self.stopReadDataRequired = YES;
-        }
-        
-        if (self.status == SJAudioPlayerStatusPaused)
-        {
-            pthread_cond_signal(&_cond);
-        }
+        pthread_cond_signal(&_cond);
     }
     pthread_mutex_unlock(&_mutex);
 }
@@ -195,28 +185,33 @@
     }
 }
 
-
-- (void)cleanUp
+- (void)cleanUpReadAudioDataThread
 {
+    [self.dataProvider close];
+    self.dataProvider = nil;
+    
     [self.audioFileStream close];
     self.audioFileStream = nil;
-    self.readDataCompleted    = NO;
-    self.stopReadDataRequired = NO;
-    self.contentLength = 0;
     
-    self.started   = NO;
-    self.status    = SJAudioPlayerStatusStopped;
-    self.stopRequired  = NO;
-    self.pauseRequired = NO;
-    self.buffer        = nil;
-    self.byteOffset    = 0;
-    self.audioQueue    = nil;
+    self.contentLength = 0;
+}
+
+- (void)cleanUpPlayAudioDataThread
+{
+    self.started = NO;
+    self.status  = SJAudioPlayerStatusStopped;
+    self.buffer     = nil;
+    self.audioQueue = nil;
+    self.byteOffset = 0;
 }
 
 
 
-- (void)enqueneAudioData
+- (void)readAudioData
 {
+    self.readDataCompleted    = NO;
+    self.stopReadDataRequired = NO;
+    
     NSError *error = nil;
     NSError *readDataError = nil;
     NSError *parseDataError = nil;
@@ -264,14 +259,15 @@
         NSLog(@"read data: completed");
     }
     
-    [self.dataProvider close];
-    
-    self.dataProvider = nil;
+    [self cleanUpReadAudioDataThread];
 }
 
 
 - (void)playAudioData
 {
+    self.stopRequired  = NO;
+    self.pauseRequired = NO;
+    
     while (!self.stopRequired && self.status != SJAudioPlayerStatusFinished) {
         
         pthread_mutex_lock(&_mutex);
@@ -349,7 +345,7 @@
         NSLog(@"play audio: stop");
     }
     
-    [self cleanUp];
+    [self cleanUpPlayAudioDataThread];
 }
 
 
