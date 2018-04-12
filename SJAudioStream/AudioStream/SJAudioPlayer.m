@@ -379,7 +379,6 @@
 }
 
 #pragma mark- SJAudioFileStreamDelegate
-
 - (void)audioFileStream:(SJAudioFileStream *)audioFileStream audioDataParsed:(NSArray *)audioData
 {
     [self.buffer enqueueFromDataArray:audioData];
