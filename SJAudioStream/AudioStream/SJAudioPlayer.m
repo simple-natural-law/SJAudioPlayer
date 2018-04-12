@@ -56,8 +56,6 @@
 
 @property (nonatomic,readwrite, assign) NSUInteger contentLength;
 
-@property (nonatomic,readwrite, assign) NSTimeInterval duration;
-
 @property (nonatomic,readwrite, assign) SJAudioPlayerStatus status;
 
 @end
@@ -367,6 +365,17 @@
 - (NSTimeInterval)duration
 {
     return self.audioFileStream.duration;
+}
+
+- (NSTimeInterval)playedTime
+{
+    if (self.audioQueue)
+    {
+        return self.audioQueue.playedTime;
+    }else
+    {
+        return 0.0;
+    }
 }
 
 #pragma mark- SJAudioFileStreamDelegate
