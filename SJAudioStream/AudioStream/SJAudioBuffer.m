@@ -154,10 +154,4 @@
     [self.bufferBlockArray removeAllObjects];
 }
 
-#pragma -mark
-- (void)dealloc
-{
-    [self.bufferBlockArray removeAllObjects];
-}
-
 @end
