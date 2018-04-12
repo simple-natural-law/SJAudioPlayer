@@ -28,6 +28,8 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 @property (nonatomic,readonly) NSTimeInterval duration;
 
+@property (nonatomic,readonly) NSTimeInterval playedTime;
+
 @property (nonatomic,readonly) SJAudioPlayerStatus status;
 
 

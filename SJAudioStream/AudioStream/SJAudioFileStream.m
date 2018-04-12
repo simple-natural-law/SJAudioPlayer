@@ -314,6 +314,7 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
         
         // 计算音频持续时长
         [self calculateDuration];
+        
     }// kAudioFileStreamProperty_DataFormat (AudioStreamBasicDescription类 用来描述音频数据的格式)
     else if (propertyID == kAudioFileStreamProperty_DataFormat)
     {

@@ -19,7 +19,6 @@
 @optional
 - (void)audioFileStreamReadyToProducePackets:(SJAudioFileStream *)audioFileStream;
 
-
 @end
 
 

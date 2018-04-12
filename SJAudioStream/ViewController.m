@@ -14,25 +14,35 @@
 
 @property (nonatomic, strong) SJAudioPlayer *player;
 
+@property (weak, nonatomic) IBOutlet UISlider *slider;
+
+@property (weak, nonatomic) IBOutlet UILabel *durationLabel;
+
+@property (weak, nonatomic) IBOutlet UILabel *progressLabel;
+
 @end
+
 
 @implementation ViewController
 
-- (void)viewDidLoad {
+- (void)viewDidLoad
+{
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
     NSString *urlString = @"http://hoishow-file.b0.upaiyun.com/uploads/boom_track/file/4ba30881757c35365380dbe9c9538054_ab320.mp3";
-//
-//    NSString *escapedValue =
-//    (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(
-//                                                                          nil,
-//                                                                          (CFStringRef)urlString,
-//                                                                          NULL,
-//                                                                          NULL,
-//                                                                          kCFStringEncodingUTF8));
     
     self.player = [[SJAudioPlayer alloc] initWithUrlString:urlString cachePath:nil];
+    
+    [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(updateProgress) userInfo:nil repeats:YES];
+}
+
+- (void)updateProgress
+{
+    self.durationLabel.text = [NSString stringWithFormat:@"%f",self.player.duration];
+    self.progressLabel.text = [NSString stringWithFormat:@"%f",self.player.playedTime];
+    
+    self.slider.value = self.player.playedTime/self.player.duration;
 }
 
 - (IBAction)play:(id)sender
@@ -49,6 +59,13 @@
 {
     [self.player stop];
 }
+
+- (IBAction)seek:(UISlider *)sender
+{
+    
+}
+
+
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
