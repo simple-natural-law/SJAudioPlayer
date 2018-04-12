@@ -248,22 +248,18 @@
             }
         }
     }
-    
-    
-    @autoreleasepool
+
+    if (self.stopReadDataRequired)
     {
-        if (self.stopReadDataRequired)
-        {
-            NSLog(@"read data: stop");
-        }
-        
-        if (self.readDataCompleted)
-        {
-            NSLog(@"read data: completed");
-        }
-        
-        [self cleanUpReadAudioDataThread];
+        NSLog(@"read data: stop");
     }
+    
+    if (self.readDataCompleted)
+    {
+        NSLog(@"read data: completed");
+    }
+    
+    [self cleanUpReadAudioDataThread];
 }
 
 
@@ -345,17 +341,14 @@
         }
     }
     
-    @autoreleasepool
+    if (self.stopRequired)
     {
-        if (self.stopRequired)
-        {
-            [self.audioQueue stop:YES];
-            
-            NSLog(@"play audio: stop");
-        }
+        [self.audioQueue stop:YES];
         
-        [self cleanUpPlayAudioDataThread];
+        NSLog(@"play audio: stop");
     }
+    
+    [self cleanUpPlayAudioDataThread];
 }
 
 
