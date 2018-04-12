@@ -361,11 +361,11 @@
     }
 }
 
-
 - (NSTimeInterval)duration
 {
-    return self.audioFileStream.duration;
+    return self.audioFileStream.duration;;
 }
+
 
 - (NSTimeInterval)playedTime
 {
@@ -379,6 +379,7 @@
 }
 
 #pragma mark- SJAudioFileStreamDelegate
+
 - (void)audioFileStream:(SJAudioFileStream *)audioFileStream audioDataParsed:(NSArray *)audioData
 {
     [self.buffer enqueueFromDataArray:audioData];
