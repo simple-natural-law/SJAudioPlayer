@@ -284,7 +284,10 @@
                 
                 pthread_cond_wait(&_cond, &_mutex); // 阻塞
                 
-                if (!self.stopRequired)
+                if (self.stopRequired)
+                {
+                    break;
+                }else
                 {
                     [self.audioQueue resume];
                     
