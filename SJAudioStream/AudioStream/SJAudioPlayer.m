@@ -52,11 +52,11 @@
 
 @property (nonatomic, assign) NSTimeInterval seekTime;
 
-@property (nonatomic,readwrite, strong) NSString *urlString;
+@property (nonatomic, readwrite, strong) NSString *urlString;
 
-@property (nonatomic,readwrite, assign) NSUInteger contentLength;
+@property (nonatomic, readwrite, assign) NSUInteger contentLength;
 
-@property (nonatomic,readwrite, assign) SJAudioPlayerStatus status;
+@property (nonatomic, readwrite, assign) SJAudioPlayerStatus status;
 
 @end
 
