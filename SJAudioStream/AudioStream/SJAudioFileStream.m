@@ -300,7 +300,6 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
             
         }
         
-        // 执行代理
         if (self.delegate && [self.delegate respondsToSelector:@selector(audioFileStreamReadyToProducePackets:)]) {
             [self.delegate audioFileStreamReadyToProducePackets:self];
         }

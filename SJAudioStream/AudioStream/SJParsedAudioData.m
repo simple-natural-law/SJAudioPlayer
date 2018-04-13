@@ -8,11 +8,16 @@
 
 #import "SJParsedAudioData.h"
 
+@interface SJParsedAudioData ()
+
+@property (nonatomic, readwrite, strong) NSData *data;
+
+@property (nonatomic, readwrite, assign) AudioStreamPacketDescription packetDescription;
+
+@end
 
 @implementation SJParsedAudioData
 
-@synthesize data = _data;
-@synthesize packetDescription = _packetDescription;
 
 + (instancetype)parsedAudioDataWithBytes:(const void *)bytes packetDescription:(AudioStreamPacketDescription)packetDescription
 {
@@ -27,10 +32,13 @@
     }
     
     self = [super init];
-    if (self) {
+    
+    if (self)
+    {
         //  赋值以bytes开头，长度为length的数据，进行初始化,使其成为数据对象的内容.
-        _data = [NSData dataWithBytes:bytes length:packetDescription.mDataByteSize];
-        _packetDescription = packetDescription;
+        self.data = [NSData dataWithBytes:bytes length:packetDescription.mDataByteSize];
+        
+        self.packetDescription = packetDescription;
     }
     return self;
 }

@@ -11,9 +11,9 @@
 
 @interface SJParsedAudioData : NSObject
 
-@property (nonatomic, readonly) NSData *data;
+@property (nonatomic, readonly, strong) NSData *data;
 
-@property (nonatomic, readonly) AudioStreamPacketDescription packetDescription;
+@property (nonatomic, readonly, assign) AudioStreamPacketDescription packetDescription;
 
 + (instancetype)parsedAudioDataWithBytes:(const void *)bytes packetDescription:(AudioStreamPacketDescription)packetDescription;
 
