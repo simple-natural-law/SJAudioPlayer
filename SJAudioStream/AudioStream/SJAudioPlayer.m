@@ -130,7 +130,10 @@
 - (void)pause
 {
     pthread_mutex_lock(&_mutex);
-    self.pauseRequired = YES;
+    if (!self.pauseRequired)
+    {
+        self.pauseRequired = YES;
+    }
     pthread_mutex_unlock(&_mutex);
 }
 
@@ -150,13 +153,17 @@
 {
     pthread_mutex_lock(&_mutex);
     
-    self.stopRequired = YES;
-    self.stopReadDataRequired = YES;
-        
-    if (self.pauseRequired)
+    if (!self.stopRequired)
     {
-        pthread_cond_signal(&_cond);
+        self.stopRequired = YES;
+        self.stopReadDataRequired = YES;
+        
+        if (self.pauseRequired)
+        {
+            pthread_cond_signal(&_cond);
+        }
     }
+    
     pthread_mutex_unlock(&_mutex);
 }
 
@@ -196,11 +203,11 @@
 
 - (void)cleanUpPlayAudioDataThread
 {
-    self.started = NO;
-    self.status  = SJAudioPlayerStatusStopped;
+    self.started    = NO;
     self.buffer     = nil;
     self.audioQueue = nil;
     self.byteOffset = 0;
+    self.status     = SJAudioPlayerStatusStopped;
 }
 
 
@@ -272,34 +279,6 @@
         
         @autoreleasepool
         {
-            pthread_mutex_lock(&_mutex);
-            
-            if (self.pauseRequired)
-            {
-                NSLog(@"play audio: pause");
-                
-                [self.audioQueue pause];
-                
-                self.status = SJAudioPlayerStatusPaused;
-                
-                pthread_cond_wait(&_cond, &_mutex); // 阻塞
-                
-                if (self.stopRequired)
-                {
-                    break;
-                }else
-                {
-                    [self.audioQueue resume];
-                    
-                    self.pauseRequired = NO;
-                    
-                    self.status = SJAudioPlayerStatusPlaying;
-                    
-                    NSLog(@"play audio: play");
-                }
-            }
-            pthread_mutex_unlock(&_mutex);
-            
             if (self.audioQueue)
             {
                 if ([self.buffer hasData])
@@ -341,6 +320,31 @@
                     self.status = SJAudioPlayerStatusPlaying;
                 }
             }
+            
+            pthread_mutex_lock(&_mutex);
+            
+            if (self.pauseRequired)
+            {
+                NSLog(@"play audio: pause");
+                
+                [self.audioQueue pause];
+                
+                self.status = SJAudioPlayerStatusPaused;
+                
+                pthread_cond_wait(&_cond, &_mutex); // 阻塞
+                
+                if (!self.stopRequired)
+                {
+                    [self.audioQueue resume];
+                    
+                    self.pauseRequired = NO;
+                    
+                    self.status = SJAudioPlayerStatusPlaying;
+                    
+                    NSLog(@"play audio: play");
+                }
+            }
+            pthread_mutex_unlock(&_mutex);
         }
     }
     
