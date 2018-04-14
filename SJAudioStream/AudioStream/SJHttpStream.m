@@ -14,8 +14,6 @@
 
 @interface SJHttpStream ()
 {
-    CFReadStreamRef _readStream;
-    
     pthread_mutex_t _mutex;
     pthread_cond_t  _cond;
 }
@@ -27,6 +25,8 @@
 @property (nonatomic, strong) NSDictionary *httpHeaders;
 
 @property (nonatomic, assign) BOOL closed;
+
+@property (nonatomic, assign) CFReadStreamRef readStream;
 
 @end
 
@@ -68,11 +68,11 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
         }
         
         // create the read stream that will receive data from the HTTP request.
-        _readStream = CFReadStreamCreateForHTTPRequest(NULL, message);
+        self.readStream = CFReadStreamCreateForHTTPRequest(NULL, message);
         
         CFRelease(message);
         
-        Boolean status = CFReadStreamSetProperty(_readStream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue);
+        Boolean status = CFReadStreamSetProperty(self.readStream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue);
         
         if (!status)
         {
@@ -82,7 +82,7 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
         
         // Handle proxies
         CFDictionaryRef proxySettings = CFNetworkCopySystemProxySettings();
-        CFReadStreamSetProperty(_readStream, kCFStreamPropertyHTTPProxy, proxySettings);
+        CFReadStreamSetProperty(self.readStream, kCFStreamPropertyHTTPProxy, proxySettings);
         CFRelease(proxySettings);
         
         // Handle SSL connections
@@ -90,16 +90,16 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
         {
             NSDictionary *sslSettings = [NSDictionary dictionaryWithObjectsAndKeys:@(YES),kCFStreamSSLValidatesCertificateChain,[NSNull null],kCFStreamSSLPeerName, nil];
             
-            CFReadStreamSetProperty(_readStream, kCFStreamPropertySSLSettings, (__bridge CFTypeRef)(sslSettings));
+            CFReadStreamSetProperty(self.readStream, kCFStreamPropertySSLSettings, (__bridge CFTypeRef)(sslSettings));
         }
         
         // open the readStream
         
-        status = CFReadStreamOpen(_readStream);
+        status = CFReadStreamOpen(self.readStream);
         
         if (!status)
         {
-            CFRelease(_readStream);
+            CFRelease(self.readStream);
             
             // 错误处理
             NSLog(@"CFReadStreamOpen error.");
@@ -131,7 +131,7 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
     
     UInt8 *bytes = (UInt8 *)malloc(maxLength);
     
-    CFIndex length = CFReadStreamRead(_readStream, bytes, maxLength);
+    CFIndex length = CFReadStreamRead(self.readStream, bytes, maxLength);
     
     if (length == -1)
     {
@@ -151,7 +151,7 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
     
     if (!self.httpHeaders)
     {
-        CFTypeRef message = CFReadStreamCopyProperty(_readStream, kCFStreamPropertyHTTPResponseHeader);
+        CFTypeRef message = CFReadStreamCopyProperty(self.readStream, kCFStreamPropertyHTTPResponseHeader);
         
         self.httpHeaders = (__bridge NSDictionary *)(CFHTTPMessageCopyAllHeaderFields((CFHTTPMessageRef)message));
         
