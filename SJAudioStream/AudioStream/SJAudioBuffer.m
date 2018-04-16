@@ -11,11 +11,10 @@
 
 
 @interface SJAudioBuffer ()
-{
-    UInt32 _bufferedSize;
-}
 
 @property (nonatomic, strong) NSMutableArray *bufferBlockArray;
+
+@property (nonatomic, assign) UInt32 bufferedSize;
 
 @end
 
@@ -65,7 +64,7 @@
     {
         [self.bufferBlockArray addObject:data];
         
-        _bufferedSize += (UInt32)data.data.length;
+        self.bufferedSize += (UInt32)data.data.length;
     }
 }
 
@@ -142,7 +141,7 @@
     
     [self.bufferBlockArray removeObjectsInRange:removeRange];
     
-    _bufferedSize -= (UInt32)retData.length;
+    self.bufferedSize -= (UInt32)retData.length;
     
     return retData;
 }
@@ -150,7 +149,8 @@
 
 - (void)clean
 {
-    _bufferedSize = 0;
+    self.bufferedSize = 0;
+    
     [self.bufferBlockArray removeAllObjects];
 }
 

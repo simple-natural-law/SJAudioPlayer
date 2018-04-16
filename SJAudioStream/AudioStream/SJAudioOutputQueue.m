@@ -10,7 +10,6 @@
 
 #pragma -mark 
 /*
- 
    在使用AudioQueue之前首先必须理解其工作模式，它之所以这么命名是因为在其内部有一套缓冲队列（Buffer Queue）的机制。在AudioQueue
  启动之后需要通过AudioQueueAllocateBuffer生成若干个AudioQueueBufferRef结构，这些Buffer将用来存储即将要播放的音频数据，并且这
  些Buffer是受生成他们的AudioQueue实例管理的，内存空间也已经被分配（按照Allocate方法的参数），当AudioQueue被Dispose时这些
@@ -49,46 +48,46 @@
 #define SJAudioQueueBufferCount 16
 
 
-
-#pragma -mark
 @interface SJAudioOutputQueue ()
 {
-@private
-    AudioQueueRef _audioQueue;
-    
-    BOOL _isRunning;
-    BOOL _started;
-    NSTimeInterval _playedTime;
-    
     pthread_mutex_t _mutex;
     pthread_cond_t _cond;
     
     AudioQueueBufferRef audioQueueBuffer[SJAudioQueueBufferCount];
     
-    NSUInteger fillBufferIndex;
-    
-    NSUInteger bufferUsed;
-    
     bool inuse[SJAudioQueueBufferCount];
 }
+
+@property (nonatomic, assign) AudioQueueRef audioQueue;
+
+@property (nonatomic, assign) BOOL started;
+
+@property (nonatomic, assign) NSUInteger fillBufferIndex;;
+
+@property (nonatomic, assign) NSUInteger bufferUsed;
+
+@property (nonatomic, assign, readwrite) BOOL available;
+
+@property (nonatomic, assign, readwrite) BOOL isRunning;
+
+@property (nonatomic, assign, readwrite) AudioStreamBasicDescription format;
+
+@property (nonatomic, assign, readwrite) NSTimeInterval playedTime;
 
 @end
 
 @implementation SJAudioOutputQueue
 
-@synthesize format = _format;
-@dynamic available;
-@synthesize volume = _volume;
-@synthesize bufferSize = _bufferSize;
-@synthesize isRuning = _isRunning;
 
 - (instancetype)initWithFormat:(AudioStreamBasicDescription)format bufferSize:(UInt32)bufferSize macgicCookie:(NSData *)macgicCookie
 {
     self = [super init];
-    if (self) {
-        _format = format;
-        _volume = 0.0f;
-        _bufferSize = bufferSize;
+    
+    if (self)
+    {
+        self.format = format;
+        self.volume = 0.0f;
+        self.bufferSize = bufferSize;
 
         [self createAudioOutputQueue:macgicCookie];
         [self mutexInit];
@@ -105,7 +104,8 @@
 
 - (void)errorForOSStatus:(OSStatus)status error:(NSError *__autoreleasing *)outError
 {
-    if (status != noErr && outError != NULL) {
+    if (status != noErr && outError != NULL)
+    {
         *outError = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
     }
 }
@@ -170,16 +170,19 @@
 - (void)createAudioOutputQueue:(NSData *)magicCookie
 {
     OSStatus status = AudioQueueNewOutput(&_format, SJAudioQueueOutputCallback, (__bridge void * _Nullable)(self), NULL, NULL, 0, &_audioQueue);
-    if (status != noErr) {
-        _audioQueue = NULL;
+    
+    if (status != noErr)
+    {
+        self.audioQueue = NULL;
         return;
     }
     
-    status = AudioQueueAddPropertyListener(_audioQueue, kAudioQueueProperty_IsRunning, SJAudioQueuePropertyCallback, (__bridge void * _Nullable)(self));
+    status = AudioQueueAddPropertyListener(self.audioQueue, kAudioQueueProperty_IsRunning, SJAudioQueuePropertyCallback, (__bridge void * _Nullable)(self));
     
-    if (status != noErr) {
-        AudioQueueDispose(_audioQueue, true);
-        _audioQueue = NULL;
+    if (status != noErr)
+    {
+        AudioQueueDispose(self.audioQueue, true);
+        self.audioQueue = NULL;
         return;
     }
     
@@ -208,10 +211,12 @@
   注意这个方法一般只在需要销毁特定某个buffer时才会被用到（因为dispose方法会自动销毁所有buffer），并且这个方法只能在AudioQueue不在处理数据时才能使用。所以这个方法一般不太能用到。
  */
             // 创建 buffer
-            status = AudioQueueAllocateBuffer(_audioQueue, _bufferSize, &audioQueueBuffer[i]);
-            if (status != noErr) {
-                AudioQueueDispose(_audioQueue, true);
-                _audioQueue = NULL;
+            status = AudioQueueAllocateBuffer(self.audioQueue, self.bufferSize, &audioQueueBuffer[i]);
+        
+            if (status != noErr)
+            {
+                AudioQueueDispose(self.audioQueue, true);
+                self.audioQueue = NULL;
                 break;
             }
         
@@ -223,10 +228,10 @@
     [self setProperty:kAudioQueueProperty_HardwareCodecPolicy dataSize:sizeof(property) data:&property error:NULL];
 #endif
     if (magicCookie) {
-        AudioQueueSetProperty(_audioQueue, kAudioQueueProperty_MagicCookie, [magicCookie bytes], (UInt32)[magicCookie length]);
+        AudioQueueSetProperty(self.audioQueue, kAudioQueueProperty_MagicCookie, [magicCookie bytes], (UInt32)[magicCookie length]);
     }
     
-    [self setParameter:kAudioQueueParam_Volume value:_volume error:NULL];
+    [self setParameter:kAudioQueueParam_Volume value:self.volume error:NULL];
 }
 
 
@@ -242,9 +247,11 @@
  */
 - (void)disposeAudioOutputQueue
 {
-    if (_audioQueue != NULL) {
-        AudioQueueDispose(_audioQueue, true);
-        _audioQueue = NULL;
+    if (self.audioQueue != NULL)
+    {
+        AudioQueueDispose(self.audioQueue, true);
+        
+        self.audioQueue = NULL;
     }
 }
 
@@ -261,7 +268,7 @@
  */
 - (BOOL)start
 {
-    OSStatus status = AudioQueueStart(_audioQueue, NULL);
+    OSStatus status = AudioQueueStart(self.audioQueue, NULL);
     
     [self setVolume:1.0];
     
@@ -296,9 +303,9 @@
 {
     [self setVolume:0];
     
-    OSStatus status = AudioQueuePause(self->_audioQueue);
+    OSStatus status = AudioQueuePause(self.audioQueue);
     
-    self->_started = status == noErr;
+    self.started = status == noErr;
 }
 
 
@@ -313,15 +320,18 @@
 - (BOOL)stop:(BOOL)immediately
 {    
     OSStatus status = noErr;
-    if (immediately) {
-        status = AudioQueueStop(_audioQueue, true);
+    
+    if (immediately)
+    {
+        status = AudioQueueStop(self.audioQueue, true);
     }else
     {
-        status = AudioQueueStop(_audioQueue, false);
+        status = AudioQueueStop(self.audioQueue, false);
     }
     
-    _started    = NO;
-    _playedTime = 0;
+    self.started    = NO;
+    self.playedTime = 0;
+    
     return status == noErr;
 }
 
@@ -338,7 +348,7 @@
  */
 - (BOOL)flush
 {
-    OSStatus status = AudioQueueFlush(_audioQueue);
+    OSStatus status = AudioQueueFlush(self.audioQueue);
     return status == noErr;
 }
 
@@ -355,7 +365,7 @@
  */
 - (BOOL)reset
 {
-    OSStatus status = AudioQueueReset(_audioQueue);
+    OSStatus status = AudioQueueReset(self.audioQueue);
     return status == noErr;
 }
 
@@ -365,7 +375,8 @@
 
 - (BOOL)playData:(NSData *)data packetCount:(UInt32)packetCount packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions completed:(BOOL)completed
 {
-    if ([data length] > _bufferSize) {
+    if ([data length] > self.bufferSize)
+    {
         return NO;
     }
 
@@ -378,19 +389,18 @@
     
     @synchronized(self) {
         
-        inuse[fillBufferIndex] = true;     // set in use flag
+        inuse[self.fillBufferIndex] = true;     // set in use flag
         
-        bufferUsed++;
+        self.bufferUsed++;
         
-        AudioQueueBufferRef buffer = audioQueueBuffer[fillBufferIndex];
+        AudioQueueBufferRef buffer = audioQueueBuffer[self.fillBufferIndex];
         
-        
-        if (!buffer) {
+        if (!buffer)
+        {
+            OSStatus status = AudioQueueAllocateBuffer(self.audioQueue, self.bufferSize, &buffer);
             
-            OSStatus status = AudioQueueAllocateBuffer(_audioQueue, _bufferSize, &buffer);
-            
-            if (status != noErr) {
-                
+            if (status != noErr)
+            {
                 return NO;
             }
         }
@@ -460,16 +470,16 @@
      
      */
     
-        status = AudioQueueEnqueueBuffer(_audioQueue, buffer, packetCount, packetDescriptions);
+        status = AudioQueueEnqueueBuffer(self.audioQueue, buffer, packetCount, packetDescriptions);
         
         
-        if (status == noErr) {
-            
-//            NSLog(@"----- %lu",(unsigned long)bufferUsed);
-            
+        if (status == noErr)
+        {
             // 等到插满 16个buffer后才开始播放
-            if (bufferUsed == SJAudioQueueBufferCount - 1 || completed) {
-                if (!_started && ![self start]) {
+            if (self.bufferUsed == SJAudioQueueBufferCount - 1 || completed)
+            {
+                if (!self.started && ![self start])
+                {
                     return NO;
                 }
             }
@@ -477,17 +487,17 @@
         
         
         // go to next buffer
-        if (++fillBufferIndex >= SJAudioQueueBufferCount) {
-            
-            fillBufferIndex = 0;
+        if (++self.fillBufferIndex >= SJAudioQueueBufferCount)
+        {
+            self.fillBufferIndex = 0;
         }
         
     }
     
     pthread_mutex_lock(&_mutex);
     
-    if (inuse[fillBufferIndex]) {
-        
+    if (inuse[self.fillBufferIndex])
+    {
         pthread_cond_wait(&_cond, &_mutex);
     }
     
@@ -501,7 +511,7 @@
 
 - (BOOL)setProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32)dataSize data:(const void *)data error:(NSError *__autoreleasing *)outError
 {
-    OSStatus status = AudioQueueSetProperty(_audioQueue, propertyID, data, dataSize);
+    OSStatus status = AudioQueueSetProperty(self.audioQueue, propertyID, data, dataSize);
     [self errorForOSStatus:status error:outError];
     return status == noErr;
 }
@@ -509,7 +519,7 @@
 
 - (BOOL)getProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32 *)dataSize data:(void *)data error:(NSError *__autoreleasing *)outError
 {
-    OSStatus status = AudioQueueGetProperty(_audioQueue, propertyID, data, dataSize);
+    OSStatus status = AudioQueueGetProperty(self.audioQueue, propertyID, data, dataSize);
     [self errorForOSStatus:status error:outError];
     return status == noErr;
 }
@@ -518,7 +528,7 @@
 
 - (BOOL)setParameter:(AudioQueueParameterID)parameterID value:(AudioQueueParameterValue)value error:(NSError *__autoreleasing *)outError
 {
-    OSStatus status = AudioQueueSetParameter(_audioQueue, parameterID, value);
+    OSStatus status = AudioQueueSetParameter(self.audioQueue, parameterID, value);
     
     [self errorForOSStatus:status error:outError];
     return status == noErr;
@@ -528,7 +538,7 @@
 
 - (BOOL)getParameter:(AudioQueueParameterID)parameterID value:(AudioQueueParameterValue *)value error:(NSError *__autoreleasing *)outError
 {
-    OSStatus status = AudioQueueGetParameter(_audioQueue, parameterID, value);
+    OSStatus status = AudioQueueGetParameter(self.audioQueue, parameterID, value);
     [self errorForOSStatus:status error:outError];
     return status == noErr;
 }
@@ -580,7 +590,7 @@
 
 - (BOOL)available
 {
-    return _audioQueue != NULL;
+    return self.audioQueue != NULL;
 }
 
 - (void)setVolume:(float)volume
@@ -593,7 +603,7 @@
 {
     // 音频淡入淡出， 首先设置音量渐变过程使用的时间。
     [self setParameter:kAudioQueueParam_VolumeRampTime value:1.0 error:NULL];
-    [self setParameter:kAudioQueueParam_Volume value:_volume error:NULL];
+    [self setParameter:kAudioQueueParam_Volume value:self.volume error:NULL];
 }
 
 #pragma -mark call back
@@ -623,9 +633,7 @@ static void SJAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ,Au
     
     inuse[bufferIndex] = false;
     
-    bufferUsed--;
-    
-//    NSLog(@"buffer --        %lu",(unsigned long)bufferUsed);
+    self.bufferUsed--;
     
     pthread_cond_signal(&_cond);
     
@@ -644,7 +652,7 @@ static void SJAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, A
         UInt32 isRuning = 0;
         UInt32 size = sizeof(isRuning);
         AudioQueueGetProperty(audioQueue, property, &isRuning, &size);
-        _isRunning = isRuning;
+        self.isRunning = isRuning;
     }
 }
 
