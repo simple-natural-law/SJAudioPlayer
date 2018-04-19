@@ -34,8 +34,6 @@
 
 @property (nonatomic, assign) SInt64 byteOffset;
 
-@property (nonatomic, assign) NSUInteger bufferSize;
-
 @property (nonatomic, assign) BOOL started;
 
 @property (nonatomic, assign) BOOL pausedByInterrupt;
@@ -57,6 +55,8 @@
 @property (nonatomic, readwrite, assign) NSUInteger contentLength;
 
 @property (nonatomic, readwrite, assign) SJAudioPlayerStatus status;
+
+@property (nonatomic, strong) NSMutableData *audioData;
 
 @end
 
@@ -82,7 +82,6 @@
     {
         self.urlString  = url;
         self.cachePath  = cachePath;
-        self.bufferSize = kDefaultBufferSize;
         self.started    = NO;
         
         pthread_mutex_init(&_mutex, NULL);
@@ -92,7 +91,7 @@
 }
 
 
-#pragma mark - methods
+#pragma mark- methods
 - (void)play
 {
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
@@ -216,9 +215,7 @@
     self.readDataCompleted    = NO;
     self.stopReadDataRequired = NO;
     
-    NSError *error = nil;
     NSError *readDataError = nil;
-    NSError *parseDataError = nil;
     
     while (!self.readDataCompleted && !self.stopReadDataRequired)
     {
@@ -229,7 +226,7 @@
                 self.dataProvider = [[SJAudioDataProvider alloc] initWithURL:[NSURL URLWithString:self.urlString] cacheFilePath:self.cachePath byteOffset:self.byteOffset];
             }
             
-            NSData *data = [self.dataProvider readDataWithMaxLength:self.bufferSize error:&readDataError completed:&_readDataCompleted];
+            NSData *data = [self.dataProvider readDataWithMaxLength:kDefaultBufferSize error:&readDataError completed:&_readDataCompleted];
             
             if (readDataError)
             {
@@ -238,21 +235,14 @@
                 break;
             }
             
-            if (self.dataProvider.contentLength && !self.audioFileStream)
+            if (self.dataProvider.contentLength)
             {
-                self.contentLength   = self.dataProvider.contentLength;
-                
-                self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:hintForFileExtension([NSURL URLWithString:self.urlString].pathExtension) fileSize:self.contentLength error:&error];
-                
-                self.audioFileStream.delegate = self;
-                
-                self.buffer = [SJAudioBuffer buffer];
+                self.contentLength = self.dataProvider.contentLength;
             }
             
-            if (self.audioFileStream)
-            {
-                [self.audioFileStream parseData:data error:&parseDataError];
-            }
+            pthread_mutex_lock(&_mutex);
+            [self.audioData appendData:data];
+            pthread_mutex_unlock(&_mutex);
         }
     }
 
@@ -275,10 +265,27 @@
     self.stopRequired  = NO;
     self.pauseRequired = NO;
     
+    NSError *error = nil;
+    NSError *parseDataError = nil;
+    
     while (!self.stopRequired && self.status != SJAudioPlayerStatusFinished) {
         
         @autoreleasepool
         {
+            if (self.audioFileStream)
+            {
+                NSData *data = nil;
+                
+                [self.audioFileStream parseData:data error:&parseDataError];
+            }else
+            {
+                self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:hintForFileExtension([NSURL URLWithString:self.urlString].pathExtension) fileSize:self.contentLength error:&error];
+                
+                self.audioFileStream.delegate = self;
+                
+                self.buffer = [SJAudioBuffer buffer];
+            }
+            
             if (self.audioQueue)
             {
                 if ([self.buffer hasData])
@@ -287,9 +294,9 @@
                     
                     AudioStreamPacketDescription *desces = NULL;
                     
-                    if ([self.buffer bufferedSize] >= self.bufferSize)
+                    if ([self.buffer bufferedSize] >= kDefaultBufferSize)
                     {
-                        NSData *data = [self.buffer dequeueDataWithSize:(UInt32)self.bufferSize packetCount:&packetCount descriptions:&desces];
+                        NSData *data = [self.buffer dequeueDataWithSize:kDefaultBufferSize packetCount:&packetCount descriptions:&desces];
                         
                         [self.audioQueue playData:data packetCount:packetCount packetDescriptions:desces completed:self.readDataCompleted];
                         
@@ -365,7 +372,7 @@
     
     AudioStreamBasicDescription format = self.audioFileStream.format;
     
-    self.audioQueue = [[SJAudioOutputQueue alloc] initWithFormat:format bufferSize:(UInt32)self.bufferSize macgicCookie:magicCookie];
+    self.audioQueue = [[SJAudioOutputQueue alloc] initWithFormat:format bufferSize:kDefaultBufferSize macgicCookie:magicCookie];
     
     if (!self.audioQueue.available)
     {
