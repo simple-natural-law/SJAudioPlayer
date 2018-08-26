@@ -434,7 +434,7 @@
         
         if (status == noErr)
         {
-            // 等到插满 16个buffer后才开始播放
+            // 等到插满8个buffer后才开始播放
             if (self.bufferUsed == SJAudioQueueBufferCount - 1 || completed)
             {
                 if (!self.started && ![self start])
@@ -575,7 +575,6 @@ static void SJAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ,Au
 
 - (void)handleAudioQueueOutputCallBack:(AudioQueueRef)audioQueue buffer:(AudioQueueBufferRef)buffer
 {
-    
     unsigned int bufferIndex = -1;
     
     for (unsigned int i = 0; i < SJAudioQueueBufferCount; ++i) {
