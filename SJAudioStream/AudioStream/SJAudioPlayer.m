@@ -16,6 +16,9 @@
 #import "SJAudioBuffer.h"
 
 
+#define kDefaultBufferSize 2048
+
+
 @interface SJAudioPlayer ()<SJAudioFileStreamDelegate>
 {
     pthread_mutex_t _mutex;
