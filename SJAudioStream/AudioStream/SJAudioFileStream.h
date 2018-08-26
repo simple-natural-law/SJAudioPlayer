@@ -22,7 +22,7 @@
 @end
 
 
-#define kDefaultBufferSize 2048
+#define kDefaultBufferSize 1024
 
 @interface SJAudioFileStream : NSObject
 

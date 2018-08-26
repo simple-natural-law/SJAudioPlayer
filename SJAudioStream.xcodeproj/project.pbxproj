@@ -20,7 +20,6 @@
 		1AB0EA2C20736C29002070E3 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2A20736C29002070E3 /* LaunchScreen.storyboard */; };
 		1AB0EA2F20736C29002070E3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2E20736C29002070E3 /* main.m */; };
 		1AB0EA3A20736D76002070E3 /* CAFSample.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1AB0EA3620736D76002070E3 /* CAFSample.caf */; };
-		1AB0EA3B20736D76002070E3 /* dj.m4p in Resources */ = {isa = PBXBuildFile; fileRef = 1AB0EA3720736D76002070E3 /* dj.m4p */; };
 		1AB0EA3C20736D76002070E3 /* M4ASample.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 1AB0EA3820736D76002070E3 /* M4ASample.m4a */; };
 		1AB0EA3D20736D76002070E3 /* MP3Sample.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 1AB0EA3920736D76002070E3 /* MP3Sample.mp3 */; };
 /* End PBXBuildFile section */
@@ -49,7 +48,6 @@
 		1AB0EA2D20736C29002070E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1AB0EA2E20736C29002070E3 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		1AB0EA3620736D76002070E3 /* CAFSample.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = CAFSample.caf; sourceTree = "<group>"; };
-		1AB0EA3720736D76002070E3 /* dj.m4p */ = {isa = PBXFileReference; lastKnownFileType = file; path = dj.m4p; sourceTree = "<group>"; };
 		1AB0EA3820736D76002070E3 /* M4ASample.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = M4ASample.m4a; sourceTree = "<group>"; };
 		1AB0EA3920736D76002070E3 /* MP3Sample.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = MP3Sample.mp3; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -122,7 +120,6 @@
 				1AB0EA2820736C29002070E3 /* Assets.xcassets */,
 				1AB0EA2A20736C29002070E3 /* LaunchScreen.storyboard */,
 				1AB0EA3620736D76002070E3 /* CAFSample.caf */,
-				1AB0EA3720736D76002070E3 /* dj.m4p */,
 				1AB0EA3820736D76002070E3 /* M4ASample.m4a */,
 				1AB0EA3920736D76002070E3 /* MP3Sample.mp3 */,
 			);
@@ -191,7 +188,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1AB0EA3B20736D76002070E3 /* dj.m4p in Resources */,
 				1AB0EA2C20736C29002070E3 /* LaunchScreen.storyboard in Resources */,
 				1AB0EA3A20736D76002070E3 /* CAFSample.caf in Resources */,
 				1AB0EA3C20736D76002070E3 /* M4ASample.m4a in Resources */,

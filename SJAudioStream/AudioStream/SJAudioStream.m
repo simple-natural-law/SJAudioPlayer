@@ -123,8 +123,6 @@
     {
         *isEof = YES;
         
-        NSLog(@"isEof");
-        
         return nil;
     }
     
