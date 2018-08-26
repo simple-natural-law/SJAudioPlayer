@@ -65,7 +65,7 @@
 
 - (void)dealloc
 {
-    [self disposeAudioOutputQueue];
+    [self disposeAudioQueue];
     
     pthread_mutex_destroy(&_mutex);
     pthread_cond_destroy(&_cond);
@@ -176,13 +176,13 @@
                                             UInt32 inBufferByteSize,
                                             AudioQueueBufferRef *outBuffer);
          
-         传入 Audio Queue 和 Buffer 的大小， 传出 AudioQueueBufferRef 实例。
+         传入 AudioQueue 实例和 Buffer 的大小， 传出 AudioQueueBufferRef 实例。
         */
         status = AudioQueueAllocateBuffer(self.audioQueue, self.bufferSize, &audioQueueBuffer[i]);
         
         if (status != noErr)
         {
-            // 调用`AudioQueueDispose`函数时，会自动销毁所有buffer。
+            // 调用`AudioQueueDispose`函数时，会自动清除所有buffer。
             AudioQueueDispose(self.audioQueue, true);
             self.audioQueue = NULL;
             break;
@@ -204,16 +204,14 @@
 
 
 
-// 销毁 audioqueue
 /*
+ 销毁 AudioQueue，同时自动清除所有的 buffer
  
-  AudioQueueDispose(AudioQueueRef inAQ,  Boolean inImmediate);
- 
-  销毁的同时会清除其中所有的 buffer ，第二个参数的意义和用法与audioqueue方法相同.
- 
- 这个方法使用时需要注意当AudioQueueStart调用之后AudioQueue其实还没有真正开始，期间会有一个短暂的间隙。如果在AudioQueueStart调用后到AudioQueue真正开始运作前的这段时间内调用AudioQueueDispose方法的话会导致程序卡死。
- */
-- (void)disposeAudioOutputQueue
+ 这个方法使用时需要注意当`AudioQueueStart`调用之后AudioQueue其实还没有真正开始，期间会有一个短暂的间隙。
+ 如果在`AudioQueueStart`调用后到AudioQueue真正开始运作前的这段时间内调用`AudioQueueDispose`方法的话会导
+ 致程序卡死。
+*/
+- (void)disposeAudioQueue
 {
     if (self.audioQueue != NULL)
     {
@@ -226,14 +224,13 @@
 
 
 
-// 开始播放
 /*
+ 开始播放
  
-  OSStatus AudioQueueStart(AudioQueueRef inAQ,const AudioTimeStamp * inStartTime);
+ OSStatus AudioQueueStart(AudioQueueRef inAQ,const AudioTimeStamp * inStartTime);
   
-  第二个参数可以用来控制播放开始的时间，一般情况下直接开始播放传入 NULL 即可。
- 
- */
+ 第二个参数可以用来控制播放开始的时间，一般情况下直接开始播放传入 NULL 即可。
+*/
 - (BOOL)start
 {
     OSStatus status = AudioQueueStart(self.audioQueue, NULL);
@@ -247,9 +244,6 @@
 
 
 
-
-
-
 // 恢复播放
 - (BOOL)resume
 {
@@ -259,14 +253,14 @@
 
 
 
-// 暂停播放
 /*
+ 暂停播放
  
-  OSStatus AudioQueuePause(AudioQueueRef inAQ);
+ OSStatus AudioQueuePause(AudioQueueRef inAQ);
   
-  这个方法一旦调用后播放就会立即暂停，这就意味着 AudioQueueOutputCallback 回调也会暂停，这时需要特别关注线程的调度以防止线程陷入无限等待。
- 
- */
+ 这个方法一旦调用后播放就会立即暂停，这就意味着`AudioQueueOutputCallback`回调也会暂停，这时需要特别关注线
+ 程的调度以防止线程陷入无限等待。
+*/
 - (void)pause
 {
     [self setVolume:0];
@@ -278,14 +272,14 @@
 
 
 
-// 停止播放
 /*
+ 停止播放
  
-  OSStatus AudioQueueStop(AudioQueueRef inAQ, Boolean inImmediate);
+ OSStatus AudioQueueStop(AudioQueueRef inAQ, Boolean inImmediate);
  
-  第二个参数如果传入true的话会立即停止播放（同步），如果传入false的话AudioQueue会播放完已经 Enqueue 的所有 buffer 后再停止播放（异步）。使用时注意根据需要传入适合的参数。
- 
- */
+ 第二个参数如果传入true的话会立即停止播放（同步），如果传入`false`的话，AudioQueue会播放完已经 Enqueue
+ 的所有 buffer 后再停止播放（异步）。使用时注意根据需要传入适合的参数。
+*/
 - (BOOL)stop:(BOOL)immediately
 {    
     OSStatus status = noErr;
@@ -305,16 +299,15 @@
 }
 
 
-
-
-
-// Flush
 /*
+ 重置 AudioQueue 的解码器状态信息
  
-  OSStatus  AudioQueueFlush(AudioQueueRef inAQ);
+ OSStatus  AudioQueueFlush(AudioQueueRef inAQ);
  
-  调用后会播放完Enqueue的所有 buffer 后重置解码器状态，以防止当前的解码器状态影响到下一段音频的解码(比如切换播放的歌曲时)。 如果和AudioQueueStop（AQ，false）一起使用并不会起效，因为 stop 方法的false参数也会做同样的事情。
- */
+ 调用此函数后，会播放完Enqueue的所有 buffer, 然后后重置解码器状态信息，以防止当前的解码器状态影响到下一段音
+ 频的解码(比如切换播放的歌曲时)。 如果和AudioQueueStop（AQ，false）一起使用并不会起效，因为 stop 方法的
+ false参数也会做同样的事情。
+*/
 - (BOOL)flush
 {
     OSStatus status = AudioQueueFlush(self.audioQueue);
@@ -322,23 +315,20 @@
 }
 
 
-
-
-// 重置
 /*
-  
-  OSStatus AudioQueueReset(AudioQueueRef inAQ);
+ 重置 AudioQueue
  
-  重置 AudioQueue 会清除所有已经 Enqueue 的buffer， 并触发 AudioQueueOutputCallback ， 调用 AudioQueueStop 方法时同样会触发该方法。这个方法的直接调用一般在seek时使用，用来清除残留的buffer（seek时还有一种做法是先 AudioQueueStop ，等seek完成后重新start）。
+ OSStatus AudioQueueReset(AudioQueueRef inAQ);
  
- */
+ 重置 AudioQueue 会清除所有已经 Enqueue 的buffer， 并触发 AudioQueueOutputCallback ，调用
+ AudioQueueStop 方法时同样会触发该方法。这个方法的直接调用一般在seek时使用，用来清除残留的buffer（seek时
+ 还有一种做法是先 AudioQueueStop ，等seek完成后重新start）。
+*/
 - (BOOL)reset
 {
     OSStatus status = AudioQueueReset(self.audioQueue);
     return status == noErr;
 }
-
-
 
 
 
