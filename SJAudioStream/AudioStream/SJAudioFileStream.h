@@ -62,11 +62,12 @@
 
 - (instancetype)initWithFileType:(AudioFileTypeID)fileType fileSize:(NSUInteger)fileSize error:(NSError **)error;
 
+/// 解析音频数据
 - (BOOL)parseData:(NSData *)data error:(NSError **)error;
 
 - (SInt64)seekToTime:(NSTimeInterval *)time;
 
-- (NSData *)fetchMagicCookie;
+- (NSData *)getMagicCookieData;
 
 /// 关闭AudioFileStream
 - (void)close;

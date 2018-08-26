@@ -393,7 +393,7 @@
 
 - (void)createAudioQueue
 {
-    NSData *magicCookie = [self.audioFileStream fetchMagicCookie];
+    NSData *magicCookie = [self.audioFileStream getMagicCookieData];
     
     AudioStreamBasicDescription format = self.audioFileStream.format;
     
