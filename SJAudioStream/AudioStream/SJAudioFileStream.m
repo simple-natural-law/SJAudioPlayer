@@ -99,10 +99,142 @@
 }
 
 
-
 - (BOOL)available
 {
     return self.audioFileStreamID != NULL;
+}
+
+
+- (NSData *)getMagicCookieData
+{
+    UInt32 cookieSize;
+    Boolean writable;
+    
+    OSStatus status = AudioFileStreamGetPropertyInfo(self.audioFileStreamID, kAudioFileStreamProperty_MagicCookieData, &cookieSize, &writable);
+    
+    if (status != noErr)
+    {
+        return nil;
+    }
+    
+    void *cookieData = malloc(cookieSize);
+    
+    status = AudioFileStreamGetProperty(self.audioFileStreamID, kAudioFileStreamProperty_MagicCookieData, &cookieSize, cookieData);
+    
+    if (status != noErr)
+    {
+        return nil;
+    }
+    
+    NSData *cookie = [NSData dataWithBytes:cookieData length:cookieSize];
+    
+    free(cookieData);
+    
+    return cookie;
+}
+
+
+- (BOOL)parseData:(NSData *)data error:(NSError **)error
+{
+    if (self.readyToProducePackets && self.packetDuration == 0)
+    {
+        [self errorForOSStatus:-1 error:error];
+        
+        return NO;
+    }
+    
+    /*
+     AudioFileStreamID: 初始化时返回的id
+     inDataByteSize   : 本次解析的数据长度
+     inData : 本次要解析的数据
+     inFlags: 本次解析和上一次解析是否是连续的关系，如果是连续的传入0，否则传入kAudioFileStreamParseFlag_Discontinuity。
+     
+     MP3的数据都以帧的形式存在的，解析时也需要以帧为单位解析。但在解码之前我们不可能知道每个帧的边界在第几个
+     字节，所以就会出现这样的情况：我们传给`AudioFileStreamParseBytes`的数据在解析完成之后会有一部分数据
+     余下来，这部分数据是接下去那一帧的前半部分，如果再次有数据输入需要继续解析时就必须要用到前一次解析余下来
+     的数据才能保证帧数据完整，所以在正常播放的情况下传入0即可。
+     
+     在seek完毕之后，seek后的数据和之前的数据完全无关，需要传入
+     kAudioFileStreamParseFlag_Discontinuity。
+     */
+    OSStatus status = AudioFileStreamParseBytes(self.audioFileStreamID, (UInt32)[data length], [data bytes], self.discontinuous ? kAudioFileStreamParseFlag_Discontinuity : 0);
+    
+    [self errorForOSStatus:status error:error];
+    
+    return status == noErr;
+}
+
+/*
+ seek : 拖动到xx分xx秒，而实际操作时我们需要操作的是文件，就是要从第几个字节开始读取音频数据。对于原始的PCM数据来说，每一个PCM帧都是固定长度的，对应的播放时长也是固定的。但一旦转换成压缩后的音频数据就会因为编码形式的不同而不同了，对于CBR（固定码率）而言每个帧中所包含的PCM数据帧是恒定的，所以每一帧对应的播放时长也是恒定的；而VBR（可变码率）则不同，为了保证数据最优并且文件大小最小，VBR的每一帧中所包含的PCM数据帧是不固定的，这就导致在流播放的情况下VBR的数据想要做seek并不容易。
+ 
+ CBR下的seek：
+ 
+ double seekToTime ＝ ...; // 需要seek到哪个时间，秒为单位
+ Uint64 audioDataByteCount = ...; // 通过kAudioFileStreamProperty_AudioDataByteCount获取的值
+ Sint64 dataOffset = ...; // 通过kAudioFileStreamProperty_DataOffset获取的值
+ double duration = ...; // 通过公式(AudioDataByteCount * 8) / BitRate 计算得到时长
+ 
+ 按照`seekByteOffset`读取对应的数据继续使用`AudioFileStreamParseByte`方法来进行解析
+ 如果是网络流可以通过设置range头来获取字节，本地文件的话直接seek就好。
+ 调用`AudioFileStreamParseByte`函数时，注意刚seek完后第一次parse数据时，需要加参数kAudioFileStreamParseFlag_Discontinuity。
+ */
+- (SInt64)seekToTime:(NSTimeInterval *)time
+{
+    // 近似seekOffset = 数据偏移 + seekToTime对应的近似字节数
+    SInt64 approximateSeekoffset = self.dataOffset + (*time / self.duration) * self.audioDataByteCount;
+    
+    // 计算packet位置
+    SInt64 seekToPacket = floor(*time / self.packetDuration);
+    SInt64 seekByteOffset;
+    UInt32 ioFlags = 0;
+    SInt64 outDataByteOffset;
+    
+    
+    // 使用`AudioStreamSeek`计算精确的字节偏移和时间。可以用该函数来寻找某一个帧（packet）对应的字节偏移（byte offset）：如果`ioFlags`里有`kAudioFileStreamFlag_OffsetIsEstimated`，说明给出的`outDataByteOffset`是估算的，并不准确，那么还是应该用第一步计算出来的`approximateSeekOffset`来做seek；如果`ioFlags`里没有 kAudioFileStreamFlag_OffsetIsEstimated 说明给出了准确的outDataByteOffset， 其就是输入的`seekToPacket`对应的字节偏移量，可以根据`outDataByteOffset`来计算出精确的`seekOffset`和`seekToTime`。
+    OSStatus status = AudioFileStreamSeek(self.audioFileStreamID, seekToPacket, &outDataByteOffset, &ioFlags);
+    
+    if (status == noErr && !(ioFlags & kAudioFileStreamSeekFlag_OffsetIsEstimated))
+    {
+        // 如果AudioFileStreamSeek方法找到了准确的帧字节偏移，就需要修正一下时间
+        *time -= ((approximateSeekoffset - self.dataOffset) - outDataByteOffset) * 8.0 / self.bitRate;
+        
+        seekByteOffset = outDataByteOffset + self.dataOffset;
+    }else
+    {
+        self.discontinuous = YES;
+        
+        seekByteOffset = approximateSeekoffset;
+    }
+    
+    return seekByteOffset;
+}
+
+
+/*
+ 获取时长的最佳方法是从ID3信息中去读取，那样是最准确的。如果ID3信息中没有存，那就依赖于文件头中的信息去计算。
+ 
+ 音频数据的字节总量`audioDataByteCount`可以通`kAudioFileStreamProperty_AudioDataByteCount`获取，
+ 码率`bitRate`可以通过`kAudioFileStreamProperty_BitRate`获取，也可以通过解析一部分数据后计算平均码率
+ 来得到。
+ */
+- (void)calculateDuration
+{
+    if (self.fileSize > 0 && self.bitRate > 0)
+    {
+        self.duration = (self.audioDataByteCount * 8.0) / self.bitRate;
+    }
+}
+
+
+/*
+ 利用之前解析得到的音频格式信息来计算PacketDuration（每个帧数据对应的时长）。
+ */
+- (void)calculatePacketDuration
+{
+    if (self.format.mSampleRate > 0)
+    {
+        self.packetDuration = self.format.mFramesPerPacket / self.format.mSampleRate;
+    }
 }
 
 
@@ -299,139 +431,6 @@
     if (deletePackDesc)
     {
         free(packetDescriptions);
-    }
-}
-
-
-- (NSData *)getMagicCookieData
-{
-    UInt32 cookieSize;
-    Boolean writable;
-    
-    OSStatus status = AudioFileStreamGetPropertyInfo(self.audioFileStreamID, kAudioFileStreamProperty_MagicCookieData, &cookieSize, &writable);
-    
-    if (status != noErr)
-    {
-        return nil;
-    }
-    
-    void *cookieData = malloc(cookieSize);
-    
-    status = AudioFileStreamGetProperty(self.audioFileStreamID, kAudioFileStreamProperty_MagicCookieData, &cookieSize, cookieData);
-    
-    if (status != noErr)
-    {
-        return nil;
-    }
-    
-    NSData *cookie = [NSData dataWithBytes:cookieData length:cookieSize];
-    
-    free(cookieData);
-    
-    return cookie;
-}
-
-
-- (BOOL)parseData:(NSData *)data error:(NSError **)error
-{
-    if (self.readyToProducePackets && self.packetDuration == 0)
-    {
-        [self errorForOSStatus:-1 error:error];
-
-        return NO;
-    }
-    
-    /*
-     AudioFileStreamID: 初始化时返回的id
-     inDataByteSize   : 本次解析的数据长度
-     inData : 本次要解析的数据
-     inFlags: 本次解析和上一次解析是否是连续的关系，如果是连续的传入0，否则传入kAudioFileStreamParseFlag_Discontinuity。
-     
-     MP3的数据都以帧的形式存在的，解析时也需要以帧为单位解析。但在解码之前我们不可能知道每个帧的边界在第几个
-     字节，所以就会出现这样的情况：我们传给`AudioFileStreamParseBytes`的数据在解析完成之后会有一部分数据
-     余下来，这部分数据是接下去那一帧的前半部分，如果再次有数据输入需要继续解析时就必须要用到前一次解析余下来
-     的数据才能保证帧数据完整，所以在正常播放的情况下传入0即可。
-     
-     在seek完毕之后，seek后的数据和之前的数据完全无关，需要传入
-     kAudioFileStreamParseFlag_Discontinuity。
-    */
-    OSStatus status = AudioFileStreamParseBytes(self.audioFileStreamID, (UInt32)[data length], [data bytes], self.discontinuous ? kAudioFileStreamParseFlag_Discontinuity : 0);
-    
-    [self errorForOSStatus:status error:error];
-    
-    return status == noErr;
-}
-
-/*
- seek : 拖动到xx分xx秒，而实际操作时我们需要操作的是文件，就是要从第几个字节开始读取音频数据。对于原始的PCM数据来说，每一个PCM帧都是固定长度的，对应的播放时长也是固定的。但一旦转换成压缩后的音频数据就会因为编码形式的不同而不同了，对于CBR（固定码率）而言每个帧中所包含的PCM数据帧是恒定的，所以每一帧对应的播放时长也是恒定的；而VBR（可变码率）则不同，为了保证数据最优并且文件大小最小，VBR的每一帧中所包含的PCM数据帧是不固定的，这就导致在流播放的情况下VBR的数据想要做seek并不容易。
- 
- CBR下的seek：
- 
- double seekToTime ＝ ...; // 需要seek到哪个时间，秒为单位
- Uint64 audioDataByteCount = ...; // 通过kAudioFileStreamProperty_AudioDataByteCount获取的值
- Sint64 dataOffset = ...; // 通过kAudioFileStreamProperty_DataOffset获取的值
- double duration = ...; // 通过公式(AudioDataByteCount * 8) / BitRate 计算得到时长
- 
- 按照`seekByteOffset`读取对应的数据继续使用`AudioFileStreamParseByte`方法来进行解析
- 如果是网络流可以通过设置range头来获取字节，本地文件的话直接seek就好。
- 调用`AudioFileStreamParseByte`函数时，注意刚seek完后第一次parse数据时，需要加参数kAudioFileStreamParseFlag_Discontinuity。
-*/
-- (SInt64)seekToTime:(NSTimeInterval *)time
-{
-    // 近似seekOffset = 数据偏移 + seekToTime对应的近似字节数
-    SInt64 approximateSeekoffset = self.dataOffset + (*time / self.duration) * self.audioDataByteCount;
-    
-    // 计算packet位置
-    SInt64 seekToPacket = floor(*time / self.packetDuration);
-    SInt64 seekByteOffset;
-    UInt32 ioFlags = 0;
-    SInt64 outDataByteOffset;
-    
-    
-    // 使用`AudioStreamSeek`计算精确的字节偏移和时间。可以用该函数来寻找某一个帧（packet）对应的字节偏移（byte offset）：如果`ioFlags`里有`kAudioFileStreamFlag_OffsetIsEstimated`，说明给出的`outDataByteOffset`是估算的，并不准确，那么还是应该用第一步计算出来的`approximateSeekOffset`来做seek；如果`ioFlags`里没有 kAudioFileStreamFlag_OffsetIsEstimated 说明给出了准确的outDataByteOffset， 其就是输入的`seekToPacket`对应的字节偏移量，可以根据`outDataByteOffset`来计算出精确的`seekOffset`和`seekToTime`。
-    OSStatus status = AudioFileStreamSeek(self.audioFileStreamID, seekToPacket, &outDataByteOffset, &ioFlags);
-    
-    if (status == noErr && !(ioFlags & kAudioFileStreamSeekFlag_OffsetIsEstimated))
-    {
-        // 如果AudioFileStreamSeek方法找到了准确的帧字节偏移，就需要修正一下时间
-        *time -= ((approximateSeekoffset - self.dataOffset) - outDataByteOffset) * 8.0 / self.bitRate;
-        
-        seekByteOffset = outDataByteOffset + self.dataOffset;
-    }else
-    {
-        self.discontinuous = YES;
-        
-        seekByteOffset = approximateSeekoffset;
-    }
-    
-    return seekByteOffset;
-}
-
-
-/*
- 获取时长的最佳方法是从ID3信息中去读取，那样是最准确的。如果ID3信息中没有存，那就依赖于文件头中的信息去计算。
- 
- 音频数据的字节总量`audioDataByteCount`可以通`kAudioFileStreamProperty_AudioDataByteCount`获取，
- 码率`bitRate`可以通过`kAudioFileStreamProperty_BitRate`获取，也可以通过解析一部分数据后计算平均码率
- 来得到。
-*/
-- (void)calculateDuration
-{
-    if (self.fileSize > 0 && self.bitRate > 0)
-    {
-        self.duration = (self.audioDataByteCount * 8.0) / self.bitRate;
-    }
-}
-
-
-/*
- 利用之前解析得到的音频格式信息来计算PacketDuration（每个帧数据对应的时长）。
-*/
-- (void)calculatePacketDuration
-{
-    if (self.format.mSampleRate > 0)
-    {
-        self.packetDuration = self.format.mFramesPerPacket / self.format.mSampleRate;
     }
 }
 
