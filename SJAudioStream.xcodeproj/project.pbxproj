@@ -8,12 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		1A0D9A032074671B007B5CCC /* SJAudioBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99F42074671B007B5CCC /* SJAudioBuffer.m */; };
-		1A0D9A042074671B007B5CCC /* SJAudioCacheDataStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99F62074671B007B5CCC /* SJAudioCacheDataStream.m */; };
 		1A0D9A052074671B007B5CCC /* SJAudioDataProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99F82074671B007B5CCC /* SJAudioDataProvider.m */; };
 		1A0D9A062074671B007B5CCC /* SJAudioFileStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99FA2074671B007B5CCC /* SJAudioFileStream.m */; };
 		1A0D9A072074671B007B5CCC /* SJAudioOutputQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99FC2074671B007B5CCC /* SJAudioOutputQueue.m */; };
 		1A0D9A082074671B007B5CCC /* SJAudioPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99FE2074671B007B5CCC /* SJAudioPlayer.m */; };
-		1A0D9A092074671B007B5CCC /* SJHttpStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D9A002074671B007B5CCC /* SJHttpStream.m */; };
+		1A0D9A092074671B007B5CCC /* SJAudioStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D9A002074671B007B5CCC /* SJAudioStream.m */; };
 		1A0D9A0A2074671B007B5CCC /* SJParsedAudioData.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D9A022074671B007B5CCC /* SJParsedAudioData.m */; };
 		1AB0EA2120736C17002070E3 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2020736C17002070E3 /* AppDelegate.m */; };
 		1AB0EA2420736C17002070E3 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2320736C17002070E3 /* ViewController.m */; };
@@ -30,8 +29,6 @@
 /* Begin PBXFileReference section */
 		1A0D99F32074671B007B5CCC /* SJAudioBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioBuffer.h; sourceTree = "<group>"; };
 		1A0D99F42074671B007B5CCC /* SJAudioBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioBuffer.m; sourceTree = "<group>"; };
-		1A0D99F52074671B007B5CCC /* SJAudioCacheDataStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioCacheDataStream.h; sourceTree = "<group>"; };
-		1A0D99F62074671B007B5CCC /* SJAudioCacheDataStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioCacheDataStream.m; sourceTree = "<group>"; };
 		1A0D99F72074671B007B5CCC /* SJAudioDataProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioDataProvider.h; sourceTree = "<group>"; };
 		1A0D99F82074671B007B5CCC /* SJAudioDataProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioDataProvider.m; sourceTree = "<group>"; };
 		1A0D99F92074671B007B5CCC /* SJAudioFileStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioFileStream.h; sourceTree = "<group>"; };
@@ -40,8 +37,8 @@
 		1A0D99FC2074671B007B5CCC /* SJAudioOutputQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioOutputQueue.m; sourceTree = "<group>"; };
 		1A0D99FD2074671B007B5CCC /* SJAudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioPlayer.h; sourceTree = "<group>"; };
 		1A0D99FE2074671B007B5CCC /* SJAudioPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioPlayer.m; sourceTree = "<group>"; };
-		1A0D99FF2074671B007B5CCC /* SJHttpStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJHttpStream.h; sourceTree = "<group>"; };
-		1A0D9A002074671B007B5CCC /* SJHttpStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJHttpStream.m; sourceTree = "<group>"; };
+		1A0D99FF2074671B007B5CCC /* SJAudioStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioStream.h; sourceTree = "<group>"; };
+		1A0D9A002074671B007B5CCC /* SJAudioStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioStream.m; sourceTree = "<group>"; };
 		1A0D9A012074671B007B5CCC /* SJParsedAudioData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJParsedAudioData.h; sourceTree = "<group>"; };
 		1A0D9A022074671B007B5CCC /* SJParsedAudioData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJParsedAudioData.m; sourceTree = "<group>"; };
 		1AB0EA1C20736C16002070E3 /* SJAudioStream.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SJAudioStream.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -76,8 +73,6 @@
 			children = (
 				1A0D99F32074671B007B5CCC /* SJAudioBuffer.h */,
 				1A0D99F42074671B007B5CCC /* SJAudioBuffer.m */,
-				1A0D99F52074671B007B5CCC /* SJAudioCacheDataStream.h */,
-				1A0D99F62074671B007B5CCC /* SJAudioCacheDataStream.m */,
 				1A0D99F72074671B007B5CCC /* SJAudioDataProvider.h */,
 				1A0D99F82074671B007B5CCC /* SJAudioDataProvider.m */,
 				1A0D99F92074671B007B5CCC /* SJAudioFileStream.h */,
@@ -86,8 +81,8 @@
 				1A0D99FC2074671B007B5CCC /* SJAudioOutputQueue.m */,
 				1A0D9A012074671B007B5CCC /* SJParsedAudioData.h */,
 				1A0D9A022074671B007B5CCC /* SJParsedAudioData.m */,
-				1A0D99FF2074671B007B5CCC /* SJHttpStream.h */,
-				1A0D9A002074671B007B5CCC /* SJHttpStream.m */,
+				1A0D99FF2074671B007B5CCC /* SJAudioStream.h */,
+				1A0D9A002074671B007B5CCC /* SJAudioStream.m */,
 				1A0D99FD2074671B007B5CCC /* SJAudioPlayer.h */,
 				1A0D99FE2074671B007B5CCC /* SJAudioPlayer.m */,
 			);
@@ -166,10 +161,15 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0930;
-				ORGANIZATIONNAME = "讯心科技";
+				ORGANIZATIONNAME = "张诗健";
 				TargetAttributes = {
 					1AB0EA1B20736C16002070E3 = {
 						CreatedOnToolsVersion = 9.3;
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -215,14 +215,13 @@
 			files = (
 				1A0D9A082074671B007B5CCC /* SJAudioPlayer.m in Sources */,
 				1A0D9A052074671B007B5CCC /* SJAudioDataProvider.m in Sources */,
-				1A0D9A092074671B007B5CCC /* SJHttpStream.m in Sources */,
+				1A0D9A092074671B007B5CCC /* SJAudioStream.m in Sources */,
 				1AB0EA2420736C17002070E3 /* ViewController.m in Sources */,
 				1AB0EA2F20736C29002070E3 /* main.m in Sources */,
 				1AB0EA2120736C17002070E3 /* AppDelegate.m in Sources */,
 				1A0D9A072074671B007B5CCC /* SJAudioOutputQueue.m in Sources */,
 				1A0D9A062074671B007B5CCC /* SJAudioFileStream.m in Sources */,
 				1A0D9A0A2074671B007B5CCC /* SJParsedAudioData.m in Sources */,
-				1A0D9A042074671B007B5CCC /* SJAudioCacheDataStream.m in Sources */,
 				1A0D9A032074671B007B5CCC /* SJAudioBuffer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -364,6 +363,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 8AWR7HVK86;
 				INFOPLIST_FILE = SJAudioStream/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -381,6 +381,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 8AWR7HVK86;
 				INFOPLIST_FILE = SJAudioStream/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = (

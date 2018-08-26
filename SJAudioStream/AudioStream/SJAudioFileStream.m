@@ -15,23 +15,23 @@
 
 @interface SJAudioFileStream ()
 
-@property (nonatomic,assign,readwrite) AudioFileTypeID fileType;
+@property (nonatomic, assign, readwrite) AudioFileTypeID fileType;
 
-@property (nonatomic,assign,readwrite) BOOL available;
+@property (nonatomic, assign, readwrite) BOOL available;
 
-@property (nonatomic,assign,readwrite) BOOL readyToProducePackets;
+@property (nonatomic, assign, readwrite) BOOL readyToProducePackets;
 // 声音格式设置，这些设置要和采集时的配置一致
-@property (nonatomic,assign,readwrite) AudioStreamBasicDescription format;
+@property (nonatomic, assign, readwrite) AudioStreamBasicDescription format;
 
-@property (nonatomic,assign,readwrite) unsigned long long fileSize;
+@property (nonatomic, assign, readwrite) unsigned long long fileSize;
 
-@property (nonatomic,assign,readwrite) NSTimeInterval duration;
+@property (nonatomic, assign, readwrite) NSTimeInterval duration;
 
-@property (nonatomic,assign,readwrite) UInt32 bitRate;
+@property (nonatomic, assign, readwrite) UInt32 bitRate;
 
-@property (nonatomic,assign,readwrite) UInt32 maxPacketSize;
+@property (nonatomic, assign, readwrite) UInt32 maxPacketSize;
 
-@property (nonatomic,assign,readwrite) UInt64 audioDataByteCount;
+@property (nonatomic, assign, readwrite) UInt64 audioDataByteCount;
 
 @property (nonatomic, assign) BOOL discontinuous;
 // 文件流ID
@@ -133,7 +133,7 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
     [audioFileStream handleAudioFileStreamPackets:inInputData numberOfBytes:inNumberBytes numberOfPackets:inNumberPackets packetDescriptions:inPacketDescription];
 }
 
-#pragma -mark
+
 @implementation SJAudioFileStream
 
 
@@ -542,16 +542,18 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
 // 获取时长的最佳方法是从ID3信息中去读取，那样是最准确的。如果ID3信息中没有存，那就依赖于文件头中的信息去计算了。(音频数据的字节总量audioDataByteCount可以通过kAudioFileStreamProperty_AudioDataByteCount获取，码率bitRate可以通过kAudioFileStreamProperty_BitRate获取也可以通过Parse一部分数据后计算平均码率来得到。)
 - (void)calculateDuration
 {
-    if (self.fileSize > 0 && self.bitRate > 0) {
+    if (self.fileSize > 0 && self.bitRate > 0)
+    {
         self.duration = (self.audioDataByteCount * 8.0) / self.bitRate;
     }
 }
 
 
-// 利用之前parse得到的音频格式信息来计算PacketDuration。（每个帧数据对应的时长）
+// 利用之前解析得到的音频格式信息来计算PacketDuration。（每个帧数据对应的时长）
 - (void)calculatePacketDuration
 {
-    if (self.format.mSampleRate > 0) {
+    if (self.format.mSampleRate > 0)
+    {
         self.packetDuration = self.format.mFramesPerPacket / self.format.mSampleRate;
     }
 }

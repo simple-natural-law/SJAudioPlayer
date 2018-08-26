@@ -1,22 +1,20 @@
 //
-//  SJHttpStream.m
+//  SJAudioStream.m
 //  SJAudioStream
 //
 //  Created by 张诗健 on 16/4/28.
 //  Copyright © 2016年 张诗健. All rights reserved.
 //
 
-#import "SJHttpStream.h"
+#import "SJAudioStream.h"
 #import <CFNetwork/CFNetwork.h>
 #import <pthread.h>
 #import <sys/time.h>
 
 
-@interface SJHttpStream ()
-{
-    pthread_mutex_t _mutex;
-    pthread_cond_t  _cond;
-}
+@interface SJAudioStream ()
+
+@property (nonatomic, assign) NSUInteger contentLength;
 
 @property (nonatomic, assign) NSUInteger byteOffset;
 
@@ -28,24 +26,12 @@
 
 @property (nonatomic, assign) CFReadStreamRef readStream;
 
+@property (nonatomic, strong) dispatch_semaphore_t semaphore;
+
 @end
 
 
-@implementation SJHttpStream
-
-#pragma mark- ReadStream callback
-void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,void * clientCallBackInfo)
-{
-    SJHttpStream *httpStream = (__bridge SJHttpStream *)(clientCallBackInfo);
-    
-    [httpStream handleReadFormStream:stream eventType:eventType];
-}
-
-- (void)dealloc
-{
-    pthread_mutex_destroy(&_mutex);
-    pthread_cond_destroy(&_cond);
-}
+@implementation SJAudioStream
 
 
 - (instancetype)initWithURL:(NSURL *)url byteOffset:(NSUInteger)byteOffset
@@ -56,7 +42,6 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
     {
         self.closed = YES;
         
-        // 创建CHFHTTP消息对象
         CFHTTPMessageRef message = CFHTTPMessageCreateRequest(NULL, (CFStringRef)@"GET", (__bridge CFURLRef _Nonnull)(url), kCFHTTPVersion1_1);
         
         // If we are creating this request to seek to a location, set the requested byte range in the headers.
@@ -77,7 +62,7 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
         if (!status)
         {
             // 错误处理
-            NSLog(@"CFReadStreamSetProperty error.");
+            NSLog(@"error: failed to set property of the readStream.");
         }
         
         // Handle proxies
@@ -94,7 +79,6 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
         }
         
         // open the readStream
-        
         status = CFReadStreamOpen(self.readStream);
         
         if (!status)
@@ -102,21 +86,16 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
             CFRelease(self.readStream);
             
             // 错误处理
-            NSLog(@"CFReadStreamOpen error.");
+            NSLog(@"error: failed to open the readStream.");
         }
         
+//        CFStreamClientContext context = {0,(__bridge void *)(self),NULL,NULL,NULL};
+//
+//        CFReadStreamSetClient(self.readStream, kCFStreamEventHasBytesAvailable | kCFStreamEventErrorOccurred | kCFStreamEventEndEncountered, SJReadStreamCallBack, &context);
+//
+//        CFReadStreamScheduleWithRunLoop(self.readStream, CFRunLoopGetMain(), kCFRunLoopCommonModes);
+        
         self.closed = NO;
-        
-        // set our callback function to receive the data
-        //CFStreamClientContext context = {0,(__bridge void *)(self),NULL,NULL,NULL};
-        
-        //CFReadStreamSetClient(_readStream, kCFStreamEventHasBytesAvailable | kCFStreamEventErrorOccurred | kCFStreamEventEndEncountered, SJReadStreamCallBack, &context);
-        
-        // 在当前线程回调
-        //CFReadStreamScheduleWithRunLoop(_readStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
-        
-        pthread_mutex_init(&_mutex, NULL);
-        pthread_cond_init(&_cond, NULL);
     }
     
     return self;
@@ -129,6 +108,21 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
         return nil;
     }
     
+    if (self.streamEvent == kCFStreamEventErrorOccurred)
+    {
+        // 错误处理
+        *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:-1 userInfo:nil];
+        
+        return nil;
+    }
+    
+    if (self.streamEvent == kCFStreamEventEndEncountered)
+    {
+        *completed = YES;
+        
+        return nil;
+    }
+    
     UInt8 *bytes = (UInt8 *)malloc(maxLength);
     
     CFIndex length = CFReadStreamRead(self.readStream, bytes, maxLength);
@@ -137,8 +131,6 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
     {
         // 错误处理
         *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:-1 userInfo:nil];
-        
-        NSLog(@"");
         
         return nil;
         
@@ -173,8 +165,19 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
 - (void)close
 {
     self.closed = YES;
+    
+    CFReadStreamClose(self.readStream);
 }
 
+
+
+#pragma mark- ReadStream callback
+void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,void * clientCallBackInfo)
+{
+    SJAudioStream *audioStream = (__bridge SJAudioStream *)(clientCallBackInfo);
+    
+    [audioStream handleReadFormStream:stream eventType:eventType];
+}
 
 - (void)handleReadFormStream:(CFReadStreamRef)stream eventType:(CFStreamEventType)eventType
 {

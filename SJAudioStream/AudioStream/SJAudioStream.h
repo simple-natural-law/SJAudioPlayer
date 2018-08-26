@@ -1,5 +1,5 @@
 //
-//  SJHttpStream.h
+//  SJAudioStream.h
 //  SJAudioStream
 //
 //  Created by 张诗健 on 16/4/28.
@@ -8,19 +8,17 @@
 
 #import <Foundation/Foundation.h>
 
-// 请求超时时间
-#define HTTP_REQUEST_TIMEOUT 60
 
-@interface SJHttpStream : NSObject
+@interface SJAudioStream : NSObject
 
 /**
  *  音频数据总长度
  */
-@property (nonatomic, assign) NSUInteger contentLength;
+@property (nonatomic, assign, readonly) NSUInteger contentLength;
 
 
 /**
- *  根据 URL 和 数据偏移量 创建请求
+ *  根据 URL 和 数据偏移量 创建一个`SJAudioStream`对象
  */
 - (instancetype)initWithURL:(NSURL *)url byteOffset:(NSUInteger)byteOffset;
 
@@ -36,7 +34,7 @@
 - (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error completed:(BOOL *)completed;
 
 /**
- *  结束请求
+ *  关闭
  */
 - (void)close;
 

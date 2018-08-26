@@ -30,7 +30,7 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-    NSString *urlString = @"http://hoishow-file.b0.upaiyun.com/uploads/boom_track/file/4ba30881757c35365380dbe9c9538054_ab320.mp3";
+    NSString *urlString = @"http://music.163.com/song/media/outer/url?id=166321.mp3";
     
     self.player = [[SJAudioPlayer alloc] initWithUrlString:urlString cachePath:nil];
     

@@ -115,13 +115,13 @@
     
     NSThread  *readDataThread = [[NSThread alloc] initWithTarget:self selector:@selector(readAudioData) object:nil];
     
-    [readDataThread setName:@"Read Data Thread"];
+    [readDataThread setName:@"Read_Data_Thread"];
     
     [readDataThread start];
     
     NSThread *playAudioThread = [[NSThread alloc] initWithTarget:self selector:@selector(playAudioData) object:nil];
     
-    [playAudioThread setName:@"Play Audio Thread"];
+    [playAudioThread setName:@"Play_Audio_Thread"];
     
     [playAudioThread start];
 }
@@ -393,6 +393,8 @@
 #pragma mark- SJAudioFileStreamDelegate
 - (void)audioFileStream:(SJAudioFileStream *)audioFileStream audioDataParsed:(NSArray *)audioData
 {
+    //NSLog(@"======");
+    
     [self.buffer enqueueFromDataArray:audioData];
 }
 

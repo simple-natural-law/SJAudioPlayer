@@ -22,15 +22,15 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 @interface SJAudioPlayer : NSObject
 
-@property (nonatomic,readonly) NSString *urlString;
+@property (nonatomic, readonly, strong) NSString *urlString;
 
-@property (nonatomic,readonly) NSUInteger contentLength;
+@property (nonatomic, readonly, assign) NSUInteger contentLength;
 
-@property (nonatomic,readonly) NSTimeInterval duration;
+@property (nonatomic, readonly, assign) NSTimeInterval duration;
 
-@property (nonatomic,readonly) NSTimeInterval playedTime;
+@property (nonatomic, readonly, assign) NSTimeInterval playedTime;
 
-@property (nonatomic,readonly) SJAudioPlayerStatus status;
+@property (nonatomic, readonly, assign) SJAudioPlayerStatus status;
 
 
 

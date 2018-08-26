@@ -7,15 +7,13 @@
 //
 
 #import "SJAudioDataProvider.h"
-#import "SJHttpStream.h"
-#import "SJAudioCacheDataStream.h"
+#import "SJAudioStream.h"
+
 
 
 @interface SJAudioDataProvider ()
 
-@property (nonatomic, strong) SJHttpStream *stream;
-
-@property (nonatomic, strong) SJAudioCacheDataStream *cacheDataStream;
+@property (nonatomic, strong) SJAudioStream *stream;
 
 @property (nonatomic, strong) NSURL *url;
 
@@ -56,7 +54,7 @@
     
     if (!self.stream && self.url)
     {
-        self.stream = [[SJHttpStream alloc] initWithURL:self.url byteOffset:self.byteOffset];
+        self.stream = [[SJAudioStream alloc] initWithURL:self.url byteOffset:self.byteOffset];
     }
     
     NSData *data = [self.stream readDataWithMaxLength:maxLength error:error completed:completed];
@@ -67,18 +65,7 @@
 
 - (NSUInteger)contentLength
 {
-    NSUInteger length = 0;
-    
-    length = self.cacheDataStream.contentLength;
-    
-    if (length)
-    {
-        return length;
-    }
-    
-    length = self.stream.contentLength;
-    
-    return length;
+    return self.stream.contentLength;
 }
 
 
