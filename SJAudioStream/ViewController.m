@@ -32,7 +32,7 @@
     
     NSString *urlString = @"http://music.163.com/song/media/outer/url?id=166321.mp3";
     
-    self.player = [[SJAudioPlayer alloc] initWithUrlString:urlString cachePath:nil];
+    self.player = [[SJAudioPlayer alloc] initWithUrlString:urlString];
     
     [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(updateProgress) userInfo:nil repeats:YES];
 }

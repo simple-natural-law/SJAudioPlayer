@@ -34,7 +34,7 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 
 
-- (instancetype)initWithUrlString:(NSString *)url cachePath:(NSString *)cachePath;
+- (instancetype)initWithUrlString:(NSString *)url;
 
 - (void)play;
 

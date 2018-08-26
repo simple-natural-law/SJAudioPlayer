@@ -1,5 +1,5 @@
 //
-//  SJAudioOutputQueue.m
+//  SJAudioQueue.m
 //  SJAudioStream
 //
 //  Created by 张诗健 on 15/12/30.
@@ -25,14 +25,14 @@
 
 
 
-#import "SJAudioOutputQueue.h"
+#import "SJAudioQueue.h"
 #import <pthread.h>
 #import <AudioToolbox/AudioToolbox.h>
 
 #define SJAudioQueueBufferCount 16
 
 
-@interface SJAudioOutputQueue ()
+@interface SJAudioQueue ()
 {
     pthread_mutex_t _mutex;
     pthread_cond_t _cond;
@@ -60,7 +60,7 @@
 
 @end
 
-@implementation SJAudioOutputQueue
+@implementation SJAudioQueue
 
 
 - (instancetype)initWithFormat:(AudioStreamBasicDescription)format bufferSize:(UInt32)bufferSize macgicCookie:(NSData *)macgicCookie
@@ -594,7 +594,7 @@
 #pragma -mark call back
 static void SJAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ,AudioQueueBufferRef inBuffer)
 {
-    SJAudioOutputQueue *audioOutputQueue = (__bridge SJAudioOutputQueue *)(inClientData);
+    SJAudioQueue *audioOutputQueue = (__bridge SJAudioQueue *)(inClientData);
     [audioOutputQueue handleAudioQueueOutputCallBack:inAQ buffer:inBuffer];
 }
 
@@ -627,7 +627,7 @@ static void SJAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ,Au
 
 static void SJAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, AudioQueuePropertyID inID)
 {
-    SJAudioOutputQueue *audioQueue = (__bridge SJAudioOutputQueue *)(inUserData);
+    SJAudioQueue *audioQueue = (__bridge SJAudioQueue *)(inUserData);
     [audioQueue handleAudioQueuePropertyCallBack:inAQ property:inID];
 }
 

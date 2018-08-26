@@ -11,7 +11,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import "SJAudioDataProvider.h"
 #import "SJAudioFileStream.h"
-#import "SJAudioOutputQueue.h"
+#import "SJAudioQueue.h"
 #import "SJParsedAudioData.h"
 #import "SJAudioBuffer.h"
 
@@ -24,13 +24,11 @@
 
 @property (nonatomic, strong) SJAudioFileStream *audioFileStream;
 
-@property (nonatomic, strong) SJAudioOutputQueue *audioQueue;
+@property (nonatomic, strong) SJAudioQueue *audioQueue;
 
 @property (nonatomic, strong) SJAudioDataProvider *dataProvider;
 
 @property (nonatomic, strong) SJAudioBuffer *buffer;
-
-@property (nonatomic, strong) NSString *cachePath;
 
 @property (nonatomic, assign) SInt64 byteOffset;
 
@@ -72,7 +70,7 @@
 }
 
 
-- (instancetype)initWithUrlString:(NSString *)url cachePath:(NSString *)cachePath
+- (instancetype)initWithUrlString:(NSString *)url
 {
     NSAssert(url, @"url should be not nil");
     
@@ -81,7 +79,6 @@
     if (self)
     {
         self.urlString  = url;
-        self.cachePath  = cachePath;
         self.bufferSize = kDefaultBufferSize;
         self.started    = NO;
         
@@ -226,7 +223,7 @@
         {
             if (!self.dataProvider)
             {
-                self.dataProvider = [[SJAudioDataProvider alloc] initWithURL:[NSURL URLWithString:self.urlString] cacheFilePath:self.cachePath byteOffset:self.byteOffset];
+                self.dataProvider = [[SJAudioDataProvider alloc] initWithURL:[NSURL URLWithString:self.urlString] cacheFilePath:nil byteOffset:self.byteOffset];
             }
             
             NSData *data = [self.dataProvider readDataWithMaxLength:self.bufferSize error:&readDataError completed:&_readDataCompleted];
@@ -365,7 +362,7 @@
     
     AudioStreamBasicDescription format = self.audioFileStream.format;
     
-    self.audioQueue = [[SJAudioOutputQueue alloc] initWithFormat:format bufferSize:(UInt32)self.bufferSize macgicCookie:magicCookie];
+    self.audioQueue = [[SJAudioQueue alloc] initWithFormat:format bufferSize:(UInt32)self.bufferSize macgicCookie:magicCookie];
     
     if (!self.audioQueue.available)
     {

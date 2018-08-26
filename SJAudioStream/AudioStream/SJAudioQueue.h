@@ -1,5 +1,5 @@
 //
-//  SJAudioOutputQueue.h
+//  SJAudioQueue.h
 //  SJAudioStream
 //
 //  Created by 张诗健 on 15/12/30.
@@ -10,7 +10,7 @@
 #import <AudioToolbox/AudioToolbox.h>
 
 
-@interface SJAudioOutputQueue : NSObject
+@interface SJAudioQueue : NSObject
 
 @property (nonatomic, assign,readonly) BOOL available; // audioqueue 是否可用
 

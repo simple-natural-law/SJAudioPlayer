@@ -10,7 +10,7 @@
 		1A0D9A032074671B007B5CCC /* SJAudioBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99F42074671B007B5CCC /* SJAudioBuffer.m */; };
 		1A0D9A052074671B007B5CCC /* SJAudioDataProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99F82074671B007B5CCC /* SJAudioDataProvider.m */; };
 		1A0D9A062074671B007B5CCC /* SJAudioFileStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99FA2074671B007B5CCC /* SJAudioFileStream.m */; };
-		1A0D9A072074671B007B5CCC /* SJAudioOutputQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99FC2074671B007B5CCC /* SJAudioOutputQueue.m */; };
+		1A0D9A072074671B007B5CCC /* SJAudioQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99FC2074671B007B5CCC /* SJAudioQueue.m */; };
 		1A0D9A082074671B007B5CCC /* SJAudioPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99FE2074671B007B5CCC /* SJAudioPlayer.m */; };
 		1A0D9A092074671B007B5CCC /* SJAudioStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D9A002074671B007B5CCC /* SJAudioStream.m */; };
 		1A0D9A0A2074671B007B5CCC /* SJParsedAudioData.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D9A022074671B007B5CCC /* SJParsedAudioData.m */; };
@@ -33,8 +33,8 @@
 		1A0D99F82074671B007B5CCC /* SJAudioDataProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioDataProvider.m; sourceTree = "<group>"; };
 		1A0D99F92074671B007B5CCC /* SJAudioFileStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioFileStream.h; sourceTree = "<group>"; };
 		1A0D99FA2074671B007B5CCC /* SJAudioFileStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioFileStream.m; sourceTree = "<group>"; };
-		1A0D99FB2074671B007B5CCC /* SJAudioOutputQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioOutputQueue.h; sourceTree = "<group>"; };
-		1A0D99FC2074671B007B5CCC /* SJAudioOutputQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioOutputQueue.m; sourceTree = "<group>"; };
+		1A0D99FB2074671B007B5CCC /* SJAudioQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioQueue.h; sourceTree = "<group>"; };
+		1A0D99FC2074671B007B5CCC /* SJAudioQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioQueue.m; sourceTree = "<group>"; };
 		1A0D99FD2074671B007B5CCC /* SJAudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioPlayer.h; sourceTree = "<group>"; };
 		1A0D99FE2074671B007B5CCC /* SJAudioPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioPlayer.m; sourceTree = "<group>"; };
 		1A0D99FF2074671B007B5CCC /* SJAudioStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioStream.h; sourceTree = "<group>"; };
@@ -77,8 +77,8 @@
 				1A0D99F82074671B007B5CCC /* SJAudioDataProvider.m */,
 				1A0D99F92074671B007B5CCC /* SJAudioFileStream.h */,
 				1A0D99FA2074671B007B5CCC /* SJAudioFileStream.m */,
-				1A0D99FB2074671B007B5CCC /* SJAudioOutputQueue.h */,
-				1A0D99FC2074671B007B5CCC /* SJAudioOutputQueue.m */,
+				1A0D99FB2074671B007B5CCC /* SJAudioQueue.h */,
+				1A0D99FC2074671B007B5CCC /* SJAudioQueue.m */,
 				1A0D9A012074671B007B5CCC /* SJParsedAudioData.h */,
 				1A0D9A022074671B007B5CCC /* SJParsedAudioData.m */,
 				1A0D99FF2074671B007B5CCC /* SJAudioStream.h */,
@@ -219,7 +219,7 @@
 				1AB0EA2420736C17002070E3 /* ViewController.m in Sources */,
 				1AB0EA2F20736C29002070E3 /* main.m in Sources */,
 				1AB0EA2120736C17002070E3 /* AppDelegate.m in Sources */,
-				1A0D9A072074671B007B5CCC /* SJAudioOutputQueue.m in Sources */,
+				1A0D9A072074671B007B5CCC /* SJAudioQueue.m in Sources */,
 				1A0D9A062074671B007B5CCC /* SJAudioFileStream.m in Sources */,
 				1A0D9A0A2074671B007B5CCC /* SJParsedAudioData.m in Sources */,
 				1A0D9A032074671B007B5CCC /* SJAudioBuffer.m in Sources */,
