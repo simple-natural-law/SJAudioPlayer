@@ -12,6 +12,7 @@
 
 @interface SJAudioFileStream ()
 
+/// 文件类型的提示，这个参数来帮助AudioFileStream对文件格式进行解析。这个参数在文件信息不完整（例如信息有缺陷）时尤其有用，它可以给与AudioFileStream一定的提示，帮助其绕过文件中的错误或者缺失从而成功解析文件。所以在确定文件类型的情况下，建议填上这个参数。如果无法确定，可以传入0。
 @property (nonatomic, assign, readwrite) AudioFileTypeID fileType;
 
 @property (nonatomic, assign, readwrite) BOOL available;

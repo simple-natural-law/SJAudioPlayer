@@ -28,7 +28,6 @@
 
 @property (nonatomic, weak) id<SJAudioFileStreamDelegate> delegate;
 
-/// 文件类型的提示，这个参数来帮助AudioFileStream对文件格式进行解析。这个参数在文件信息不完整（例如信息有缺陷）时尤其有用，它可以给与AudioFileStream一定的提示，帮助其绕过文件中的错误或者缺失从而成功解析文件。所以在确定文件类型的情况下，建议填上这个参数。如果无法确定，可以传入0。
 @property (nonatomic, assign, readonly) AudioFileTypeID fileType;
 
 @property (nonatomic, assign, readonly) BOOL available;
@@ -60,16 +59,19 @@
 
 @property (nonatomic, assign, readonly) UInt64 audioDataSize;
 
+/// 初始化并打开 AudioFileStream
 - (instancetype)initWithFileType:(AudioFileTypeID)fileType fileSize:(NSUInteger)fileSize error:(NSError **)error;
 
 /// 解析音频数据
 - (BOOL)parseData:(NSData *)data error:(NSError **)error;
 
+/// 拖动到xx分xx秒
 - (SInt64)seekToTime:(NSTimeInterval *)time;
 
+/// 获取音频数据的 Magic Cookie
 - (NSData *)getMagicCookieData;
 
-/// 关闭AudioFileStream
+/// 关闭 AudioFileStream
 - (void)close;
 
 @end
