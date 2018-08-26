@@ -29,7 +29,7 @@
 #import <pthread.h>
 #import <AudioToolbox/AudioToolbox.h>
 
-#define SJAudioQueueBufferCount 16
+#define SJAudioQueueBufferCount 8
 
 
 @interface SJAudioQueue ()
@@ -60,7 +60,25 @@
 
 @end
 
+
 @implementation SJAudioQueue
+
+- (void)dealloc
+{
+    [self disposeAudioOutputQueue];
+    
+    pthread_mutex_destroy(&_mutex);
+    pthread_cond_destroy(&_cond);
+}
+
+
+- (void)errorForOSStatus:(OSStatus)status error:(NSError *__autoreleasing *)outError
+{
+    if (status != noErr && outError != NULL)
+    {
+        *outError = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+    }
+}
 
 
 - (instancetype)initWithFormat:(AudioStreamBasicDescription)format bufferSize:(UInt32)bufferSize macgicCookie:(NSData *)macgicCookie
@@ -73,39 +91,15 @@
         self.volume = 0.0f;
         self.bufferSize = bufferSize;
 
-        [self createAudioOutputQueue:macgicCookie];
-        [self mutexInit];
+        [self createAudioQueueWithMagicCookie:macgicCookie];
+        
+        pthread_mutex_init(&_mutex, NULL);
+        pthread_cond_init(&_cond, NULL);
     }
+    
     return self;
 }
 
-- (void)dealloc
-{
-    [self disposeAudioOutputQueue];
-    [self mutexDestory];
-}
-
-
-- (void)errorForOSStatus:(OSStatus)status error:(NSError *__autoreleasing *)outError
-{
-    if (status != noErr && outError != NULL)
-    {
-        *outError = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-    }
-}
-
-#pragma -mark
-- (void)mutexInit
-{
-    pthread_mutex_init(&_mutex, NULL); // 初始化 锁
-    pthread_cond_init(&_cond, NULL);
-}
-
-- (void)mutexDestory
-{
-    pthread_mutex_destroy(&_mutex);
-    pthread_cond_destroy(&_cond);
-}
 
 - (void)mutexWait
 {
@@ -121,9 +115,9 @@
     pthread_mutex_unlock(&_mutex);
 }
 
-#pragma -mark  audio queue
+
 /*
-  使用下列方法来生成AudioQueue的实例
+ 使用下列方法来生成AudioQueue的实例
  
  OSStatus AudioQueueNewOutput (const AudioStreamBasicDescription * inFormat,
                                AudioQueueOutputCallback inCallbackProc,
@@ -133,14 +127,14 @@
                                UInt32 inFlags,
                                AudioQueueRef * outAQ);
  
- 第一个参数表示需要播放的音频数据格式类型，是一个 AudioStreamBasicDescription 对象，是使用 AudioFileStream 或 AudioFile 解析出来的数据格式信息；
- 第二个参数 AudioQueueOutputCallback 是某块 Buffer 被使用之后的回调;
+ 第一个参数表示需要播放的音频数据格式类型，是一个`AudioStreamBasicDescription`对象，是使用 `AudioFileStream`或`AudioFile`解析出来的数据格式信息；
+ 第二个参数`AudioQueueOutputCallBack`是某块Buffer被使用之后的回调;
  第三个参数为上下文对象；
- 第四个参数 inCallbackRunLoop 为 AudioQueueOutputCallback 需要在哪个Runloop上被回调，如果传入NULL的话就会在AudioQueue的内部Runloop中被回调，所以一般传NULL久可以了。
- 第五个参数 inCallbackRunLoopMode 为Runloop模式，如果传入NULL就相当于kCFRunLoopCommonModes，也传NULL就可以了。
- 第六个参数inFlags是保留字段，目前没有作用，传0；
- 第七个参数，返回生成的 AudioQueue 实例。
- 返回值用来判断是否成功创建。
+ 第四个参数`inCallbackRunLoop`是`AudioQueueOutputCallback`需要在哪个Runloop上调用，如果传入NULL的话就会在AudioQueue的内部Runloop中调用，所以一般传NULL就可以了。
+ 第五个参数`inCallbackRunLoopMode`为Runloop模式，如果传入NULL就相当于kCFRunLoopCommonModes，也传NULL就可以了。
+ 第六个参数`inFlags`是保留字段，目前没有作用，传0；
+ 第七个参数，返回生成的`AudioQueue`实例。
+ 返回值，用来判断是否成功创建。
  
  OSStatus AudioQueueNewOutputWithDispatchQueue(AudioQueueRef * outAQ,
                                                const AudioStreamBasicDescription * inFormat,
@@ -148,16 +142,16 @@
                                                dispatch_queue_t inCallbackDispatchQueue,
                                             AudioQueueOutputCallbackBlock inCallbackBlock);
  
- 第二个方法就是把 Runloop 替换成了一个dispatch queue， 其余参数同相同
- 
- */
-- (void)createAudioOutputQueue:(NSData *)magicCookie
+ 第二个方法就是把Runloop替换成了一个dispatch queue， 其余参数同相同。
+*/
+- (void)createAudioQueueWithMagicCookie:(NSData *)magicCookie
 {
     OSStatus status = AudioQueueNewOutput(&_format, SJAudioQueueOutputCallback, (__bridge void * _Nullable)(self), NULL, NULL, 0, &_audioQueue);
     
     if (status != noErr)
     {
         self.audioQueue = NULL;
+        
         return;
     }
     
@@ -166,52 +160,42 @@
     if (status != noErr)
     {
         AudioQueueDispose(self.audioQueue, true);
+        
         self.audioQueue = NULL;
+        
         return;
     }
     
 
-    for (int i = 0; i < SJAudioQueueBufferCount; ++i) {
-//            AudioQueueBufferRef buffer;
+    for (int i = 0; i < SJAudioQueueBufferCount; ++i)
+    {
+        /*
+         创建AudioQueueBufferRef实例
+         
+         OSStatus AudioQueueAllocateBuffer (AudioQueueRef inAQ,
+                                            UInt32 inBufferByteSize,
+                                            AudioQueueBufferRef *outBuffer);
+         
+         传入 Audio Queue 和 Buffer 的大小， 传出 AudioQueueBufferRef 实例。
+        */
+        status = AudioQueueAllocateBuffer(self.audioQueue, self.bufferSize, &audioQueueBuffer[i]);
         
-/*
-  OSStatus AudioQueueAllocateBuffer(AudioQueueRef inAQ,
-                                  UInt32 inBufferByteSize,
-                                  AudioQueueBufferRef * outBuffer);
- 
-  传入 AudioQueue 实例 和 Buffer大小， 传出 buffer 实例；
- 
-  OSStatus AudioQueueAllocateBufferWithPacketDescriptions(AudioQueueRef inAQ,
-                                                         UInt32 inBufferByteSize,
-                                                         UInt32 inNumberPacketDescriptions,
-                                                         AudioQueueBufferRef * outBuffer);
-  
-  这个方法可以指定生成的buffer中PacketDescriptions的个数；
- 
- 
-  销毁Buffer:
-  OSStatus AudioQueueFreeBuffer(AudioQueueRef inAQ,AudioQueueBufferRef inBuffer);
- 
-  注意这个方法一般只在需要销毁特定某个buffer时才会被用到（因为dispose方法会自动销毁所有buffer），并且这个方法只能在AudioQueue不在处理数据时才能使用。所以这个方法一般不太能用到。
- */
-            // 创建 buffer
-            status = AudioQueueAllocateBuffer(self.audioQueue, self.bufferSize, &audioQueueBuffer[i]);
-        
-            if (status != noErr)
-            {
-                AudioQueueDispose(self.audioQueue, true);
-                self.audioQueue = NULL;
-                break;
-            }
-        
+        if (status != noErr)
+        {
+            // 调用`AudioQueueDispose`函数时，会自动销毁所有buffer。
+            AudioQueueDispose(self.audioQueue, true);
+            self.audioQueue = NULL;
+            break;
+        }
     }
-
 
 #if TARGET_OS_IPHONE
     UInt32 property = kAudioQueueHardwareCodecPolicy_PreferSoftware;
     [self setProperty:kAudioQueueProperty_HardwareCodecPolicy dataSize:sizeof(property) data:&property error:NULL];
 #endif
-    if (magicCookie) {
+    
+    if (magicCookie)
+    {
         AudioQueueSetProperty(self.audioQueue, kAudioQueueProperty_MagicCookie, [magicCookie bytes], (UInt32)[magicCookie length]);
     }
     
@@ -591,12 +575,13 @@
     [self setParameter:kAudioQueueParam_Volume value:self.volume error:NULL];
 }
 
-#pragma -mark call back
+
 static void SJAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ,AudioQueueBufferRef inBuffer)
 {
     SJAudioQueue *audioOutputQueue = (__bridge SJAudioQueue *)(inClientData);
     [audioOutputQueue handleAudioQueueOutputCallBack:inAQ buffer:inBuffer];
 }
+
 
 - (void)handleAudioQueueOutputCallBack:(AudioQueueRef)audioQueue buffer:(AudioQueueBufferRef)buffer
 {

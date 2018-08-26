@@ -12,20 +12,20 @@
 
 @interface SJAudioQueue : NSObject
 
-@property (nonatomic, assign,readonly) BOOL available; // audioqueue 是否可用
+/// Audio Queue 是否可用
+@property (nonatomic, assign, readonly) BOOL available;
 
-@property (nonatomic, assign,readonly) AudioStreamBasicDescription format;
+@property (nonatomic, assign, readonly) AudioStreamBasicDescription format;
+
+@property (nonatomic, assign, readonly) BOOL isRuning;
+
+/// 已播放时长
+@property (nonatomic, assign, readonly) NSTimeInterval playedTime;
 
 @property (nonatomic, assign) float volume;
 
 @property (nonatomic, assign) UInt32  bufferSize;
 
-@property (nonatomic, assign, readonly) BOOL isRuning;
-
-/**
- *  return playedTime of audioqueue, return invalidPlayedTime when error occurs.
- */
-@property (nonatomic, assign, readonly) NSTimeInterval playedTime;
 
 - (instancetype)initWithFormat:(AudioStreamBasicDescription)format bufferSize:(UInt32)bufferSize macgicCookie:(NSData *)macgicCookie;
 
@@ -43,9 +43,6 @@
  */
 - (BOOL)playData:(NSData *)data packetCount:(UInt32)packetCount packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions completed:(BOOL)completed;
 
-/*
- pause & resume
- */
 - (void)pause;
 
 - (BOOL)resume;
