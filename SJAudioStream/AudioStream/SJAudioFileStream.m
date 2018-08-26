@@ -493,7 +493,7 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
  double duration = ...; // 通过公式(AudioDataByteCount * 8) / BitRate 计算得到时长
  
  按照seekByteOffset读取对应的数据继续使用 AudioFileStreamParseByte 方法来进行解析
- 如果是网络流可以通过设置range头来获取字节，本地文件的话直接seek就好。 ⚠ 调用 AudioFileStreamParseByte 方法时注意刚seek完第一次parse数据需要加参数 kAudioFileStreamParseFlag_Discontinuity。
+ 如果是网络流可以通过设置range头来获取字节，本地文件的话直接seek就好。 ⚠ 调用AudioFileStreamParseByte 方法时注意刚seek完第一次parse数据需要加参数 kAudioFileStreamParseFlag_Discontinuity。
  
  */
 - (SInt64)seekToTime:(NSTimeInterval *)time

@@ -22,7 +22,7 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 @interface SJAudioPlayer : NSObject
 
-@property (nonatomic, readonly, strong) NSString *urlString;
+@property (nonatomic, readonly, strong) NSURL *url;
 
 @property (nonatomic, readonly, assign) NSUInteger contentLength;
 
@@ -34,7 +34,7 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 
 
-- (instancetype)initWithUrlString:(NSString *)url;
+- (instancetype)initWithUrl:(NSURL *)url;
 
 - (void)play;
 

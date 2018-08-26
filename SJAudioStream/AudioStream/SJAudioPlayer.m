@@ -9,7 +9,7 @@
 #import "SJAudioPlayer.h"
 #import <pthread.h>
 #import <AVFoundation/AVFoundation.h>
-#import "SJAudioDataProvider.h"
+#import "SJAudioStream.h"
 #import "SJAudioFileStream.h"
 #import "SJAudioQueue.h"
 #import "SJParsedAudioData.h"
@@ -24,21 +24,21 @@
 
 @property (nonatomic, strong) SJAudioFileStream *audioFileStream;
 
-@property (nonatomic, strong) SJAudioQueue *audioQueue;
+@property (nonatomic, strong) SJAudioStream *audioStream;
 
-@property (nonatomic, strong) SJAudioDataProvider *dataProvider;
+@property (nonatomic, strong) SJAudioQueue *audioQueue;
 
 @property (nonatomic, strong) SJAudioBuffer *buffer;
 
-@property (nonatomic, assign) SInt64 byteOffset;
+@property (nonatomic, assign) NSUInteger byteOffset;
 
 @property (nonatomic, assign) NSUInteger bufferSize;
 
 @property (nonatomic, assign) BOOL started;
 
-@property (nonatomic, assign) BOOL pausedByInterrupt;
+@property (nonatomic, assign) BOOL isEof;
 
-@property (nonatomic, assign) BOOL readDataCompleted;
+@property (nonatomic, assign) BOOL pausedByInterrupt;
 
 @property (nonatomic, assign) BOOL stopReadDataRequired;
 
@@ -50,7 +50,7 @@
 
 @property (nonatomic, assign) NSTimeInterval seekTime;
 
-@property (nonatomic, readwrite, strong) NSString *urlString;
+@property (nonatomic, readwrite, strong) NSURL *url;
 
 @property (nonatomic, readwrite, assign) NSUInteger contentLength;
 
@@ -70,15 +70,15 @@
 }
 
 
-- (instancetype)initWithUrlString:(NSString *)url
+- (instancetype)initWithUrl:(NSURL *)url;
 {
-    NSAssert(url, @"url should be not nil");
+    NSAssert(url, @"url should be not nil.");
     
     self = [super init];
     
     if (self)
     {
-        self.urlString  = url;
+        self.url  = url;
         self.bufferSize = kDefaultBufferSize;
         self.started    = NO;
         
@@ -110,15 +110,23 @@
 {
     self.started = YES;
     
+    if ([self.url.scheme isEqualToString:@"file"])
+    {
+        
+    }else
+    {
+        self.audioStream = [[SJAudioStream alloc] initWithURL:_url byteOffset:_byteOffset];
+    }
+    
     NSThread  *readDataThread = [[NSThread alloc] initWithTarget:self selector:@selector(readAudioData) object:nil];
     
-    [readDataThread setName:@"Read_Data_Thread"];
+    [readDataThread setName:@"ReadDataThread"];
     
     [readDataThread start];
     
     NSThread *playAudioThread = [[NSThread alloc] initWithTarget:self selector:@selector(playAudioData) object:nil];
     
-    [playAudioThread setName:@"Play_Audio_Thread"];
+    [playAudioThread setName:@"PlayAudioThread"];
     
     [playAudioThread start];
 }
@@ -169,7 +177,7 @@
 {
     self.seekTime = timeOffset;
     
-    if (self.readDataCompleted)
+    if (self.isEof)
     {
         self.byteOffset = [self.audioFileStream seekToTime:&_seekTime];
     }else
@@ -182,15 +190,16 @@
             self.byteOffset = [self.audioFileStream seekToTime:&_seekTime];
             [self.buffer clean];
             [self.audioQueue reset];
-            self.dataProvider = nil;
+            [self.audioStream closeReadStream];
+            self.audioStream = nil;
         }
     }
 }
 
 - (void)cleanUpReadAudioDataThread
 {
-    [self.dataProvider close];
-    self.dataProvider = nil;
+    [self.audioStream closeReadStream];
+    self.audioStream = nil;
     
     [self.audioFileStream close];
     self.audioFileStream = nil;
@@ -210,23 +219,18 @@
 
 - (void)readAudioData
 {
-    self.readDataCompleted    = NO;
+    self.isEof = NO;
     self.stopReadDataRequired = NO;
     
     NSError *error = nil;
     NSError *readDataError = nil;
     NSError *parseDataError = nil;
     
-    while (!self.readDataCompleted && !self.stopReadDataRequired)
+    while (!self.isEof && !self.stopReadDataRequired)
     {
         @autoreleasepool
         {
-            if (!self.dataProvider)
-            {
-                self.dataProvider = [[SJAudioDataProvider alloc] initWithURL:[NSURL URLWithString:self.urlString] cacheFilePath:nil byteOffset:self.byteOffset];
-            }
-            
-            NSData *data = [self.dataProvider readDataWithMaxLength:self.bufferSize error:&readDataError completed:&_readDataCompleted];
+            NSData *data = [self.audioStream readDataWithMaxLength:self.bufferSize error:&readDataError isEof:&_isEof];
             
             if (readDataError)
             {
@@ -235,20 +239,23 @@
                 break;
             }
             
-            if (self.dataProvider.contentLength && !self.audioFileStream)
+            if (data.length)
             {
-                self.contentLength   = self.dataProvider.contentLength;
+                if (self.audioStream.contentLength && !self.audioFileStream)
+                {
+                    self.contentLength   = self.audioStream.contentLength;
+                    
+                    self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:hintForFileExtension(self.url.pathExtension) fileSize:self.contentLength error:&error];
+                    
+                    self.audioFileStream.delegate = self;
+                    
+                    self.buffer = [SJAudioBuffer buffer];
+                }
                 
-                self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:hintForFileExtension([NSURL URLWithString:self.urlString].pathExtension) fileSize:self.contentLength error:&error];
-                
-                self.audioFileStream.delegate = self;
-                
-                self.buffer = [SJAudioBuffer buffer];
-            }
-            
-            if (self.audioFileStream)
-            {
-                [self.audioFileStream parseData:data error:&parseDataError];
+                if (self.audioFileStream)
+                {
+                    [self.audioFileStream parseData:data error:&parseDataError];
+                }
             }
         }
     }
@@ -258,7 +265,7 @@
         NSLog(@"read data: stop");
     }
     
-    if (self.readDataCompleted)
+    if (self.isEof)
     {
         NSLog(@"read data: completed");
     }
@@ -288,13 +295,13 @@
                     {
                         NSData *data = [self.buffer dequeueDataWithSize:(UInt32)self.bufferSize packetCount:&packetCount descriptions:&desces];
                         
-                        [self.audioQueue playData:data packetCount:packetCount packetDescriptions:desces completed:self.readDataCompleted];
+                        [self.audioQueue playData:data packetCount:packetCount packetDescriptions:desces completed:self.isEof];
                         
                     }else
                     {
                         NSData *data = [self.buffer dequeueDataWithSize:[self.buffer bufferedSize] packetCount:&packetCount descriptions:&desces];
                         
-                        [self.audioQueue playData:data packetCount:packetCount packetDescriptions:desces completed:self.readDataCompleted];
+                        [self.audioQueue playData:data packetCount:packetCount packetDescriptions:desces completed:self.isEof];
                     }
                     
                     free(desces);
@@ -387,6 +394,7 @@
     }
 }
 
+
 #pragma mark- SJAudioFileStreamDelegate
 - (void)audioFileStream:(SJAudioFileStream *)audioFileStream audioDataParsed:(NSArray *)audioData
 {
@@ -396,9 +404,7 @@
 }
 
 
-/**
- *  根据 URL的pathExtension 识别音频格式
- */
+/// 根据 URL的 pathExtension 识别音频格式
 AudioFileTypeID hintForFileExtension(NSString *fileExtension)
 {
     AudioFileTypeID fileTypeHint = 0;

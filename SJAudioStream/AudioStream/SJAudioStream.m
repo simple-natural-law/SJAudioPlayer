@@ -18,7 +18,7 @@
 
 @property (nonatomic, assign) NSUInteger byteOffset;
 
-@property (nonatomic, assign) CFStreamEventType streamEvent;
+//@property (nonatomic, assign) CFStreamEventType streamEvent;
 
 @property (nonatomic, strong) NSDictionary *httpHeaders;
 
@@ -101,25 +101,10 @@
     return self;
 }
 
-- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error completed:(BOOL *)completed
+- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error isEof:(BOOL *)isEof
 {
     if (self.closed)
     {
-        return nil;
-    }
-    
-    if (self.streamEvent == kCFStreamEventErrorOccurred)
-    {
-        // 错误处理
-        *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:-1 userInfo:nil];
-        
-        return nil;
-    }
-    
-    if (self.streamEvent == kCFStreamEventEndEncountered)
-    {
-        *completed = YES;
-        
         return nil;
     }
     
@@ -136,7 +121,9 @@
         
     }else if (length == 0)
     {
-        *completed = YES;
+        *isEof = YES;
+        
+        NSLog(@"isEof");
         
         return nil;
     }
@@ -162,7 +149,7 @@
 }
 
 
-- (void)close
+- (void)closeReadStream
 {
     self.closed = YES;
     
@@ -172,16 +159,16 @@
 
 
 #pragma mark- ReadStream callback
-void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,void * clientCallBackInfo)
-{
-    SJAudioStream *audioStream = (__bridge SJAudioStream *)(clientCallBackInfo);
-    
-    [audioStream handleReadFormStream:stream eventType:eventType];
-}
-
-- (void)handleReadFormStream:(CFReadStreamRef)stream eventType:(CFStreamEventType)eventType
-{
-    self.streamEvent = eventType;
-}
+//void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,void * clientCallBackInfo)
+//{
+//    SJAudioStream *audioStream = (__bridge SJAudioStream *)(clientCallBackInfo);
+//
+//    [audioStream handleReadFormStream:stream eventType:eventType];
+//}
+//
+//- (void)handleReadFormStream:(CFReadStreamRef)stream eventType:(CFStreamEventType)eventType
+//{
+//    self.streamEvent = eventType;
+//}
 
 @end

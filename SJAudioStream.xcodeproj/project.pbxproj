@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		1A0D9A032074671B007B5CCC /* SJAudioBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99F42074671B007B5CCC /* SJAudioBuffer.m */; };
-		1A0D9A052074671B007B5CCC /* SJAudioDataProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99F82074671B007B5CCC /* SJAudioDataProvider.m */; };
 		1A0D9A062074671B007B5CCC /* SJAudioFileStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99FA2074671B007B5CCC /* SJAudioFileStream.m */; };
 		1A0D9A072074671B007B5CCC /* SJAudioQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99FC2074671B007B5CCC /* SJAudioQueue.m */; };
 		1A0D9A082074671B007B5CCC /* SJAudioPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99FE2074671B007B5CCC /* SJAudioPlayer.m */; };
@@ -29,8 +28,6 @@
 /* Begin PBXFileReference section */
 		1A0D99F32074671B007B5CCC /* SJAudioBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioBuffer.h; sourceTree = "<group>"; };
 		1A0D99F42074671B007B5CCC /* SJAudioBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioBuffer.m; sourceTree = "<group>"; };
-		1A0D99F72074671B007B5CCC /* SJAudioDataProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioDataProvider.h; sourceTree = "<group>"; };
-		1A0D99F82074671B007B5CCC /* SJAudioDataProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioDataProvider.m; sourceTree = "<group>"; };
 		1A0D99F92074671B007B5CCC /* SJAudioFileStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioFileStream.h; sourceTree = "<group>"; };
 		1A0D99FA2074671B007B5CCC /* SJAudioFileStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioFileStream.m; sourceTree = "<group>"; };
 		1A0D99FB2074671B007B5CCC /* SJAudioQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioQueue.h; sourceTree = "<group>"; };
@@ -73,8 +70,6 @@
 			children = (
 				1A0D99F32074671B007B5CCC /* SJAudioBuffer.h */,
 				1A0D99F42074671B007B5CCC /* SJAudioBuffer.m */,
-				1A0D99F72074671B007B5CCC /* SJAudioDataProvider.h */,
-				1A0D99F82074671B007B5CCC /* SJAudioDataProvider.m */,
 				1A0D99F92074671B007B5CCC /* SJAudioFileStream.h */,
 				1A0D99FA2074671B007B5CCC /* SJAudioFileStream.m */,
 				1A0D99FB2074671B007B5CCC /* SJAudioQueue.h */,
@@ -214,7 +209,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1A0D9A082074671B007B5CCC /* SJAudioPlayer.m in Sources */,
-				1A0D9A052074671B007B5CCC /* SJAudioDataProvider.m in Sources */,
 				1A0D9A092074671B007B5CCC /* SJAudioStream.m in Sources */,
 				1AB0EA2420736C17002070E3 /* ViewController.m in Sources */,
 				1AB0EA2F20736C29002070E3 /* main.m in Sources */,

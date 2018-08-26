@@ -11,32 +11,27 @@
 
 @interface SJAudioStream : NSObject
 
-/**
- *  音频数据总长度
- */
+/// 音频数据总长度
 @property (nonatomic, assign, readonly) NSUInteger contentLength;
 
 
-/**
- *  根据 URL 和 数据偏移量 创建一个`SJAudioStream`对象
- */
+/// 根据 URL 和 数据偏移量（用于seek） 创建一个`SJAudioStream`对象
 - (instancetype)initWithURL:(NSURL *)url byteOffset:(NSUInteger)byteOffset;
 
 
 /**
- *  读取指定长度的数据 返回读取数据是否完毕
+ *  读取数据
  *
- *  param maxLength  最大返回数据长度
+ *  param maxLength  最大读取长度
  *  param error      错误信息
- *  param completed  是否已读完
- *  return  data
+ *  param isEof  是否已读完
+ *  return  data     数据
  */
-- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error completed:(BOOL *)completed;
+- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error isEof:(BOOL *)isEof;
 
-/**
- *  关闭
- */
-- (void)close;
+
+/// 关闭ReadStream
+- (void)closeReadStream;
 
 
 @end
