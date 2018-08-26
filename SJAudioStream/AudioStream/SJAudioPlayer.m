@@ -38,6 +38,8 @@
 
 @property (nonatomic, assign) BOOL isEof;
 
+@property (nonatomic, assign) BOOL readDataFormLocalFile;
+
 @property (nonatomic, assign) BOOL pausedByInterrupt;
 
 @property (nonatomic, assign) BOOL stopReadDataRequired;
@@ -78,8 +80,10 @@
     
     if (self)
     {
-        self.url  = url;
-        self.started    = NO;
+        self.url     = url;
+        self.started = NO;
+        
+        self.readDataFormLocalFile = [self.url isFileURL];
         
         pthread_mutex_init(&_mutex, NULL);
         pthread_cond_init(&_cond, NULL);
@@ -109,7 +113,7 @@
 {
     self.started = YES;
     
-    if ([self.url isFileURL])
+    if (self.readDataFormLocalFile)
     {
         self.fileHandle = [NSFileHandle fileHandleForReadingAtPath:self.url.path];
         
@@ -238,7 +242,7 @@
         {
             NSData *data = nil;
             
-            if ([self.url isFileURL])
+            if (self.readDataFormLocalFile)
             {
                 data = [self.fileHandle readDataOfLength:kDefaultBufferSize];
                 
@@ -251,20 +255,20 @@
             }else
             {
                 data = [self.audioStream readDataWithMaxLength:kDefaultBufferSize error:&readDataError isEof:&_isEof];
-            }
-            
-            if (readDataError)
-            {
-                NSLog(@"read data: error");
                 
-                break;
+                if (readDataError)
+                {
+                    NSLog(@"read data: error");
+                    
+                    break;
+                }
             }
             
             if (data.length)
             {
                 if (!self.audioFileStream)
                 {
-                    if (![self.url isFileURL])
+                    if (!self.readDataFormLocalFile)
                     {
                         self.contentLength = self.audioStream.contentLength;
                     }
