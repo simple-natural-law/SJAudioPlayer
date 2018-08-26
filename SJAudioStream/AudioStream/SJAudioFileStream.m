@@ -20,10 +20,10 @@
 @property (nonatomic, assign, readwrite) BOOL available;
 
 @property (nonatomic, assign, readwrite) BOOL readyToProducePackets;
-// 声音格式设置，这些设置要和采集时的配置一致
+
 @property (nonatomic, assign, readwrite) AudioStreamBasicDescription format;
 
-@property (nonatomic, assign, readwrite) unsigned long long fileSize;
+@property (nonatomic, assign, readwrite) NSUInteger fileSize;
 
 @property (nonatomic, assign, readwrite) NSTimeInterval duration;
 
@@ -31,7 +31,7 @@
 
 @property (nonatomic, assign, readwrite) UInt32 maxPacketSize;
 
-@property (nonatomic, assign, readwrite) UInt64 audioDataByteCount;
+@property (nonatomic, assign, readwrite) UInt64 audioDataSize;
 
 @property (nonatomic, assign) BOOL discontinuous;
 // 文件流ID
@@ -45,114 +45,11 @@
 
 @property (nonatomic, assign) UInt64 processedPacketsSizeTotal;
 
-
-
-
-- (void)handleAudioFileStreamProperty:(AudioFileStreamPropertyID)propertyID;
-
-- (void)handleAudioFileStreamPackets:(const void *)packets
-                       numberOfBytes:(UInt32)numberOfBytes
-                     numberOfPackets:(UInt32)numberOfPackets
-                  packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions;
-
 @end
 
-#pragma -mark
-// 在初始化完成之后，只要拿到文件数据就可以进行解析了。解析时调用方法：
-/*
- extern OSStatus AudioFileStreamParseBytes(AudioFileStreamID inAudioFileStream,
-                        UInt32 inDataByteSize,
-                        const void* inData,
-                        UInt32 inFlags);
- 
- AudioFileStreamID: 初始化时返回的id
- inDataByteSize : 本次解析的数据长度
- inData : 本次解析的数据
- inFlags : 本次的解析和上一次的解析是否是连续的关系， 如果是连续的传入0， 否则传入
-       kAudioFileStreamParseFlag_Discontinuity。
- 
- 何谓“连续” ：MP3的数据都以帧的形式存在的，解析时也需要以帧为单位解析。但在解码之前我们不可能知道每个帧的边界在第几个字节，所以就会出现这样的情况：我们传给AudioFileStreamParseBytes的数据在解析完成之后会有一部分数据余下来，这部分数据是接下去那一帧的前半部分，如果再次有数据输入需要继续解析时就必须要用到前一次解析余下来的数据才能保证帧数据完整，所以在正常播放的情况下传入0即可。目前知道的需要传入kAudioFileStreamParseFlag_Discontinuity的情况有两个，一个是在seek完毕之后显然seek后的数据和之前的数据完全无关；另一个是开源播放器AudioStreamer的作者@Matt Gallagher曾在自己的blog中提到过的：
- the Audio File Stream Services hit me with a nasty bug: AudioFileStreamParseBytes will crash when trying to parse a streaming MP3.
- In this case, if we pass the kAudioFileStreamParseFlag_Discontinuity flag to AudioFileStreamParseBytes on every invocation between receiving kAudioFileStreamProperty_ReadyToProducePackets and the first successful call to MyPacketsProc, then AudioFileStreamParseBytes will be extra cautious in its approach and won't crash.
- Matt发布这篇blog是在2008年，这个Bug年代相当久远了，而且原因未知，究竟是否修复也不得而知，而且由于环境不同（比如测试用的mp3文件和所处的iOS系统）无法重现这个问题，所以我个人觉得还是按照Matt的work around在回调得到kAudioFileStreamProperty_ReadyToProducePackets之后，在正常解析第一帧之前都传入kAudioFileStreamParseFlag_Discontinuity比较好。
- 回到之前的内容，AudioFileStreamParseBytes方法的返回值表示当前的数据是否被正常解析，如果OSStatus的值不是noErr则表示解析不成功，其中错误码包括：
- enum
- {
-  kAudioFileStreamError_UnsupportedFileType        = 'typ?',
-  kAudioFileStreamError_UnsupportedDataFormat      = 'fmt?',
-  kAudioFileStreamError_UnsupportedProperty        = 'pty?',
-  kAudioFileStreamError_BadPropertySize            = '!siz',
-  kAudioFileStreamError_NotOptimized               = 'optm',
-  kAudioFileStreamError_InvalidPacketOffset        = 'pck?',
-  kAudioFileStreamError_InvalidFile                = 'dta?',
-  kAudioFileStreamError_ValueUnknown               = 'unk?',
-  kAudioFileStreamError_DataUnavailable            = 'more',
-  kAudioFileStreamError_IllegalOperation           = 'nope',
-  kAudioFileStreamError_UnspecifiedError           = 'wht?',
-  kAudioFileStreamError_DiscontinuityCantRecover   = 'dsc!'
- };
- 
- 注意AudioFileStreamParseBytes方法每一次调用都应该注意返回值，一旦出现错误就可以不必继续Parse了。
- 
- 在调用AudioFileStreamParseBytes方法进行解析时会首先读取格式信息，并同步的进入AudioFileStream_PropertyListenerProc回调方法
- */
-static void SJAudioFileStreamPropertyListener(void *inClientData, AudioFileStreamID inAudioFileStream, AudioFileStreamPropertyID inPropertyID, UInt32 *ioFlags)
-{
-    SJAudioFileStream *audioFileStream = (__bridge SJAudioFileStream *)inClientData;
-    [audioFileStream handleAudioFileStreamProperty:inPropertyID];
-}
-
-
-/*
- 读取格式信息完成之后继续调用AudioFileStreamParseBytes方法可以对帧进行分离，并同步的进入AudioFileStream_PacketsProc回调方法。
- 回调的定义:
- typedef void (*AudioFileStream_PacketsProc)(void * inClientData,
-                        UInt32 inNumberBytes,
-                        UInt32 inNumberPackets,
-                        const void * inInputData,
-                        AudioStreamPacketDescription * inPacketDescriptions);
- inNumberBytes :　本次处理的数据大小
- inNumberPackets　：　本次总共处理了多少帧（即代码里的ｐａｃｋｅｔ）
- inInputData : 本次处理的所有数据
- AudioStreamPacketDescription : 数组，存储了每一帧数据是从第几个字节开始的，这一帧总共多少字节。
- 
- AudioStreamPacketDescription结构:
- 这里的mVariableFramesInPacket是指实际的数据帧只有VBR的数据才能用到（像MP3这样的压缩数据一个帧里会有好几个数据帧）
- struct  AudioStreamPacketDescription
- {
-  SInt64  mStartOffset;
-  UInt32  mVariableFramesInPacket;
-  UInt32  mDataByteSize;
- };
- 
- */
-
-static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumberBytes, UInt32 inNumberPackets, const void *inInputData, AudioStreamPacketDescription *inPacketDescription)
-{
-    SJAudioFileStream *audioFileStream = (__bridge SJAudioFileStream *)inClientData;
-    [audioFileStream handleAudioFileStreamPackets:inInputData numberOfBytes:inNumberBytes numberOfPackets:inNumberPackets packetDescriptions:inPacketDescription];
-}
 
 
 @implementation SJAudioFileStream
-
-
-- (instancetype)initWithFileType:(AudioFileTypeID)fileType fileSize:(unsigned long long)fileSize error:(NSError **)error
-{
-    self = [super init];
-    if (self) {
-        self.discontinuous = NO;
-        self.fileType = fileType;
-        self.fileSize = fileSize;
-        [self openAudioFileStreamWithFileTypeHint:self.fileType error:error];
-    }
-    return self;
-}
-
-- (void)dealloc
-{
-    [self closeAudioFlieStream];
-}
 
 - (void)errorForOSStatus:(OSStatus)status error:(NSError *__autoreleasing *)outError
 {
@@ -162,43 +59,29 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
     }
 }
 
-#pragma -mark open & close
+
+- (instancetype)initWithFileType:(AudioFileTypeID)fileType fileSize:(NSUInteger)fileSize error:(NSError **)error
+{
+    self = [super init];
+    
+    if (self)
+    {
+        self.discontinuous = NO;
+        
+        self.fileType = fileType;
+        
+        self.fileSize = fileSize;
+        
+        [self openAudioFileStreamWithFileTypeHint:self.fileType error:error];
+    }
+    
+    return self;
+}
+
+
 - (BOOL)openAudioFileStreamWithFileTypeHint:(AudioFileTypeID)fileTypeHint error:(NSError *__autoreleasing *)error
 {
-    //第一步，自然是要生成一个AudioFileStream的实例：
-    
-    // 用来读取采样率、码率、时长等基本信息以及分离音频帧。
-    // 根据Apple的描述AudioFileStreamer用在流播放中，当然不仅限于网络流，本地文件同样可以用它来读取信息和分离音频帧。AudioFileStreamer的主要数据是文件数据而不是文件路径，所以数据的读取需要使用者自行实现，
-    /*
-     支持的文件格式有：
-     MPEG-1 Audio Layer 3, used for .mp3 files
-     MPEG-2 ADTS, used for the .aac audio data format
-     AIFC
-     AIFF
-     CAF
-     MPEG-4, used for .m4a, .mp4, and .3gp files
-     NeXT
-     WAVE
-     上述格式是iOS、MacOSX所支持的音频格式，这类格式可以被系统提供的API解码，如果想要解码其他的音频格式（如OGG、APE、FLAC）就需要自己实现解码器了。
-    */
-    
-    // 和之前的AudioSession的初始化方法一样是一个上下文对象
-    
-    /*
-     extern OSStatus AudioFileStreamOpen (void * inClientData,
-                          AudioFileStream_PropertyListenerProc inPropertyListenerProc,
-                          AudioFileStream_PacketsProc inPacketsProc,
-                          AudioFileTypeID inFileTypeHint,
-                          AudioFileStreamID * outAudioFileStream);
-     
-     第一个参数和之前的AudioSession的初始化方法一样是一个上下文对象；
-     第二个参数AudioFileStream_PropertyListenerProc是歌曲信息解析的回调，每解析出一个歌曲信息都会进行一次回调；
-     第三个参数AudioFileStream_PacketsProc是分离帧的回调，每解析出一部分帧就会进行一次回调；
-     第四个参数AudioFileTypeID是文件类型的提示，这个参数来帮助AudioFileStream对文件格式进行解析。这个参数在文件信息不完整（例如信息有缺陷）时尤其有用，它可以给与AudioFileStream一定的提示，帮助其绕过文件中的错误或者缺失从而成功解析文件。所以在确定文件类型的情况下建议各位还是填上这个参数，如果无法确定可以传入0.
-     第五个参数是返回的AudioFileStream实例对应的AudioFileStreamID，这个ID需要保存起来作为后续一些方法的参数使用；
-     
-     返回值用来判断是否成功初始化（OSStatus == noErr）。
-     */
+    // 打开AudioFileStream来读取采样率、码率、时长等基本信息以及分离音频帧。
     OSStatus status = AudioFileStreamOpen((__bridge void * _Nullable)(self), SJAudioFileStreamPropertyListener, SJAudioFileStreamPacketsCallBack, fileTypeHint, &_audioFileStreamID);
     
     if (status != noErr)
@@ -211,8 +94,8 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
     return status == noErr;
 }
 
-// 关闭AudioFileStream
-- (void)closeAudioFlieStream
+
+- (void)close
 {
     if (self.available)
     {
@@ -223,164 +106,137 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
 }
 
 
-- (void)close
-{
-    [self closeAudioFlieStream];
-}
-
 
 - (BOOL)available
 {
     return self.audioFileStreamID != NULL;
 }
 
-#pragma -mark
+
 - (void)handleAudioFileStreamProperty:(AudioFileStreamPropertyID)propertyID
 {
-    // AudioFileStreamPropertyID （对 AudioFileStream常量 获取某个属性时调用）
+    // 一旦解析到音频数据的开头，流的所有属性就都是已知的了。
     
-    // 一旦解析到音频数据的开头，流的所有属性就是已知的了
-    if (propertyID == kAudioFileStreamProperty_ReadyToProducePackets)
+    switch (propertyID)
     {
-        self.readyToProducePackets = YES;
-        self.discontinuous = YES;
-        
-        UInt32 sizeOfUInt32 = sizeof(self.maxPacketSize);
-        
-        /*
-        extern OSStatus
-        AudioFileStreamGetProperty(
-                                   AudioFileStreamID					inAudioFileStream,
-                                   AudioFileStreamPropertyID			inPropertyID,
-                                   UInt32 *							ioPropertyDataSize,
-                                   void *								outPropertyData)
-         该方法用来获取某个属性对应的数据。
-         第一个参数为：文件流ID
-         第二个参数为：属性
-         
-         CF_ENUM(AudioFileStreamPropertyID)
-         {
-         kAudioFileStreamProperty_ReadyToProducePackets			=	'redy',
-         kAudioFileStreamProperty_FileFormat						=	'ffmt',
-         kAudioFileStreamProperty_DataFormat						=	'dfmt',
-         kAudioFileStreamProperty_FormatList						=	'flst',
-         kAudioFileStreamProperty_MagicCookieData				=	'mgic',
-         kAudioFileStreamProperty_AudioDataByteCount				=	'bcnt',
-         kAudioFileStreamProperty_AudioDataPacketCount			=	'pcnt',
-         kAudioFileStreamProperty_MaximumPacketSize				=	'psze',
-         kAudioFileStreamProperty_DataOffset						=	'doff',
-         kAudioFileStreamProperty_ChannelLayout					=	'cmap',
-         kAudioFileStreamProperty_PacketToFrame					=	'pkfr',
-         kAudioFileStreamProperty_FrameToPacket					=	'frpk',
-         kAudioFileStreamProperty_PacketToByte					=	'pkby',
-         kAudioFileStreamProperty_ByteToPacket					=	'bypk',
-         kAudioFileStreamProperty_PacketTableInfo				=	'pnfo',
-         kAudioFileStreamProperty_PacketSizeUpperBound  			=	'pkub',
-         kAudioFileStreamProperty_AverageBytesPerPacket			=	'abpp',
-         kAudioFileStreamProperty_BitRate						=	'brat',
-         kAudioFileStreamProperty_InfoDictionary                 =   'info'
-         };
-         
-         第三个参数
-         第四个参数
-        */
-        
-        // kAudioFileStreamProperty_PacketSizeUpperBound (文件中理论上最大数据包的大小)
-        OSStatus status = AudioFileStreamGetProperty(self.audioFileStreamID, kAudioFileStreamProperty_PacketSizeUpperBound, &sizeOfUInt32, &_maxPacketSize);
-        
-        // 如果获取属性失败 或者 最大数据包的大小为0
-        if (status != noErr || self.maxPacketSize == 0) {
-            // kAudioFileStreamProperty_MaximumPacketSize (文件中包含的数据包的最大尺寸)
-            status = AudioFileStreamGetProperty(self.audioFileStreamID, kAudioFileStreamProperty_MaximumPacketSize, &sizeOfUInt32, &_maxPacketSize);
+        case kAudioFileStreamProperty_ReadyToProducePackets:
+        {
+            self.readyToProducePackets = YES;
+            self.discontinuous = YES;
             
-            if (status != noErr || self.maxPacketSize == 0) {
-                
-                self.maxPacketSize = kDefaultBufferSize;
+            UInt32 sizeOfUInt32 = sizeof(self.maxPacketSize);
+            
+            //  获取文件中理论上最大的数据包的大小
+            OSStatus status = AudioFileStreamGetProperty(self.audioFileStreamID, kAudioFileStreamProperty_PacketSizeUpperBound, &sizeOfUInt32, &_maxPacketSize);
+            
+            // 如果获取失败或者最大数据包的大小为0
+            if (status != noErr || self.maxPacketSize == 0)
+            {
+                // 则获取文件中包含的数据包的最大尺寸
+                status = AudioFileStreamGetProperty(self.audioFileStreamID, kAudioFileStreamProperty_MaximumPacketSize, &sizeOfUInt32, &_maxPacketSize);
             }
             
+            if (self.delegate && [self.delegate respondsToSelector:@selector(audioFileStreamReadyToProducePackets:)])
+            {
+                [self.delegate audioFileStreamReadyToProducePackets:self];
+            }
         }
+            break;
         
-        if (self.delegate && [self.delegate respondsToSelector:@selector(audioFileStreamReadyToProducePackets:)]) {
-            [self.delegate audioFileStreamReadyToProducePackets:self];
+        case kAudioFileStreamProperty_DataOffset:
+        {
+            UInt32 offsetSize = sizeof(self.dataOffset);
+            
+            // kAudioFileStreamProperty_DataOffset表示音频数据在整个音频文件中的offset，因为大多数音频文件都会有一个文件头，之后才是真正的音频数据。这个值在seek时会发挥比较大的作用，音频的seek并不是直接seek文件位置而seek时间（比如seek到2分10秒的位置），seek时会根据时间计算出音频数据的字节offset然后需要再加上音频数据的offset才能得到在文件中的真正offset。
+            AudioFileStreamGetProperty(self.audioFileStreamID, kAudioFileStreamProperty_DataOffset, &offsetSize, &_dataOffset);
+            
+            self.audioDataSize = self.fileSize - self.dataOffset;
+            
+            // 计算音频持续时长
+            [self calculateDuration];
         }
-        
-    }// kAudioFileStreamProperty_DataOffset(表示音频数据在整个音频文件中的offset（因为大多数音频文件都会有一个文件头之后才使真正的音频数据），这个值在seek时会发挥比较大的作用，音频的seek并不是直接seek文件位置而seek时间（比如seek到2分10秒的位置），seek时会根据时间计算出音频数据的字节offset然后需要再加上音频数据的offset才能得到在文件中的真正offset。 SInt64)
-    else if (propertyID == kAudioFileStreamProperty_DataOffset)
-    {
-        UInt32 offsetSize = sizeof(self.dataOffset);
-        AudioFileStreamGetProperty(self.audioFileStreamID, kAudioFileStreamProperty_DataOffset, &offsetSize, &_dataOffset);
-        self.audioDataByteCount = self.fileSize - self.dataOffset;
-        
-        // 计算音频持续时长
-        [self calculateDuration];
-        
-    }// kAudioFileStreamProperty_DataFormat (AudioStreamBasicDescription类 用来描述音频数据的格式)
-    else if (propertyID == kAudioFileStreamProperty_DataFormat)
-    {
-        UInt32 asbdSize = sizeof(self.format);
-        AudioFileStreamGetProperty(self.audioFileStreamID, kAudioFileStreamProperty_DataFormat, &asbdSize, &_format);
-        // 计算数据包间隔时长
-        [self calculatePacketDuration];
-    }// kAudioFileStreamProperty_FormatList (为了支持包括AAC SBR格式编码的数据流可以被解码到多个目的地的格式，此属性返回包含这些格式的AudioFormatListItems数组（见AudioFormat.h）。默认行为是与kAudioFileStreamProperty_DataFormat属性返回相同的AudioStreamBasicDescription的一个AudioFormatListItem。)
-    else if (propertyID == kAudioFileStreamProperty_FormatList)
-    {
-        /*
-        extern OSStatus
-        AudioFileStreamGetPropertyInfo(
-                                       AudioFileStreamID				inAudioFileStream,
-                                       AudioFileStreamPropertyID		inPropertyID,
-                                       UInt32 * __nullable				outPropertyDataSize,
-                                       Boolean * __nullable			outWritable)
-         该方法用来获取某个属性对应的数据的大小(outDataSize)以及该属性是否可以被write（isWriteable） 
-         AudioFileStreamGetProperty 用来获取属性对应的数据.
-         对于一些大小可变的属性需要先使用 AudioFileStreamGetPropertyInfo 获取数据大小 才能获取数据(例如formatList)，而有些确定类型单个属性则不必先调用AudioFileGetPropertyInfo直接调用AudioFileGetProperty即可（比如BitRate）
-        */
-        Boolean outWriteable;
-        UInt32 formatListSize;
-        OSStatus status = AudioFileStreamGetPropertyInfo(self.audioFileStreamID, kAudioFileStreamProperty_FormatList, &formatListSize, &outWriteable);
-        if (status == noErr) {
-            // 获取formatlist
-            AudioFormatListItem *formatlist = malloc(formatListSize);
-            OSStatus status = AudioFileStreamGetProperty(self.audioFileStreamID, kAudioFileStreamProperty_FormatList, &formatListSize, formatlist);
-            if (status == noErr) {
+            break;
+            
+        case kAudioFileStreamProperty_DataFormat:
+        {
+            UInt32 asbdSize = sizeof(self.format);
+            
+            // kAudioFileStreamProperty_DataFormat用来描述音频数据的格式
+            AudioFileStreamGetProperty(self.audioFileStreamID, kAudioFileStreamProperty_DataFormat, &asbdSize, &_format);
+            
+            // 计算数据包间隔时长
+            [self calculatePacketDuration];
+        }
+            break;
+            
+        case kAudioFileStreamProperty_FormatList:
+        {
+            Boolean outWriteable;
+            UInt32 formatListSize;
+            
+            // 该方法用来获取某个属性对应的数据的大小(outDataSize)以及该属性是否可以被write（isWriteable）AudioFileStreamGetProperty用来获取属性对应的数据.对于一些大小可变的属性需要先使用 AudioFileStreamGetPropertyInfo获取数据大小，之后才能获取数据(例如formatList)。而有些确定类型单个属性则不必先调用AudioFileGetPropertyInfo，直接调用AudioFileGetProperty即可（比如BitRate）。
+            // kAudioFileStreamProperty_FormatList (为了支持包括AAC和SBR格式编码的数据流可以被解码到多个目的地的格式，此属性返回包含这些格式的AudioFormatListItems数组（见AudioFormat.h）。默认行为是与kAudioFileStreamProperty_DataFormat属性返回相同的AudioStreamBasicDescription的一个AudioFormatListItem。)
+            OSStatus status = AudioFileStreamGetPropertyInfo(self.audioFileStreamID, kAudioFileStreamProperty_FormatList, &formatListSize, &outWriteable);
+            
+            if (status == noErr)
+            {
+                // 获取formatlist
+                AudioFormatListItem *formatlist = malloc(formatListSize);
                 
-                UInt32 supportedFormatsSize;
-                status = AudioFormatGetPropertyInfo(kAudioFormatProperty_DecodeFormatIDs, 0, NULL, &supportedFormatsSize);
-                if (status != noErr) {
-                    // 错误处理
-                    free(formatlist);
-                    return;
-                }
+                OSStatus status = AudioFileStreamGetProperty(self.audioFileStreamID, kAudioFileStreamProperty_FormatList, &formatListSize, formatlist);
                 
-                UInt32 supportedFormatCount = supportedFormatsSize / sizeof(OSType);
-                OSType *supportedFormats = (OSType *)malloc(supportedFormatsSize);
-                status = AudioFormatGetProperty(kAudioFormatProperty_DecodeFormatIDs, 0, NULL, &supportedFormatCount, supportedFormats);
-                
-                if (status != noErr) {
-                    // 错误处理
-                    free(formatlist);
-                    free(supportedFormats);
-                    return;
-                }
-                
-                // 选择需要的格式
-                for (int i = 0; i * sizeof(AudioFormatListItem) < formatListSize; i += sizeof(AudioFormatListItem)) {
-                    AudioStreamBasicDescription format = formatlist[i].mASBD;
-                    for (UInt32 j = 0; j < supportedFormatCount; ++j) {
+                if (status == noErr)
+                {
+                    UInt32 supportedFormatsSize;
+                    
+                    status = AudioFormatGetPropertyInfo(kAudioFormatProperty_DecodeFormatIDs, 0, NULL, &supportedFormatsSize);
+                    
+                    if (status != noErr)
+                    {
+                        // 错误处理
+                        free(formatlist);
+                        return;
+                    }
+                    
+                    UInt32 supportedFormatCount = supportedFormatsSize / sizeof(OSType);
+                    
+                    OSType *supportedFormats = (OSType *)malloc(supportedFormatsSize);
+                    
+                    status = AudioFormatGetProperty(kAudioFormatProperty_DecodeFormatIDs, 0, NULL, &supportedFormatCount, supportedFormats);
+                    
+                    if (status != noErr)
+                    {
+                        // 错误处理
+                        free(formatlist);
+                        free(supportedFormats);
+                        return;
+                    }
+                    
+                    // 选择需要的格式
+                    for (int i = 0; i * sizeof(AudioFormatListItem) < formatListSize; i += sizeof(AudioFormatListItem))
+                    {
+                        AudioStreamBasicDescription format = formatlist[i].mASBD;
                         
-                        if (format.mFormatID == supportedFormats[j]) {
+                        for (UInt32 j = 0; j < supportedFormatCount; ++j)
+                        {
                             
-                            self.format = format;
-                            [self calculatePacketDuration];
-                            break;
+                            if (format.mFormatID == supportedFormats[j])
+                            {
+                                self.format = format;
+                                [self calculatePacketDuration];
+                                break;
+                            }
                         }
                     }
+                    free(supportedFormats);
                 }
-                free(supportedFormats);
+                free(formatlist);
             }
-            free(formatlist);
         }
-        
+            break;
+            
+        default:
+            break;
     }
 }
 
@@ -447,7 +303,7 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
     }
 }
 
-#pragma -mark
+
 /*
  A void * pointing to memory set up by the caller.
  Some file types require that a magic cookie be provided before packets can be written
@@ -499,7 +355,7 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
 - (SInt64)seekToTime:(NSTimeInterval *)time
 {
     // 近似seekOffset = 数据偏移 + seekToTime对应的近似字节数
-    SInt64 approximateSeekoffset = self.dataOffset + (*time / self.duration) * self.audioDataByteCount;
+    SInt64 approximateSeekoffset = self.dataOffset + (*time / self.duration) * self.audioDataSize;
     
     // floor() 向下取整  计算packet位置
     SInt64 seekToPacket = floor(*time / self.packetDuration);
@@ -539,17 +395,25 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
 
 }
 
-// 获取时长的最佳方法是从ID3信息中去读取，那样是最准确的。如果ID3信息中没有存，那就依赖于文件头中的信息去计算了。(音频数据的字节总量audioDataByteCount可以通过kAudioFileStreamProperty_AudioDataByteCount获取，码率bitRate可以通过kAudioFileStreamProperty_BitRate获取也可以通过Parse一部分数据后计算平均码率来得到。)
+/*
+ 获取时长的最佳方法是从ID3信息中去读取，那样是最准确的。如果ID3信息中没有存，那就依赖于文件头中的信息去计算。
+ 
+ 音频数据的字节总量`audioDataByteCount`可以通`kAudioFileStreamProperty_AudioDataByteCount`获取
+ 码率`bitRate`可以通过`kAudioFileStreamProperty_BitRate`获取，也可以通过解析一部分数据后计算平均码率
+ 来得到。
+*/
 - (void)calculateDuration
 {
     if (self.fileSize > 0 && self.bitRate > 0)
     {
-        self.duration = (self.audioDataByteCount * 8.0) / self.bitRate;
+        self.duration = (self.audioDataSize * 8.0) / self.bitRate;
     }
 }
 
 
-// 利用之前解析得到的音频格式信息来计算PacketDuration。（每个帧数据对应的时长）
+/*
+ 利用之前解析得到的音频格式信息来计算PacketDuration（每个帧数据对应的时长）。
+*/
 - (void)calculatePacketDuration
 {
     if (self.format.mSampleRate > 0)
@@ -559,5 +423,28 @@ static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumber
 }
 
 
+/*
+ 在调用`AudioFileStreamParseBytes`方法进行解析时会首先读取格式信息，每解析出一个音频的格式信息都会同步调用一次此方法。
+ 
+ 注意`AudioFileStreamParseBytes`方法每一次调用都应该注意返回值，一旦出现错误就可以不用继续解析了。
+*/
+static void SJAudioFileStreamPropertyListener(void *inClientData, AudioFileStreamID inAudioFileStream, AudioFileStreamPropertyID inPropertyID, UInt32 *ioFlags)
+{
+    SJAudioFileStream *audioFileStream = (__bridge SJAudioFileStream *)inClientData;
+    
+    [audioFileStream handleAudioFileStreamProperty:inPropertyID];
+}
+
+
+/*
+ 读取格式信息完成之后，继续调用`AudioFileStreamParseBytes`方法可以对帧进行分离，每解析出一部分帧就会同步调用一次此方法。
+*/
+static void SJAudioFileStreamPacketsCallBack(void *inClientData, UInt32 inNumberBytes, UInt32 inNumberPackets, const void *inInputData, AudioStreamPacketDescription *inPacketDescription)
+{
+    SJAudioFileStream *audioFileStream = (__bridge SJAudioFileStream *)inClientData;
+    
+    [audioFileStream handleAudioFileStreamPackets:inInputData numberOfBytes:inNumberBytes numberOfPackets:inNumberPackets packetDescriptions:inPacketDescription];
+}
 
 @end
+

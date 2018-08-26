@@ -426,14 +426,12 @@
 #pragma mark- SJAudioFileStreamDelegate
 - (void)audioFileStream:(SJAudioFileStream *)audioFileStream audioDataParsed:(NSArray *)audioData
 {
-    //NSLog(@"======");
-    
     [self.buffer enqueueFromDataArray:audioData];
 }
 
 
 /// 根据 URL的 pathExtension 识别音频格式
-AudioFileTypeID hintForFileExtension(NSString *fileExtension)
+AudioFileTypeID hintForFileExtension (NSString *fileExtension)
 {
     AudioFileTypeID fileTypeHint = 0;
     
