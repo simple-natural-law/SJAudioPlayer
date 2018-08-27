@@ -165,7 +165,6 @@
         
         return;
     }
-    
 
     for (int i = 0; i < SJAudioQueueBufferCount; ++i)
     {
@@ -305,12 +304,13 @@
  OSStatus  AudioQueueFlush(AudioQueueRef inAQ);
  
  调用此函数后，会播放完Enqueue的所有 buffer, 然后后重置解码器状态信息，以防止当前的解码器状态影响到下一段音
- 频的解码(比如切换播放的歌曲时)。 如果和AudioQueueStop（AQ，false）一起使用并不会起效，因为 stop 方法的
+ 频的解码(比如切换播放的歌曲时)。 如果和`AudioQueueStop(AQ，false)`一起使用并不会起效，因为 stop 方法的
  false参数也会做同样的事情。
 */
 - (BOOL)flush
 {
     OSStatus status = AudioQueueFlush(self.audioQueue);
+    
     return status == noErr;
 }
 
@@ -327,6 +327,7 @@
 - (BOOL)reset
 {
     OSStatus status = AudioQueueReset(self.audioQueue);
+    
     return status == noErr;
 }
 

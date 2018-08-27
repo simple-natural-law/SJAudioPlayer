@@ -268,8 +268,8 @@
             Boolean outWriteable;
             UInt32 formatListSize;
             
-            // 该方法用来获取某个属性对应的数据的大小(outDataSize)以及该属性是否可以被write（isWriteable）AudioFileStreamGetProperty用来获取属性对应的数据.对于一些大小可变的属性需要先使用 AudioFileStreamGetPropertyInfo获取数据大小，之后才能获取数据(例如formatList)。而有些确定类型单个属性则不必先调用AudioFileGetPropertyInfo，直接调用AudioFileGetProperty即可（比如BitRate）。
             // kAudioFileStreamProperty_FormatList (为了支持包括AAC和SBR格式编码的数据流可以被解码到多个目的地的格式，此属性返回包含这些格式的AudioFormatListItems数组（见AudioFormat.h）。默认行为是与kAudioFileStreamProperty_DataFormat属性返回相同的AudioStreamBasicDescription的一个AudioFormatListItem。)
+            // 该方法用来获取某个属性对应的数据的大小(outDataSize)以及该属性是否可以被write（isWriteable）AudioFileStreamGetProperty用来获取属性对应的数据.对于一些大小可变的属性需要先使用 AudioFileStreamGetPropertyInfo获取数据大小，之后才能获取数据(例如formatList)。而有些确定类型单个属性则不必先调用AudioFileGetPropertyInfo，直接调用AudioFileGetProperty即可（比如BitRate）。
             OSStatus status = AudioFileStreamGetPropertyInfo(self.audioFileStreamID, kAudioFileStreamProperty_FormatList, &formatListSize, &outWriteable);
             
             if (status == noErr)
