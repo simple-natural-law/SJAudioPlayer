@@ -16,8 +16,7 @@
 #import "SJAudioPacketsBuffer.h"
 
 
-#define kDefaultBufferSize 2048
-
+static NSUInteger const kDefaultBufferSize = 1024;
 
 @interface SJAudioPlayer ()<SJAudioFileStreamDelegate>
 {
