@@ -1,5 +1,5 @@
 //
-//  SJParsedAudioData.h
+//  SJAudioPacketData.h
 //  SJAudioStream
 //
 //  Created by 张诗健 on 15/12/30.
@@ -9,12 +9,12 @@
 #import <Foundation/Foundation.h>
 #import <CoreAudio/CoreAudioTypes.h>
 
-@interface SJParsedAudioData : NSObject
+@interface SJAudioPacketData : NSObject
 
 @property (nonatomic, readonly, strong) NSData *data;
 
 @property (nonatomic, readonly, assign) AudioStreamPacketDescription packetDescription;
 
-+ (instancetype)parsedAudioDataWithBytes:(const void *)bytes packetDescription:(AudioStreamPacketDescription)packetDescription;
+- (instancetype)initWithBytes:(const void *)bytes packetDescription:(AudioStreamPacketDescription)packetDescription;
 
 @end

@@ -1,28 +1,27 @@
 //
-//  SJAudioBuffer.h
+//  SJAudioPacketsBuffer.h
 //  SJAudioStream
 //
-//  Created by 张诗健 on 15/12/30.
-//  Copyright © 2015年 zhangshijian. All rights reserved.
+//  Created by 张诗健 on 2017/11/27.
+//  Copyright © 2017年 张诗健. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
 #import <CoreAudio/CoreAudioTypes.h>
 
-@class SJParsedAudioData;
 
-@interface SJAudioBuffer : NSObject
+@class SJAudioPacketData;
+
+@interface SJAudioPacketsBuffer : NSObject
 
 + (instancetype)buffer;
 
-- (void)enqueueData:(SJParsedAudioData *)data;
-- (void)enqueueFromDataArray:(NSArray *)dataArray;
+- (void)enqueueData:(SJAudioPacketData *)data;
 
 - (BOOL)hasData;
 
 - (UInt32)bufferedSize;
 
-/// description needs free
 - (NSData *)dequeueDataWithSize:(UInt32)requestSize packetCount:(UInt32 *)packetCount descriptions:(AudioStreamPacketDescription **)descriptions;
 
 - (void)clean;

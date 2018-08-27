@@ -313,6 +313,8 @@ static int const SJAudioQueueBufferCount = 4;
 
 /*
  播放音频数据，音频数据长度必须小于AudioQueueBufferRef的size。
+ 
+ 还需要传入音频数据中包含的音频帧个数和每个音频帧的描述信息。
 */
 - (BOOL)playData:(NSData *)data packetCount:(UInt32)packetCount packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions isEof:(BOOL)isEof
 {

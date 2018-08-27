@@ -1,14 +1,14 @@
 //
-//  SJParsedAudioData.m
+//  SJAudioPacketData.m
 //  SJAudioStream
 //
 //  Created by 张诗健 on 15/12/30.
 //  Copyright © 2015年 zhangshijian. All rights reserved.
 //
 
-#import "SJParsedAudioData.h"
+#import "SJAudioPacketData.h"
 
-@interface SJParsedAudioData ()
+@interface SJAudioPacketData ()
 
 @property (nonatomic, readwrite, strong) NSData *data;
 
@@ -16,13 +16,7 @@
 
 @end
 
-@implementation SJParsedAudioData
-
-
-+ (instancetype)parsedAudioDataWithBytes:(const void *)bytes packetDescription:(AudioStreamPacketDescription)packetDescription
-{
-    return [[self alloc] initWithBytes:bytes packetDescription:packetDescription];
-}
+@implementation SJAudioPacketData
 
 
 - (instancetype)initWithBytes:(const void *)bytes packetDescription:(AudioStreamPacketDescription)packetDescription

@@ -7,7 +7,8 @@
 //
 
 #import "SJAudioFileStream.h"
-#import "SJParsedAudioData.h"
+#import "SJAudioPacketData.h"
+
 
 
 @interface SJAudioFileStream ()
@@ -414,20 +415,15 @@
         }
         packetDescriptions = description;
     }
-    
-    NSMutableArray *parsedDataArray = [[NSMutableArray alloc] init];
-    
+
     for (int i = 0; i < numberOfPackets; ++i)
     {
         SInt64 packetOffset = packetDescriptions[i].mStartOffset;
         
-        // 把解析出来的帧数据放进自己的buffer中
-        SJParsedAudioData *parsedData = [SJParsedAudioData parsedAudioDataWithBytes:packets + packetOffset packetDescription:packetDescriptions[i]];
-        
-        [parsedDataArray addObject:parsedData];
+        SJAudioPacketData *packetData = [[SJAudioPacketData alloc] initWithBytes:packets + packetOffset packetDescription:packetDescriptions[i]];
+
+        [self.delegate audioFileStream:self receiveAudioPacketData:packetData];
     }
-    
-    [self.delegate audioFileStream:self audioDataParsed:parsedDataArray];
     
     if (deletePackDesc)
     {

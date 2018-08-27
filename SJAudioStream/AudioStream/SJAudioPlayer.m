@@ -12,8 +12,8 @@
 #import "SJAudioStream.h"
 #import "SJAudioFileStream.h"
 #import "SJAudioQueue.h"
-#import "SJParsedAudioData.h"
-#import "SJAudioBuffer.h"
+#import "SJAudioPacketData.h"
+#import "SJAudioPacketsBuffer.h"
 
 
 #define kDefaultBufferSize 2048
@@ -33,7 +33,7 @@
 
 @property (nonatomic, strong) SJAudioQueue *audioQueue;
 
-@property (nonatomic, strong) SJAudioBuffer *buffer;
+@property (nonatomic, strong) SJAudioPacketsBuffer *buffer;
 
 @property (nonatomic, assign) NSUInteger byteOffset;
 
@@ -261,7 +261,7 @@
                 
                 if (readDataError)
                 {
-                    NSLog(@"read data: error");
+                    NSLog(@"error: failed to read data.");
                     
                     break;
                 }
@@ -278,14 +278,24 @@
                     
                     self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:hintForFileExtension(self.url.pathExtension) fileSize:self.contentLength error:&openAudioFileStreamError];
                     
+                    if (openAudioFileStreamError)
+                    {
+                        NSLog(@"error: failed to open AudioFileStream.");
+                    }
+                    
                     self.audioFileStream.delegate = self;
                     
-                    self.buffer = [SJAudioBuffer buffer];
+                    self.buffer = [SJAudioPacketsBuffer buffer];
                 }
                 
                 if (self.audioFileStream)
                 {
                     [self.audioFileStream parseData:data error:&parseDataError];
+                    
+                    if (parseDataError)
+                    {
+                        NSLog(@"error: failed to parse audio data.");
+                    }
                 }
             }
         }
@@ -319,7 +329,7 @@
                 if ([self.buffer hasData])
                 {
                     UInt32 packetCount;
-                    
+
                     AudioStreamPacketDescription *desces = NULL;
                     
                     if ([self.buffer bufferedSize] >= kDefaultBufferSize)
@@ -331,7 +341,7 @@
                     }else
                     {
                         NSData *data = [self.buffer dequeueDataWithSize:[self.buffer bufferedSize] packetCount:&packetCount descriptions:&desces];
-                        
+
                         [self.audioQueue playData:data packetCount:packetCount packetDescriptions:desces isEof:self.isEof];
                     }
                     
@@ -427,49 +437,49 @@
 
 
 #pragma mark- SJAudioFileStreamDelegate
-- (void)audioFileStream:(SJAudioFileStream *)audioFileStream audioDataParsed:(NSArray *)audioData
+- (void)audioFileStream:(SJAudioFileStream *)audioFileStream receiveAudioPacketData:(SJAudioPacketData *)audioPacketData
 {
-    [self.buffer enqueueFromDataArray:audioData];
+    [self.buffer enqueueData:audioPacketData];
 }
-
 
 /// 根据 URL的 pathExtension 识别音频格式
 AudioFileTypeID hintForFileExtension (NSString *fileExtension)
 {
     AudioFileTypeID fileTypeHint = 0;
     
-    if ([fileExtension isEqual:@"mp3"])
+    if ([fileExtension isEqualToString:@"mp3"])
     {
         fileTypeHint = kAudioFileMP3Type;
         
-    }else if ([fileExtension isEqual:@"wav"])
+    }else if ([fileExtension isEqualToString:@"wav"])
     {
         fileTypeHint = kAudioFileWAVEType;
         
-    }else if ([fileExtension isEqual:@"aifc"])
+    }else if ([fileExtension isEqualToString:@"aifc"])
     {
         fileTypeHint = kAudioFileAIFCType;
         
-    }else if ([fileExtension isEqual:@"aiff"])
+    }else if ([fileExtension isEqualToString:@"aiff"])
     {
         fileTypeHint = kAudioFileAIFFType;
         
-    }else if ([fileExtension isEqual:@"m4a"])
+    }else if ([fileExtension isEqualToString:@"m4a"])
     {
         fileTypeHint = kAudioFileM4AType;
         
-    }else if ([fileExtension isEqual:@"mp4"])
+    }else if ([fileExtension isEqualToString:@"mp4"])
     {
         fileTypeHint = kAudioFileMPEG4Type;
         
-    }else if ([fileExtension isEqual:@"caf"])
+    }else if ([fileExtension isEqualToString:@"caf"])
     {
         fileTypeHint = kAudioFileCAFType;
         
-    }else if ([fileExtension isEqual:@"aac"])
+    }else if ([fileExtension isEqualToString:@"aac"])
     {
         fileTypeHint = kAudioFileAAC_ADTSType;
     }
+    
     return fileTypeHint;
 }
 

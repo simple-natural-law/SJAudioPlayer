@@ -9,12 +9,12 @@
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 
-@class SJAudioFileStream;
+@class SJAudioFileStream, SJAudioPacketData;
 
 @protocol SJAudioFileStreamDelegate <NSObject>
 
 @required
-- (void)audioFileStream:(SJAudioFileStream *)audioFileStream audioDataParsed:(NSArray *)audioData;
+- (void)audioFileStream:(SJAudioFileStream *)audioFileStream receiveAudioPacketData:(SJAudioPacketData *)audioPacketData;
 
 @optional
 - (void)audioFileStreamReadyToProducePackets:(SJAudioFileStream *)audioFileStream;
