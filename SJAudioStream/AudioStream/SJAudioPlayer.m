@@ -54,13 +54,16 @@ static NSUInteger const kDefaultBufferSize = 2048;
 
 @property (nonatomic, assign) NSTimeInterval seekTime;
 
-@property (nonatomic, readwrite, strong) NSURL *url;
+@property (nonatomic, strong) NSURL *url;
 
-@property (nonatomic, readwrite, assign) NSUInteger contentLength;
+@property (nonatomic, assign) NSUInteger contentLength;
 
-@property (nonatomic, readwrite, assign) SJAudioPlayerStatus status;
+@property (nonatomic, assign) SJAudioPlayerStatus status;
 
-@property (nonatomic, readwrite, assign) NSTimeInterval duration;
+@property (nonatomic, assign) NSTimeInterval duration;
+
+
+@property (nonatomic, assign) NSTimeInterval progress;
 
 @end
 
@@ -418,15 +421,9 @@ static NSUInteger const kDefaultBufferSize = 2048;
 }
 
 
-- (NSTimeInterval)playedTime
+- (NSTimeInterval)progress
 {
-    if (self.audioQueue)
-    {
-        return self.audioQueue.playedTime;
-    }else
-    {
-        return 0.0;
-    }
+    return self.audioQueue.playedTime;
 }
 
 

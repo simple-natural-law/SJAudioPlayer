@@ -45,10 +45,13 @@
 
 - (void)updateProgress
 {
-    self.durationLabel.text = [NSString stringWithFormat:@"%f",self.player.duration];
-    self.progressLabel.text = [NSString stringWithFormat:@"%f",self.player.playedTime];
+    int duration = floor(self.player.duration);
+    int progress = ceil(self.player.progress);
     
-    self.slider.value = self.player.playedTime/self.player.duration;
+    self.durationLabel.text = [NSString stringWithFormat:@"%d",duration];
+    self.progressLabel.text = [NSString stringWithFormat:@"%d",progress];
+    
+    self.slider.value = self.player.progress/self.player.duration;
 }
 
 - (IBAction)play:(id)sender
