@@ -464,7 +464,7 @@ static int const SJAudioQueueBufferCount = 4;
      NSTimeInterval progress = timingOffset + playedTime;
  
  第二个需要注意的是GetCurrentTime方法有时候会失败，所以上次获取的播放时间最好保存起来，如果遇到调用失败，就返回上次保存的结果。
- */
+*/
 - (NSTimeInterval)playedTime
 {
     if (_format.mSampleRate == 0)
