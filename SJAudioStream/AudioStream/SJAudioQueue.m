@@ -311,10 +311,11 @@ static int const SJAudioQueueBufferCount = 4;
 }
 
 
-
-- (BOOL)playData:(NSData *)data packetCount:(UInt32)packetCount packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions completed:(BOOL)completed
+/*
+ 播放音频数据，音频数据长度必须小于AudioQueueBufferRef的size。
+*/
+- (BOOL)playData:(NSData *)data packetCount:(UInt32)packetCount packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions isEof:(BOOL)isEof
 {
-    // 每次播放的数据长度，不要超过 buffer 的长度。
     if ([data length] > self.bufferSize)
     {
         return NO;
@@ -360,7 +361,7 @@ static int const SJAudioQueueBufferCount = 4;
         pthread_mutex_unlock(&_mutex);
         
         // 等到插满所有buffer后才开始播放
-        if (reusableBufferCount == 0 || completed)
+        if (reusableBufferCount == 0 || isEof)
         {
             if (!self.started && ![self start])
             {
@@ -375,7 +376,7 @@ static int const SJAudioQueueBufferCount = 4;
 
 
 /*
- 获取播放时间
+ 获取播放时长
  
  需要注意的是这个播放时间是指实际播放的时间，和播放进度是有区别的。举个例子，开始播放8秒后用
  户操作slider把播放进度seek到了第20秒之后又播放了3秒钟，此时通常意义上播放时间应该是23秒，即播放进度。而用
@@ -412,10 +413,12 @@ static int const SJAudioQueueBufferCount = 4;
     return _playedTime;
 }
 
+
 - (BOOL)available
 {
     return self.audioQueue != NULL;
 }
+
 
 - (void)setVolume:(float)volume
 {
@@ -423,6 +426,7 @@ static int const SJAudioQueueBufferCount = 4;
     
     [self setVolumeParameter];
 }
+
 
 - (void)setVolumeParameter
 {
@@ -489,9 +493,9 @@ static void SJAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, A
 - (BOOL)setProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32)dataSize data:(const void *)data error:(NSError *__autoreleasing *)outError
 {
     OSStatus status = AudioQueueSetProperty(self.audioQueue, propertyID, data, dataSize);
-    
+
     [self errorForOSStatus:status error:outError];
-    
+
     return status == noErr;
 }
 
@@ -499,9 +503,9 @@ static void SJAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, A
 - (BOOL)getProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32 *)dataSize data:(void *)data error:(NSError *__autoreleasing *)outError
 {
     OSStatus status = AudioQueueGetProperty(self.audioQueue, propertyID, data, dataSize);
-    
+
     [self errorForOSStatus:status error:outError];
-    
+
     return status == noErr;
 }
 
@@ -510,9 +514,9 @@ static void SJAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, A
 - (BOOL)setParameter:(AudioQueueParameterID)parameterID value:(AudioQueueParameterValue)value error:(NSError *__autoreleasing *)outError
 {
     OSStatus status = AudioQueueSetParameter(self.audioQueue, parameterID, value);
-    
+
     [self errorForOSStatus:status error:outError];
-    
+
     return status == noErr;
 }
 
@@ -521,9 +525,9 @@ static void SJAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, A
 - (BOOL)getParameter:(AudioQueueParameterID)parameterID value:(AudioQueueParameterValue *)value error:(NSError *__autoreleasing *)outError
 {
     OSStatus status = AudioQueueGetParameter(self.audioQueue, parameterID, value);
-    
+
     [self errorForOSStatus:status error:outError];
-    
+
     return status == noErr;
 }
 

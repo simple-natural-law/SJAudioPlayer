@@ -326,13 +326,13 @@
                     {
                         NSData *data = [self.buffer dequeueDataWithSize:(UInt32)kDefaultBufferSize packetCount:&packetCount descriptions:&desces];
                         
-                        [self.audioQueue playData:data packetCount:packetCount packetDescriptions:desces completed:self.isEof];
+                        [self.audioQueue playData:data packetCount:packetCount packetDescriptions:desces isEof:self.isEof];
                         
                     }else
                     {
                         NSData *data = [self.buffer dequeueDataWithSize:[self.buffer bufferedSize] packetCount:&packetCount descriptions:&desces];
                         
-                        [self.audioQueue playData:data packetCount:packetCount packetDescriptions:desces completed:self.isEof];
+                        [self.audioQueue playData:data packetCount:packetCount packetDescriptions:desces isEof:self.isEof];
                     }
                     
                     free(desces);
