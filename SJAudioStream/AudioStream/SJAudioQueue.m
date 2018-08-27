@@ -8,26 +8,8 @@
 
 
 
-// 在使用AudioQueue之前首先必须理解其工作模式，它之所以这么命名是因为在其内部有一套缓冲队列（Buffer Queue）的机制。在AudioQueue启动之后需要通过AudioQueueAllocateBuffer生成若干个AudioQueueBufferRef结构，这些Buffer将用来存储即将要播放的音频数据，并且这些Buffer是受生成他们的AudioQueue实例管理的，内存空间也已经被分配（按照Allocate方法的参数），当AudioQueue被Dispose时这些Buffer也会随之被销毁。
-// 当有音频数据需要被播放时首先需要被memcpy到AudioQueueBufferRef的mAudioData中（mAudioData所指向的内存已经被分配，之前AudioQueueAllocateBuffer所做的工作），并给mAudioDataByteSize字段赋值传入的数据大小。完成之后需要调用AudioQueueEnqueueBuffer把存有音频数据的Buffer插入到AudioQueue内置的Buffer队列中。在Buffer队列中有buffer存在的情况下调用
-// AudioQueueStart，此时AudioQueue就回按照Enqueue顺序逐个使用Buffer队列中的buffer进行播放，每当一个Buffer使用完毕之后就会从
-// Buffer队列中被移除并且在使用者指定的RunLoop上触发一个回调来告诉使用者，某个AudioQueueBufferRef对象已经使用完成，你可以继续重用这个对象来存储后面的音频数据。如此循环往复音频数据就会被逐个播放直到结束。
-
-
-// AudioQueue工作原理：
-// 1.创建audioqueue，创建一个自己的buffer数组bufferarray
-// 2.使用 AudioQueueAllocateBuffer 创建若干个AudioQueueBufferRef（一般2-3个即可）
-// 3.有数据时从bufferArray取出一个buffer，memcpy数据后用 AudioQueueEnqueueBuffer 方法把buffer插入AudioQueue中；
-// 4.AudioQueue 中存在buffer后，调用 AudioQueueStart 播放。（具体等到填入多少buffer后再播放开源自己控制，只要能保证播放不间断即可）；
-// 5.AudioQueue 播放音乐后消耗了某个buffer， 在另一个线程回调并送出该buffer ，把buffer放回bufferArray供下一次使用；
-// 6.返回步骤3继续循环知道播放结束。
-
-
-
-
 #import "SJAudioQueue.h"
 #import <pthread.h>
-#import <AudioToolbox/AudioToolbox.h>
 
 
 
@@ -392,74 +374,22 @@ static int const SJAudioQueueBufferCount = 4;
 
 
 
-
-- (BOOL)setProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32)dataSize data:(const void *)data error:(NSError *__autoreleasing *)outError
-{
-    OSStatus status = AudioQueueSetProperty(self.audioQueue, propertyID, data, dataSize);
-    
-    [self errorForOSStatus:status error:outError];
-    
-    return status == noErr;
-}
-
-
-- (BOOL)getProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32 *)dataSize data:(void *)data error:(NSError *__autoreleasing *)outError
-{
-    OSStatus status = AudioQueueGetProperty(self.audioQueue, propertyID, data, dataSize);
-    
-    [self errorForOSStatus:status error:outError];
-    
-    return status == noErr;
-}
-
-
-
-- (BOOL)setParameter:(AudioQueueParameterID)parameterID value:(AudioQueueParameterValue)value error:(NSError *__autoreleasing *)outError
-{
-    OSStatus status = AudioQueueSetParameter(self.audioQueue, parameterID, value);
-    
-    [self errorForOSStatus:status error:outError];
-    
-    return status == noErr;
-}
-
-
-
-- (BOOL)getParameter:(AudioQueueParameterID)parameterID value:(AudioQueueParameterValue *)value error:(NSError *__autoreleasing *)outError
-{
-    OSStatus status = AudioQueueGetParameter(self.audioQueue, parameterID, value);
-    
-    [self errorForOSStatus:status error:outError];
-    
-    return status == noErr;
-}
-
-
-// 获取播放时间
 /*
- OSStatus AudioQueueGetCurrentTime(AudioQueueRef inAQ,
-                                   AudioQueueTimelineRef inTimeline,
-                                   AudioTimeStamp * outTimeStamp,
-                                   Boolean * outTimelineDiscontinuity);
+ 获取播放时间
  
- 传入的参数中，第二，第四个参数是和AudioQueueTimeline相关的，这里并没有用到，传入NULL。 调用后的返回AudioTimeStamp，从这个timestap结构可以得出播放时间。
- 
- 在使用这个时间获取方法时有两点必须注意：
- 
- 第一个需要注意的时这个播放时间是指实际播放的时间和一般理解上的播放进度是有区别的。举个例子，开始播放8秒后用
- 户操作slider把播放进度seek到了第20秒之后又播放了3秒钟，此时通常意义上播放时间应该是23秒，即播放进度；而用
+ 需要注意的是这个播放时间是指实际播放的时间，和播放进度是有区别的。举个例子，开始播放8秒后用
+ 户操作slider把播放进度seek到了第20秒之后又播放了3秒钟，此时通常意义上播放时间应该是23秒，即播放进度。而用
  GetCurrentTime方法中获得的时间为11秒，即实际播放时间。所以每次seek时都必须保存seek的timingOffset：
  
-     AudioTimeStamp time = ...; （AudioQueueGetCurrentTime方法获取）
+ AudioTimeStamp time = ...; （AudioQueueGetCurrentTime方法获取）
  
-     NSTimeInterval playedTime = time.mSampleTime / _format.mSampleRate; （seek时的播放时间）
+ NSTimeInterval playedTime = time.mSampleTime / _format.mSampleRate; （seek时的播放时间）
  
-     NSTimeInterval seekTime = ...; （需要seek到哪个时间）
+ NSTimeInterval seekTime = ...; （需要seek到哪个时间）
  
-     NSTimeInterval timingOffset = seekTime - playedTime;
+ NSTimeInterval timingOffset = seekTime - playedTime;
  
- seek后的播放进度需要根据timingOffset和playedTime计算：
-     NSTimeInterval progress = timingOffset + playedTime;
+ seek后的播放进度需要根据timingOffset和playedTime计算：NSTimeInterval progress = timingOffset + playedTime;
  
  第二个需要注意的是GetCurrentTime方法有时候会失败，所以上次获取的播放时间最好保存起来，如果遇到调用失败，就返回上次保存的结果。
 */
@@ -552,6 +482,49 @@ static void SJAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, A
         
         self.isRunning = isRuning;
     }
+}
+
+
+
+- (BOOL)setProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32)dataSize data:(const void *)data error:(NSError *__autoreleasing *)outError
+{
+    OSStatus status = AudioQueueSetProperty(self.audioQueue, propertyID, data, dataSize);
+    
+    [self errorForOSStatus:status error:outError];
+    
+    return status == noErr;
+}
+
+
+- (BOOL)getProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32 *)dataSize data:(void *)data error:(NSError *__autoreleasing *)outError
+{
+    OSStatus status = AudioQueueGetProperty(self.audioQueue, propertyID, data, dataSize);
+    
+    [self errorForOSStatus:status error:outError];
+    
+    return status == noErr;
+}
+
+
+
+- (BOOL)setParameter:(AudioQueueParameterID)parameterID value:(AudioQueueParameterValue)value error:(NSError *__autoreleasing *)outError
+{
+    OSStatus status = AudioQueueSetParameter(self.audioQueue, parameterID, value);
+    
+    [self errorForOSStatus:status error:outError];
+    
+    return status == noErr;
+}
+
+
+
+- (BOOL)getParameter:(AudioQueueParameterID)parameterID value:(AudioQueueParameterValue *)value error:(NSError *__autoreleasing *)outError
+{
+    OSStatus status = AudioQueueGetParameter(self.audioQueue, parameterID, value);
+    
+    [self errorForOSStatus:status error:outError];
+    
+    return status == noErr;
 }
 
 @end
