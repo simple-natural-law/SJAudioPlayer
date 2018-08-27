@@ -60,6 +60,8 @@ static NSUInteger const kDefaultBufferSize = 2048;
 
 @property (nonatomic, readwrite, assign) SJAudioPlayerStatus status;
 
+@property (nonatomic, readwrite, assign) NSTimeInterval duration;
+
 @end
 
 
@@ -247,7 +249,7 @@ static NSUInteger const kDefaultBufferSize = 2048;
             
             if (self.readDataFormLocalFile)
             {
-                data = [self.fileHandle readDataOfLength:kDefaultBufferSize];
+                data = [self.fileHandle readDataOfLength:1024];
                 
                 didReadLength += [data length];
                 
@@ -257,7 +259,7 @@ static NSUInteger const kDefaultBufferSize = 2048;
                 }
             }else
             {
-                data = [self.audioStream readDataWithMaxLength:kDefaultBufferSize error:&readDataError isEof:&_isEof];
+                data = [self.audioStream readDataWithMaxLength:1024 error:&readDataError isEof:&_isEof];
                 
                 if (readDataError)
                 {
@@ -288,14 +290,11 @@ static NSUInteger const kDefaultBufferSize = 2048;
                     self.buffer = [SJAudioPacketsBuffer buffer];
                 }
                 
-                if (self.audioFileStream)
+                [self.audioFileStream parseData:data error:&parseDataError];
+                
+                if (parseDataError)
                 {
-                    [self.audioFileStream parseData:data error:&parseDataError];
-                    
-                    if (parseDataError)
-                    {
-                        NSLog(@"error: failed to parse audio data.");
-                    }
+                    NSLog(@"error: failed to parse audio data.");
                 }
             }
         }
@@ -418,11 +417,6 @@ static NSUInteger const kDefaultBufferSize = 2048;
     }
 }
 
-- (NSTimeInterval)duration
-{
-    return self.audioFileStream.duration;;
-}
-
 
 - (NSTimeInterval)playedTime
 {
@@ -440,6 +434,11 @@ static NSUInteger const kDefaultBufferSize = 2048;
 - (void)audioFileStream:(SJAudioFileStream *)audioFileStream receiveAudioPacketData:(SJAudioPacketData *)audioPacketData
 {
     [self.buffer enqueueData:audioPacketData];
+}
+
+- (void)audioFileStreamReadyToProducePackets:(SJAudioFileStream *)audioFileStream
+{
+    self.duration = self.audioFileStream.duration;
 }
 
 /// 根据 URL的 pathExtension 识别音频格式

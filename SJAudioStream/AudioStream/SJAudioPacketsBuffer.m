@@ -64,6 +64,7 @@
     self.bufferedSize += (UInt32)data.data.length;
 }
 
+
 // 从 packetArray 中取出解析完成的数据使用
 - (NSData *)dequeueDataWithSize:(UInt32)requestSize packetCount:(UInt32 *)packetCount descriptions:(AudioStreamPacketDescription **)descriptions
 {

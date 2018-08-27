@@ -55,7 +55,7 @@
 
 @property (nonatomic, assign, readonly) UInt32 maxPacketSize;
 
-@property (nonatomic, assign, readonly) UInt64 audioDataSize;
+@property (nonatomic, assign, readonly) UInt64 audioDataByteCount;
 
 /// 初始化并打开 AudioFileStream
 - (instancetype)initWithFileType:(AudioFileTypeID)fileType fileSize:(NSUInteger)fileSize error:(NSError **)error;

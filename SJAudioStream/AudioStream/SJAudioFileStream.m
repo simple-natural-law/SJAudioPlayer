@@ -223,7 +223,7 @@
 {
     if (self.fileSize > 0 && self.bitRate > 0)
     {
-        self.duration = (self.audioDataByteCount * 8.0) / self.bitRate;
+        self.duration = (self.audioDataByteCount * 8) / self.bitRate;
     }
 }
 
