@@ -16,7 +16,7 @@
 #import "SJAudioPacketsBuffer.h"
 
 
-static NSUInteger const kDefaultBufferSize = 1024;
+static NSUInteger const kDefaultBufferSize = 2048;
 
 @interface SJAudioPlayer ()<SJAudioFileStreamDelegate>
 {
@@ -126,10 +126,11 @@ static NSUInteger const kDefaultBufferSize = 1024;
     }
     
     NSThread  *readDataThread = [[NSThread alloc] initWithTarget:self selector:@selector(readAudioData) object:nil];
-    
+
     [readDataThread setName:@"ReadDataThread"];
-    
+
     [readDataThread start];
+    
     
     NSThread *playAudioThread = [[NSThread alloc] initWithTarget:self selector:@selector(playAudioData) object:nil];
     
@@ -347,7 +348,7 @@ static NSUInteger const kDefaultBufferSize = 1024;
                     free(desces);
                 }else
                 {
-                    NSLog(@"%u",(unsigned int)[self.buffer bufferedSize]);
+                    NSLog(@"===== %u",(unsigned int)[self.buffer bufferedSize]);
                     
                     [self.audioQueue stop:NO];
                     

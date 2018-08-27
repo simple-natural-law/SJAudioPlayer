@@ -71,6 +71,7 @@
     {
         return nil;
     }
+    
     SInt64 size = requestSize;
     
     int i = 0;
@@ -99,7 +100,7 @@
         return nil;
     }
     
-    UInt32 count = (i >= self.packetArray.count) ? (UInt32)self.packetArray.count : i + 1;
+    UInt32 count = (i >= self.packetArray.count) ? (UInt32)self.packetArray.count : (i + 1);
     
     *packetCount = count;
     

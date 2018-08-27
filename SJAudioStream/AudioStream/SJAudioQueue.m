@@ -25,7 +25,7 @@
 
 
 
-static int const SJAudioQueueBufferCount = 4;
+static int const SJAudioQueueBufferCount = 3;
 
 @interface SJAudioQueue ()
 {

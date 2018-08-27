@@ -18,8 +18,6 @@
 
 @property (nonatomic, assign) NSUInteger byteOffset;
 
-//@property (nonatomic, assign) CFStreamEventType streamEvent;
-
 @property (nonatomic, strong) NSDictionary *httpHeaders;
 
 @property (nonatomic, assign) BOOL closed;
@@ -89,12 +87,6 @@
             NSLog(@"error: failed to open the readStream.");
         }
         
-//        CFStreamClientContext context = {0,(__bridge void *)(self),NULL,NULL,NULL};
-//
-//        CFReadStreamSetClient(self.readStream, kCFStreamEventHasBytesAvailable | kCFStreamEventErrorOccurred | kCFStreamEventEndEncountered, SJReadStreamCallBack, &context);
-//
-//        CFReadStreamScheduleWithRunLoop(self.readStream, CFRunLoopGetMain(), kCFRunLoopCommonModes);
-        
         self.closed = NO;
     }
     
@@ -138,7 +130,6 @@
         self.contentLength = [[self.httpHeaders objectForKey:@"Content-Length"] integerValue] + self.byteOffset;
     }
     
-    
     NSData *data = [NSData dataWithBytes:bytes length:length];
     
     free(bytes);
@@ -153,20 +144,5 @@
     
     CFReadStreamClose(self.readStream);
 }
-
-
-
-#pragma mark- ReadStream callback
-//void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,void * clientCallBackInfo)
-//{
-//    SJAudioStream *audioStream = (__bridge SJAudioStream *)(clientCallBackInfo);
-//
-//    [audioStream handleReadFormStream:stream eventType:eventType];
-//}
-//
-//- (void)handleReadFormStream:(CFReadStreamRef)stream eventType:(CFStreamEventType)eventType
-//{
-//    self.streamEvent = eventType;
-//}
 
 @end
