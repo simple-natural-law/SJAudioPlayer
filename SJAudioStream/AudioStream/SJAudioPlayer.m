@@ -224,7 +224,7 @@
     self.buffer     = nil;
     self.audioQueue = nil;
     self.byteOffset = 0;
-    self.status     = SJAudioPlayerStatusStopped;
+    self.status     = SJAudioPlayerStatusIdle;
 }
 
 

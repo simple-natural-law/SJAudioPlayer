@@ -14,8 +14,7 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
     SJAudioPlayerStatusWaiting  = 1,
     SJAudioPlayerStatusPlaying  = 2,
     SJAudioPlayerStatusPaused   = 3,
-    SJAudioPlayerStatusFinished = 4,
-    SJAudioPlayerStatusStopped  = 5,
+    SJAudioPlayerStatusFinished = 4
 };
 
 
@@ -31,7 +30,6 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 @property (nonatomic, readonly, assign) NSTimeInterval playedTime;
 
 @property (nonatomic, readonly, assign) SJAudioPlayerStatus status;
-
 
 
 - (instancetype)initWithUrl:(NSURL *)url;

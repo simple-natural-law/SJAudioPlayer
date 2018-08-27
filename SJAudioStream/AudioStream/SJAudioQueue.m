@@ -223,7 +223,7 @@ static int const SJAudioQueueBufferCount = 4;
 
 
 
-// 恢复播放
+/// 恢复播放
 - (BOOL)resume
 {
     return [self start];
