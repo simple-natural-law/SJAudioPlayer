@@ -29,26 +29,33 @@
 #import <pthread.h>
 #import <AudioToolbox/AudioToolbox.h>
 
-#define SJAudioQueueBufferCount 8
 
+
+@interface SJAudioQueueBuffer : NSObject
+
+@property (nonatomic, assign) AudioQueueBufferRef audioQueueBufferRef;
+
+@end
+
+@implementation SJAudioQueueBuffer
+
+@end
+
+
+
+static int const SJAudioQueueBufferCount = 4;
 
 @interface SJAudioQueue ()
 {
     pthread_mutex_t _mutex;
     pthread_cond_t _cond;
-    
-    AudioQueueBufferRef audioQueueBuffer[SJAudioQueueBufferCount];
-    
-    bool inuse[SJAudioQueueBufferCount];
 }
 
 @property (nonatomic, assign) AudioQueueRef audioQueue;
 
 @property (nonatomic, assign) BOOL started;
 
-@property (nonatomic, assign) NSUInteger fillBufferIndex;;
-
-@property (nonatomic, assign) NSUInteger bufferUsed;
+@property (nonatomic, strong) NSMutableArray<SJAudioQueueBuffer *> *reusableBufferArray;
 
 @property (nonatomic, assign, readwrite) BOOL available;
 
@@ -101,20 +108,6 @@
 }
 
 
-- (void)mutexWait
-{
-    pthread_mutex_lock(&_mutex);
-    pthread_cond_wait(&_cond, &_mutex);
-    pthread_mutex_unlock(&_mutex);
-}
-
-- (void)mutexSignal
-{
-    pthread_mutex_lock(&_mutex);
-    pthread_cond_signal(&_cond);
-    pthread_mutex_unlock(&_mutex);
-}
-
 
 /*
  使用下列方法来生成AudioQueue的实例
@@ -166,18 +159,18 @@
         return;
     }
 
-    for (int i = 0; i < SJAudioQueueBufferCount; ++i)
+    self.reusableBufferArray = [[NSMutableArray alloc] initWithCapacity:SJAudioQueueBufferCount];
+    
+    for (int i = 0; i < SJAudioQueueBufferCount; i++)
     {
         /*
          创建AudioQueueBufferRef实例
          
-         OSStatus AudioQueueAllocateBuffer (AudioQueueRef inAQ,
-                                            UInt32 inBufferByteSize,
-                                            AudioQueueBufferRef *outBuffer);
-         
          传入 AudioQueue 实例和 Buffer 的大小， 传出 AudioQueueBufferRef 实例。
         */
-        status = AudioQueueAllocateBuffer(self.audioQueue, self.bufferSize, &audioQueueBuffer[i]);
+        AudioQueueBufferRef bufferRef;
+        
+        status = AudioQueueAllocateBuffer(self.audioQueue, self.bufferSize, &bufferRef);
         
         if (status != noErr)
         {
@@ -186,6 +179,12 @@
             self.audioQueue = NULL;
             break;
         }
+        
+        SJAudioQueueBuffer *buffer = [[SJAudioQueueBuffer alloc] init];
+        
+        buffer.audioQueueBufferRef = bufferRef;
+        
+        [self.reusableBufferArray addObject:buffer];
     }
 
 #if TARGET_OS_IPHONE
@@ -236,9 +235,9 @@
     
     [self setVolume:1.0];
     
-    _started = status == noErr;
+    self.started = status == noErr;
     
-    return _started;
+    return self.started;
 }
 
 
@@ -335,133 +334,60 @@
 
 - (BOOL)playData:(NSData *)data packetCount:(UInt32)packetCount packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions completed:(BOOL)completed
 {
+    // 每次播放的数据长度，不要超过 buffer 的长度。
     if ([data length] > self.bufferSize)
     {
         return NO;
     }
-
-    // 如果还没有开始播放
-//    if (!_started && ![self start]) {
-//        return NO;
-//    }
+    
+    pthread_mutex_lock(&_mutex);
+    if (self.reusableBufferArray.count == 0)
+    {
+        pthread_cond_wait(&_cond, &_mutex);
+    }
+    pthread_mutex_unlock(&_mutex);
+    
+    AudioQueueBufferRef bufferRef = self.reusableBufferArray.firstObject.audioQueueBufferRef;
+    
+    pthread_mutex_lock(&_mutex);
+    [self.reusableBufferArray removeObjectAtIndex:0];
+    pthread_mutex_unlock(&_mutex);
     
     OSStatus status;
     
-    @synchronized(self) {
+    if (!bufferRef)
+    {
+        status = AudioQueueAllocateBuffer(self.audioQueue, self.bufferSize, &bufferRef);
         
-        inuse[self.fillBufferIndex] = true;     // set in use flag
-        
-        self.bufferUsed++;
-        
-        AudioQueueBufferRef buffer = audioQueueBuffer[self.fillBufferIndex];
-        
-        if (!buffer)
+        if (status != noErr)
         {
-            OSStatus status = AudioQueueAllocateBuffer(self.audioQueue, self.bufferSize, &buffer);
-            
-            if (status != noErr)
+            return NO;
+        }
+    }
+    
+    // 将 data 拷贝到 buffer 中
+    memcpy(bufferRef->mAudioData, [data bytes], [data length]);
+    
+    bufferRef->mAudioDataByteSize = (UInt32)[data length];
+    
+    // 插入 buffer
+    status = AudioQueueEnqueueBuffer(self.audioQueue, bufferRef, packetCount, packetDescriptions);
+    
+    if (status == noErr)
+    {
+        pthread_mutex_lock(&_mutex);
+        NSUInteger reusableBufferCount = self.reusableBufferArray.count;
+        pthread_mutex_unlock(&_mutex);
+        
+        // 等到插满所有buffer后才开始播放
+        if (reusableBufferCount == 0 || completed)
+        {
+            if (!self.started && ![self start])
             {
                 return NO;
             }
         }
-    
-
-    // C函数语法 void *memcpy(void*dest, const void *src, size_t n);
-    /*
-       由src指向地址为起始地址的连续n个字节的数据复制到以destin指向地址为起始地址的空间内。
-       
-     memcpy用来做内存拷贝，你可以拿它拷贝任何数据类型的对象，可以指定拷贝的数据长度；
-     
-     1.source和destin所指内存区域不能重叠，函数返回指向destin的指针。
-     
-     2.与strcpy相比，memcpy并不是遇到'\0'就结束，而是一定会拷贝完n个字节。
-
-     例：
-     　　char a[100], b[50];
-     　　memcpy(b, a,sizeof(b)); //注意如用sizeof(a)，会造成b的内存地址溢出。
-     　　strcpy就只能拷贝字符串了，它遇到'\0'就结束拷贝；例：
-     　　char a[100], b[50];
-     strcpy(a,b);
-     
-     3.如果目标数组destin本身已有数据，执行memcpy（）后，将覆盖原有数据（最多覆盖n）。如果要追加数据，则每次执行memcpy后，要将目标数组地址增加到你要追加数据的地址。
-     
-     注意，source和destin都不一定是数组，任意的可读写的空间均可。
-     */
-    
-    /*
-     
-     typedef struct AudioQueueBuffer {
-     const UInt32                    mAudioDataBytesCapacity;
-     void * const                    mAudioData;
-     UInt32                          mAudioDataByteSize;
-     void * __nullable               mUserData;
-     
-     const UInt32                    mPacketDescriptionCapacity;
-     AudioStreamPacketDescription * const __nullable mPacketDescriptions;
-     UInt32                          mPacketDescriptionCount;
-     #ifdef __cplusplus
-     AudioQueueBuffer() : mAudioDataBytesCapacity(0), mAudioData(0), mPacketDescriptionCapacity(0), mPacketDescriptions(0) { }
-     #endif
-     } AudioQueueBuffer;
-
-     
-     @typedef    AudioQueueBufferRef
-     @abstract   An pointer to an AudioQueueBuffer.
-     
-     typedef AudioQueueBuffer *AudioQueueBufferRef;
-     
-     */
-    
-        memcpy(buffer->mAudioData, [data bytes], [data length]);
-        
-        buffer->mAudioDataByteSize = (UInt32)[data length];
-    
-    // 插入 buffer
-    /*
-     
-     OSStatus AudioQueueEnqueueBuffer(AudioQueueRef inAQ,
-                                      AudioQueueBufferRef inBuffer,
-                                      UInt32 inNumPacketDescs,
-                                      const AudioStreamPacketDescription * inPacketDescs);
-     
-     需要传入 AudioQueue 实例，和需要Enqueue的Buffer，对于有inNumPacketDescs和inPacketDescs则需要根据需要选择传入，文档上说这2个参数主要是在播放 VBR 数据时使用，但之前我们提到过即便是CBR数据AudioFileStream或者AudioFile也会给出PacketDescription所以不能如此一概而论。简单的来说就是有就传PacketDescription没有就给NULL，不必管是不是VBR。
-     
-     Enqueue 方法一共有2个，上面给出的是第一个方法，第二个方法AudioQueueEnqueueBufferWithParameters 可以对Enqueue的buffer进行更多操作。
-     
-     */
-    
-        status = AudioQueueEnqueueBuffer(self.audioQueue, buffer, packetCount, packetDescriptions);
-        
-        
-        if (status == noErr)
-        {
-            // 等到插满8个buffer后才开始播放
-            if (self.bufferUsed == SJAudioQueueBufferCount - 1 || completed)
-            {
-                if (!self.started && ![self start])
-                {
-                    return NO;
-                }
-            }
-        }
-        
-        
-        // go to next buffer
-        if (++self.fillBufferIndex >= SJAudioQueueBufferCount)
-        {
-            self.fillBufferIndex = 0;
-        }
-        
     }
-    
-    pthread_mutex_lock(&_mutex);
-    
-    if (inuse[self.fillBufferIndex])
-    {
-        pthread_cond_wait(&_cond, &_mutex);
-    }
-    
-    pthread_mutex_unlock(&_mutex);
     
     return status == noErr;
 }
@@ -472,7 +398,9 @@
 - (BOOL)setProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32)dataSize data:(const void *)data error:(NSError *__autoreleasing *)outError
 {
     OSStatus status = AudioQueueSetProperty(self.audioQueue, propertyID, data, dataSize);
+    
     [self errorForOSStatus:status error:outError];
+    
     return status == noErr;
 }
 
@@ -480,7 +408,9 @@
 - (BOOL)getProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32 *)dataSize data:(void *)data error:(NSError *__autoreleasing *)outError
 {
     OSStatus status = AudioQueueGetProperty(self.audioQueue, propertyID, data, dataSize);
+    
     [self errorForOSStatus:status error:outError];
+    
     return status == noErr;
 }
 
@@ -491,6 +421,7 @@
     OSStatus status = AudioQueueSetParameter(self.audioQueue, parameterID, value);
     
     [self errorForOSStatus:status error:outError];
+    
     return status == noErr;
 }
 
@@ -499,11 +430,13 @@
 - (BOOL)getParameter:(AudioQueueParameterID)parameterID value:(AudioQueueParameterValue *)value error:(NSError *__autoreleasing *)outError
 {
     OSStatus status = AudioQueueGetParameter(self.audioQueue, parameterID, value);
+    
     [self errorForOSStatus:status error:outError];
+    
     return status == noErr;
 }
 
-#pragma -mark property
+
 // 获取播放时间
 /*
  OSStatus AudioQueueGetCurrentTime(AudioQueueRef inAQ,
@@ -534,7 +467,8 @@
  */
 - (NSTimeInterval)playedTime
 {
-    if (_format.mSampleRate == 0) {
+    if (_format.mSampleRate == 0)
+    {
         return 0;
     }
     
@@ -542,9 +476,11 @@
     
     OSStatus status = AudioQueueGetCurrentTime(_audioQueue, NULL, &time, NULL);
     
-    if (status == noErr) {
+    if (status == noErr)
+    {
         _playedTime = time.mSampleTime / _format.mSampleRate;
     }
+    
     return _playedTime;
 }
 
@@ -556,6 +492,7 @@
 - (void)setVolume:(float)volume
 {
     _volume = volume;
+    
     [self setVolumeParameter];
 }
 
@@ -563,55 +500,58 @@
 {
     // 音频淡入淡出， 首先设置音量渐变过程使用的时间。
     [self setParameter:kAudioQueueParam_VolumeRampTime value:0.5 error:NULL];
+    
     [self setParameter:kAudioQueueParam_Volume value:self.volume error:NULL];
 }
 
 
-static void SJAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ,AudioQueueBufferRef inBuffer)
+/*
+ 当 AudioQueue 播放完一个 Buffer 时，会在使用`AudioQueueNewOutput`函数创建AudioQueue时指定的
+ runloop中调用一次此函数。如果没有指定runloop，则会在AudioQueue自己的线程中调用此函数。
+ */
+static void SJAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, AudioQueueBufferRef inBuffer)
 {
     SJAudioQueue *audioOutputQueue = (__bridge SJAudioQueue *)(inClientData);
+    
     [audioOutputQueue handleAudioQueueOutputCallBack:inAQ buffer:inBuffer];
 }
 
 
 - (void)handleAudioQueueOutputCallBack:(AudioQueueRef)audioQueue buffer:(AudioQueueBufferRef)buffer
 {
-    unsigned int bufferIndex = -1;
+    SJAudioQueueBuffer *audioQueueBuffer = [[SJAudioQueueBuffer alloc] init];
     
-    for (unsigned int i = 0; i < SJAudioQueueBufferCount; ++i) {
-        
-        if (buffer == audioQueueBuffer[i]) {
-            
-            bufferIndex = i;
-            
-            break;
-        }
-    }
+    audioQueueBuffer.audioQueueBufferRef = buffer;
     
     
     pthread_mutex_lock(&_mutex);
     
-    inuse[bufferIndex] = false;
-    
-    self.bufferUsed--;
+    [self.reusableBufferArray addObject:audioQueueBuffer];
     
     pthread_cond_signal(&_cond);
     
     pthread_mutex_unlock(&_mutex);
 }
 
+
 static void SJAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, AudioQueuePropertyID inID)
 {
     SJAudioQueue *audioQueue = (__bridge SJAudioQueue *)(inUserData);
+    
     [audioQueue handleAudioQueuePropertyCallBack:inAQ property:inID];
 }
 
+
 - (void)handleAudioQueuePropertyCallBack:(AudioQueueRef)audioQueue property:(AudioQueuePropertyID)property
 {
-    if (property == kAudioQueueProperty_IsRunning) {
+    if (property == kAudioQueueProperty_IsRunning)
+    {
         UInt32 isRuning = 0;
+        
         UInt32 size = sizeof(isRuning);
+        
         AudioQueueGetProperty(audioQueue, property, &isRuning, &size);
+        
         self.isRunning = isRuning;
     }
 }
