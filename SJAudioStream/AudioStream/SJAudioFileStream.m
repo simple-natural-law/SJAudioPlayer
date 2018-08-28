@@ -9,7 +9,8 @@
 #import "SJAudioFileStream.h"
 #import "SJAudioPacketData.h"
 
-
+//static NSUInteger const BitRateEstimationMaxPackets = 5000;
+//static NSUInteger const BitRateEstimationMinPackets = 10;
 
 @interface SJAudioFileStream ()
 
@@ -39,6 +40,12 @@
 @property (nonatomic, assign) SInt64 dataOffset;
 
 @property (nonatomic, assign) NSTimeInterval packetDuration;
+
+//@property (nonatomic, assign) BOOL didReadBitRate;
+//
+//@property (nonatomic, assign) UInt64 processedPacketsCount;
+//
+//@property (nonatomic, assign) UInt64 processedPacketsSizeTotal;
 
 @end
 
@@ -210,6 +217,17 @@
     
     return seekByteOffset;
 }
+
+
+/// 计算码率
+//- (void)calculateBitRate
+//{
+//    if (self.packetDuration && self.processedPacketsCount > BitRateEstimationMinPackets && self.processedPacketsCount <= BitRateEstimationMaxPackets)
+//    {
+//        double averagePacketByteSize = self.processedPacketsSizeTotal / self.processedPacketsCount;
+//        self.bitRate = 8.0 * averagePacketByteSize / self.packetDuration;
+//    }
+//}
 
 
 /*
@@ -416,18 +434,7 @@
         packetDescriptions = description;
     }
     
-    NSMutableArray *packetDataArray = [[NSMutableArray alloc] initWithCapacity:numberOfPackets];
-    
-    for (int i = 0; i < numberOfPackets; ++i)
-    {
-        SInt64 packetOffset = packetDescriptions[i].mStartOffset;
-        
-        SJAudioPacketData *packetData = [[SJAudioPacketData alloc] initWithBytes:packets + packetOffset packetDescription:packetDescriptions[i]];
-
-        [packetDataArray addObject:packetData];
-    }
-    
-    [self.delegate audioFileStream:self receiveAudioPacketDataArray:[packetDataArray copy]];
+    [self.delegate audioFileStream:self receiveInputData:packets numberOfBytes:numberOfBytes numberOfPackets:numberOfPackets packetDescriptions:packetDescriptions];
     
     if (deletePackDesc)
     {

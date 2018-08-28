@@ -14,7 +14,7 @@
 @protocol SJAudioFileStreamDelegate <NSObject>
 
 @required
-- (void)audioFileStream:(SJAudioFileStream *)audioFileStream receiveAudioPacketDataArray:(NSArray<SJAudioPacketData *> *)audioPacketDataArray;
+- (void)audioFileStream:(SJAudioFileStream *)audioFileStream receiveInputData:(const void *)inputData numberOfBytes:(UInt32)numberOfBytes numberOfPackets:(UInt32)numberOfPackets packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions;
 
 @optional
 - (void)audioFileStreamReadyToProducePackets:(SJAudioFileStream *)audioFileStream;

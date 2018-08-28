@@ -320,6 +320,8 @@ static int const SJAudioQueueBufferCount = 3;
 {
     if ([data length] > self.bufferSize)
     {
+        NSLog(@"the size of data will be played is more than the `maxBufferSize`.");
+        
         return NO;
     }
     
