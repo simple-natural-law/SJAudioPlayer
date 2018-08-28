@@ -14,7 +14,7 @@
 #import "SJAudioQueue.h"
 
 
-static NSUInteger const kDefaultBufferSize = 2048;
+static UInt32 const kDefaultBufferSize = 2048;
 
 @interface SJAudioPlayer ()<SJAudioFileStreamDelegate>
 {
@@ -148,6 +148,15 @@ static NSUInteger const kDefaultBufferSize = 2048;
     {
         @autoreleasepool
         {
+            if (self.isEof)
+            {
+                [self.audioQueue stop:NO];
+                
+                self.status = SJAudioPlayerStatusFinished;
+                
+                NSLog(@"play audio: complete");
+            }
+            
             NSData *data = nil;
             
             if (self.readDataFormLocalFile)
@@ -196,15 +205,6 @@ static NSUInteger const kDefaultBufferSize = 2048;
                 {
                     NSLog(@"error: failed to parse audio data.");
                 }
-            }
-            
-            if (self.isEof)
-            {
-                [self.audioQueue stop:NO];
-                
-                self.status = SJAudioPlayerStatusFinished;
-                
-                NSLog(@"play audio: complete");
             }
         }
     }
@@ -301,7 +301,7 @@ static NSUInteger const kDefaultBufferSize = 2048;
     
     AudioStreamBasicDescription format = self.audioFileStream.format;
     
-    self.audioQueue = [[SJAudioQueue alloc] initWithFormat:format bufferSize:(UInt32)kDefaultBufferSize macgicCookie:magicCookie];
+    self.audioQueue = [[SJAudioQueue alloc] initWithFormat:format bufferSize:kDefaultBufferSize macgicCookie:magicCookie];
 }
 
 
