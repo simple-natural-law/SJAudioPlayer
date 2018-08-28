@@ -74,9 +74,9 @@
         // Handle SSL connections
         if ([[url scheme] isEqualToString:@"https"])
         {
-            NSDictionary *sslSettings = [NSDictionary dictionaryWithObjectsAndKeys:@(YES),kCFStreamSSLValidatesCertificateChain,[NSNull null],kCFStreamSSLPeerName, nil];
+            NSDictionary *sslSettings = [NSDictionary dictionaryWithObjectsAndKeys:@(YES), kCFStreamSSLValidatesCertificateChain, [NSNull null], kCFStreamSSLPeerName, nil];
             
-            CFReadStreamSetProperty(self.readStream, kCFStreamPropertySSLSettings, (__bridge CFTypeRef)(sslSettings));
+            CFReadStreamSetProperty(self.readStream, kCFStreamPropertySSLSettings, (__bridge CFDictionaryRef)(sslSettings));
         }
         
         // open the readStream
@@ -90,7 +90,7 @@
             NSLog(@"error: failed to open the readStream.");
         }
         
-        CFStreamClientContext context = {0,(__bridge void *)(self),NULL,NULL,NULL};
+        CFStreamClientContext context = {0, (__bridge void *)(self), NULL, NULL, NULL};
         
         CFReadStreamSetClient(self.readStream, kCFStreamEventHasBytesAvailable | kCFStreamEventErrorOccurred | kCFStreamEventEndEncountered, SJReadStreamCallBack, &context);
         
@@ -150,6 +150,8 @@
 - (void)closeReadStream
 {
     self.closed = YES;
+    
+    CFReadStreamUnscheduleFromRunLoop(self.readStream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
     
     CFReadStreamClose(self.readStream);
 }
