@@ -188,7 +188,6 @@ static NSUInteger const kDefaultBufferSize = 4096;
                 isRuning = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
             }
             
-            
             if (self.isEof)
             {
                 [self.audioQueue stop:NO];
@@ -207,9 +206,9 @@ static NSUInteger const kDefaultBufferSize = 4096;
 - (void)cleanUp
 {
     self.started    = NO;
-    self.audioQueue = nil;
     self.byteOffset = 0;
     self.status     = SJAudioPlayerStatusIdle;
+    self.audioQueue = nil;
     
     [self.fileHandle closeFile];
     self.fileHandle = nil;
