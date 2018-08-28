@@ -216,7 +216,7 @@ static int const SJAudioQueueBufferCount = 3;
     
     [self setVolume:1.0];
     
-    self.started = status == noErr;
+    self.started = (status == noErr);
     
     return self.started;
 }
@@ -367,9 +367,14 @@ static int const SJAudioQueueBufferCount = 3;
         // 等到插满所有buffer后才开始播放
         if (reusableBufferCount == 0 || isEof)
         {
-            if (!self.started && ![self start])
+            if (!self.started)
             {
-                return NO;
+                BOOL success = [self start];
+                
+                if (!success)
+                {
+                    return NO;
+                }
             }
         }
     }

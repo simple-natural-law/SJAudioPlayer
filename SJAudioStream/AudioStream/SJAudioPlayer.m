@@ -372,7 +372,12 @@ static NSUInteger const kDefaultBufferSize = 4096;
     }
     pthread_mutex_unlock(&_mutex);
     
-    [self.audioQueue playData:[NSData dataWithBytes:inputData length:numberOfBytes] packetCount:numberOfPackets packetDescriptions:packetDescriptions isEof:self.isEof];
+    BOOL success = [self.audioQueue playData:[NSData dataWithBytes:inputData length:numberOfBytes] packetCount:numberOfPackets packetDescriptions:packetDescriptions isEof:self.isEof];
+    
+    if (!success)
+    {
+        NSLog(@"error: failed to play packet data.");
+    }
 }
 
 
