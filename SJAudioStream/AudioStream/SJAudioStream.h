@@ -9,29 +9,16 @@
 #import <Foundation/Foundation.h>
 
 
-@class SJAudioStream;
-
-@protocol SJAudioStreamDelegate <NSObject>
-
-@required;
-- (void)audioReadStreamHasBytesAvailable:(SJAudioStream *)audioStream;
-
-- (void)audioReadStreamEndEncountered:(SJAudioStream *)audioStream;
-
-- (void)audioReadStreamErrorOccurred:(SJAudioStream *)audioStream;
-
-@end
-
 @interface SJAudioStream : NSObject
 
 /// 音频数据总长度
 @property (nonatomic, assign, readonly) NSUInteger contentLength;
 
-/// 根据 URL 和 数据偏移量（用于seek） 创建HTTP请求，并设置回调。
-- (instancetype)initWithURL:(NSURL *)url byteOffset:(SInt64)byteOffset delegate:(id<SJAudioStreamDelegate>)delegate;
+/// 根据 URL 和 数据偏移量（用于seek） 创建HTTP请求
+- (instancetype)initWithURL:(NSURL *)url byteOffset:(SInt64)byteOffset;
 
 /// 读取数据
-- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error;
+- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error isEof:(BOOL *)isEof;
 
 /// 关闭ReadStream
 - (void)closeReadStream;

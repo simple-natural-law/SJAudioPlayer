@@ -23,22 +23,18 @@
 
 @property (nonatomic, assign) CFReadStreamRef readStream;
 
-@property (nonatomic, weak)   id<SJAudioStreamDelegate> delegate;
-
 @end
 
 
 @implementation SJAudioStream
 
 
-- (instancetype)initWithURL:(NSURL *)url byteOffset:(SInt64)byteOffset delegate:(id<SJAudioStreamDelegate>)delegate
+- (instancetype)initWithURL:(NSURL *)url byteOffset:(SInt64)byteOffset
 {
     self = [super init];
     
     if (self)
     {
-        self.delegate = delegate;
-        
         self.closed = YES;
         
         self.byteOffset = byteOffset;
@@ -90,13 +86,6 @@
             NSLog(@"error: failed to open the readStream.");
         }
         
-        CFStreamClientContext context = {0, (__bridge void *)(self), NULL, NULL, NULL};
-        
-        CFReadStreamSetClient(self.readStream, kCFStreamEventHasBytesAvailable | kCFStreamEventErrorOccurred | kCFStreamEventEndEncountered, SJReadStreamCallBack, &context);
-        
-        // 在主线程回调
-        CFReadStreamScheduleWithRunLoop(self.readStream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-        
         self.closed = NO;
     }
     
@@ -104,10 +93,29 @@
 }
 
 
-- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error
+- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error isEof:(BOOL *)isEof
 {
     if (self.closed)
     {
+        return nil;
+    }
+    
+    UInt8 *bytes = (UInt8 *)malloc(maxLength);
+    
+    // 如果当前还没有数据可供读取，此函数会阻塞调用线程直到有数据可供读取。
+    CFIndex length = CFReadStreamRead(self.readStream, bytes, maxLength);
+    
+    if (length == -1)
+    {
+        // 错误处理
+        *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:-1 userInfo:nil];
+        
+        return nil;
+        
+    }else if (length == 0)
+    {
+        *isEof = YES;
+        
         return nil;
     }
     
@@ -121,22 +129,6 @@
         
         // 音频文件总长度
         self.contentLength = [[self.httpHeaders objectForKey:@"Content-Length"] integerValue] + (NSUInteger)self.byteOffset;
-    }
-    
-    UInt8 *bytes = (UInt8 *)malloc(maxLength);
-    
-    CFIndex length = CFReadStreamRead(self.readStream, bytes, maxLength);
-    
-    if (length == -1)
-    {
-        // 错误处理
-        *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:-1 userInfo:nil];
-        
-        return nil;
-        
-    }else if (length == 0)
-    {
-        return nil;
     }
     
     NSData *data = [NSData dataWithBytes:bytes length:length];
@@ -154,41 +146,6 @@
     CFReadStreamClose(self.readStream);
     
     CFReadStreamUnscheduleFromRunLoop(self.readStream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-}
-
-
-#pragma mark- SJReadStreamCallBack
-void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,void * clientCallBackInfo)
-{
-    SJAudioStream *audioStream = (__bridge SJAudioStream *)(clientCallBackInfo);
-    
-    switch (eventType)
-    {
-        case kCFStreamEventHasBytesAvailable:
-        {
-            [audioStream.delegate audioReadStreamHasBytesAvailable:audioStream];
-        }
-            break;
-            
-        case kCFStreamEventErrorOccurred:
-        {
-            NSLog(@"kCFStreamEventErrorOccurred");
-            
-            [audioStream.delegate audioReadStreamErrorOccurred:audioStream];
-        }
-            break;
-            
-        case kCFStreamEventEndEncountered:
-        {
-            NSLog(@"kCFStreamEventEndEncountered");
-            
-            [audioStream.delegate audioReadStreamEndEncountered:audioStream];
-        }
-            break;
-            
-        default:
-            break;
-    }
 }
 
 
