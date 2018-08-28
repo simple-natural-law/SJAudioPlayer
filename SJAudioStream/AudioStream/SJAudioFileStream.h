@@ -14,7 +14,7 @@
 @protocol SJAudioFileStreamDelegate <NSObject>
 
 @required
-- (void)audioFileStream:(SJAudioFileStream *)audioFileStream receiveAudioPacketData:(SJAudioPacketData *)audioPacketData;
+- (void)audioFileStream:(SJAudioFileStream *)audioFileStream receiveAudioPacketDataArray:(NSArray<SJAudioPacketData *> *)audioPacketDataArray;
 
 @optional
 - (void)audioFileStreamReadyToProducePackets:(SJAudioFileStream *)audioFileStream;
@@ -47,7 +47,7 @@
 // };
 @property (nonatomic, assign, readonly) AudioStreamBasicDescription format;
 
-@property (nonatomic, assign, readonly) NSUInteger fileSize;
+@property (nonatomic, assign, readonly) unsigned long long fileSize;
 
 @property (nonatomic, assign, readonly) NSTimeInterval duration;
 
@@ -58,7 +58,7 @@
 @property (nonatomic, assign, readonly) UInt64 audioDataByteCount;
 
 /// 初始化并打开 AudioFileStream
-- (instancetype)initWithFileType:(AudioFileTypeID)fileType fileSize:(NSUInteger)fileSize error:(NSError **)error;
+- (instancetype)initWithFileType:(AudioFileTypeID)fileType fileSize:(unsigned long long)fileSize error:(NSError **)error;
 
 /// 解析音频数据
 - (BOOL)parseData:(NSData *)data error:(NSError **)error;

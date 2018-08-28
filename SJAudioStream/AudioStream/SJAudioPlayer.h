@@ -23,8 +23,6 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 @property (nonatomic, readonly, strong) NSURL *url;
 
-@property (nonatomic, readonly, assign) NSUInteger contentLength;
-
 @property (nonatomic, readonly, assign) NSTimeInterval duration;
 
 @property (nonatomic, readonly, assign) NSTimeInterval progress;
@@ -38,7 +36,7 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 - (void)pause;
 
-- (void)seekToProgress:(NSTimeInterval)timeOffset;
+- (void)seekToProgress:(NSTimeInterval)progress;
 
 - (void)stop;
 

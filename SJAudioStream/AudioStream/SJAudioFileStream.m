@@ -22,7 +22,7 @@
 
 @property (nonatomic, assign, readwrite) AudioStreamBasicDescription format;
 
-@property (nonatomic, assign, readwrite) NSUInteger fileSize;
+@property (nonatomic, assign, readwrite) unsigned long long fileSize;
 
 @property (nonatomic, assign, readwrite) NSTimeInterval duration;
 
@@ -55,7 +55,7 @@
 }
 
 
-- (instancetype)initWithFileType:(AudioFileTypeID)fileType fileSize:(NSUInteger)fileSize error:(NSError **)error
+- (instancetype)initWithFileType:(AudioFileTypeID)fileType fileSize:(unsigned long long)fileSize error:(NSError **)error
 {
     self = [super init];
     
@@ -415,15 +415,19 @@
         }
         packetDescriptions = description;
     }
-
+    
+    NSMutableArray *packetDataArray = [[NSMutableArray alloc] initWithCapacity:numberOfPackets];
+    
     for (int i = 0; i < numberOfPackets; ++i)
     {
         SInt64 packetOffset = packetDescriptions[i].mStartOffset;
         
         SJAudioPacketData *packetData = [[SJAudioPacketData alloc] initWithBytes:packets + packetOffset packetDescription:packetDescriptions[i]];
 
-        [self.delegate audioFileStream:self receiveAudioPacketData:packetData];
+        [packetDataArray addObject:packetData];
     }
+    
+    [self.delegate audioFileStream:self receiveAudioPacketDataArray:[packetDataArray copy]];
     
     if (deletePackDesc)
     {

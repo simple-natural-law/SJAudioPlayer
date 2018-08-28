@@ -16,11 +16,9 @@
 
 + (instancetype)buffer;
 
-- (BOOL)hasData;
-
 - (UInt32)bufferedSize;
 
-- (void)enqueueData:(SJAudioPacketData *)data;
+- (void)enqueueDataFromArray:(NSArray<SJAudioPacketData *> *)array;
 
 - (NSData *)dequeueDataWithSize:(UInt32)requestSize packetCount:(UInt32 *)packetCount descriptions:(AudioStreamPacketDescription **)descriptions;
 

@@ -16,7 +16,7 @@
 
 @property (nonatomic, assign) NSUInteger contentLength;
 
-@property (nonatomic, assign) NSUInteger byteOffset;
+@property (nonatomic, assign) SInt64 byteOffset;
 
 @property (nonatomic, strong) NSDictionary *httpHeaders;
 
@@ -24,21 +24,21 @@
 
 @property (nonatomic, assign) CFReadStreamRef readStream;
 
-@property (nonatomic, strong) dispatch_semaphore_t semaphore;
-
 @end
 
 
 @implementation SJAudioStream
 
 
-- (instancetype)initWithURL:(NSURL *)url byteOffset:(NSUInteger)byteOffset
+- (instancetype)initWithURL:(NSURL *)url byteOffset:(SInt64)byteOffset
 {
     self = [super init];
     
     if (self)
     {
         self.closed = YES;
+        
+        self.byteOffset = byteOffset;
         
         CFHTTPMessageRef message = CFHTTPMessageCreateRequest(NULL, (CFStringRef)@"GET", (__bridge CFURLRef _Nonnull)(url), kCFHTTPVersion1_1);
         

@@ -16,8 +16,6 @@
 
 @property (nonatomic, assign) UInt32 bufferedSize;
 
-@property (nonatomic, strong) NSLock *lock;
-
 @end
 
 
@@ -37,16 +35,9 @@
         self.packetArray = [[NSMutableArray alloc] init];
         
         self.bufferedSize = 0;
-        
-        self.lock = [[NSLock alloc] init];
     }
     
     return self;
-}
-
-- (BOOL)hasData
-{
-    return self.packetArray.count > 0;
 }
 
 
@@ -57,11 +48,14 @@
 
 
 // 把解析完成的数据存储到 packetArray 中
-- (void)enqueueData:(SJAudioPacketData *)data
+- (void)enqueueDataFromArray:(NSArray<SJAudioPacketData *> *)array;
 {
-    [self.packetArray addObject:data];
-    
-    self.bufferedSize += (UInt32)data.data.length;
+    for (SJAudioPacketData *data in array)
+    {
+        [self.packetArray addObject:data];
+        
+        self.bufferedSize += (UInt32)data.data.length;
+    }
 }
 
 

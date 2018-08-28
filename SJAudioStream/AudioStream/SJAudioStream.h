@@ -15,7 +15,7 @@
 @property (nonatomic, assign, readonly) NSUInteger contentLength;
 
 /// 根据 URL 和 数据偏移量（用于seek） 创建一个`SJAudioStream`对象
-- (instancetype)initWithURL:(NSURL *)url byteOffset:(NSUInteger)byteOffset;
+- (instancetype)initWithURL:(NSURL *)url byteOffset:(SInt64)byteOffset;
 
 /// 读取数据
 - (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error isEof:(BOOL *)isEof;
