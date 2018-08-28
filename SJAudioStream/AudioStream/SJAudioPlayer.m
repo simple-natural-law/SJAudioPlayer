@@ -301,7 +301,7 @@ static NSUInteger const kDefaultBufferSize = 2048;
     NSError *openAudioFileStreamError = nil;
     NSError *parseDataError = nil;
 
-    NSData *data = [self.audioStream readDataWithMaxLength:kDefaultBufferSize error:&readDataError];
+    NSData *data = [audioStream readDataWithMaxLength:kDefaultBufferSize error:&readDataError];
 
     if (readDataError)
     {
@@ -312,7 +312,7 @@ static NSUInteger const kDefaultBufferSize = 2048;
     {
         if (!self.audioFileStream)
         {
-            self.contentLength = self.audioStream.contentLength;
+            self.contentLength = audioStream.contentLength;
 
             self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:hintForFileExtension(self.url.pathExtension) fileSize:self.contentLength error:&openAudioFileStreamError];
 
