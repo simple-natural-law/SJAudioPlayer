@@ -301,32 +301,32 @@ static NSUInteger const kDefaultBufferSize = 4096;
     NSError *readDataError = nil;
     NSError *openAudioFileStreamError = nil;
     NSError *parseDataError = nil;
-    
+
     NSData *data = [self.audioStream readDataWithMaxLength:kDefaultBufferSize error:&readDataError];
-        
+
     if (readDataError)
     {
         NSLog(@"error: failed to read data.");
     }
-    
+
     if (data.length)
     {
         if (!self.audioFileStream)
         {
             self.contentLength = self.audioStream.contentLength;
-            
+
             self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:hintForFileExtension(self.url.pathExtension) fileSize:self.contentLength error:&openAudioFileStreamError];
-            
+
             if (openAudioFileStreamError)
             {
                 NSLog(@"error: failed to open AudioFileStream.");
             }
-            
+
             self.audioFileStream.delegate = self;
         }
-        
+
         [self.audioFileStream parseData:data error:&parseDataError];
-        
+
         if (parseDataError)
         {
             NSLog(@"error: failed to parse audio data.");

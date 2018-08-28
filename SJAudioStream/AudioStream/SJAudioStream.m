@@ -172,12 +172,16 @@ void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,vo
             
         case kCFStreamEventErrorOccurred:
         {
+            NSLog(@"kCFStreamEventErrorOccurred");
+            
             [audioStream.delegate audioReadStreamErrorOccurred:audioStream];
         }
             break;
             
         case kCFStreamEventEndEncountered:
         {
+            NSLog(@"kCFStreamEventEndEncountered");
+            
             [audioStream.delegate audioReadStreamEndEncountered:audioStream];
         }
             break;
