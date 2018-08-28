@@ -151,9 +151,9 @@
 {
     self.closed = YES;
     
-    CFReadStreamUnscheduleFromRunLoop(self.readStream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-    
     CFReadStreamClose(self.readStream);
+    
+    CFReadStreamUnscheduleFromRunLoop(self.readStream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 }
 
 

@@ -133,9 +133,9 @@ static NSUInteger const kDefaultBufferSize = 4096;
     
     NSUInteger didReadLength = 0;
     
-    BOOL isRuning = YES;
+    BOOL run = YES;
     
-    while (isRuning && self.started && self.status != SJAudioPlayerStatusFinished)
+    while (run && self.started && self.status != SJAudioPlayerStatusFinished)
     {
         @autoreleasepool
         {
@@ -185,7 +185,7 @@ static NSUInteger const kDefaultBufferSize = 4096;
                     self.audioStream = [[SJAudioStream alloc] initWithURL:self.url byteOffset:self.byteOffset delegate:self];
                 }
                 
-                isRuning = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+                run = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
             }
             
             if (self.isEof)
