@@ -7,7 +7,6 @@
 //
 
 #import "SJAudioFileStream.h"
-#import "SJAudioPacketData.h"
 
 //static NSUInteger const BitRateEstimationMaxPackets = 5000;
 //static NSUInteger const BitRateEstimationMinPackets = 10;

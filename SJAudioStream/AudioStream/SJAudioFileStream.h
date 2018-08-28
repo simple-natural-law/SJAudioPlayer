@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 
-@class SJAudioFileStream, SJAudioPacketData;
+@class SJAudioFileStream;
 
 @protocol SJAudioFileStreamDelegate <NSObject>
 

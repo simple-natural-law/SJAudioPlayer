@@ -9,7 +9,6 @@
 #import "SJAudioStream.h"
 #import <CFNetwork/CFNetwork.h>
 #import <pthread.h>
-#import <sys/time.h>
 
 
 @interface SJAudioStream ()
@@ -24,18 +23,22 @@
 
 @property (nonatomic, assign) CFReadStreamRef readStream;
 
+@property (nonatomic, weak)   id<SJAudioStreamDelegate> delegate;
+
 @end
 
 
 @implementation SJAudioStream
 
 
-- (instancetype)initWithURL:(NSURL *)url byteOffset:(SInt64)byteOffset
+- (instancetype)initWithURL:(NSURL *)url byteOffset:(SInt64)byteOffset delegate:(id<SJAudioStreamDelegate>)delegate
 {
     self = [super init];
     
     if (self)
     {
+        self.delegate = delegate;
+        
         self.closed = YES;
         
         self.byteOffset = byteOffset;
@@ -60,7 +63,7 @@
         if (!status)
         {
             // 错误处理
-            NSLog(@"error: failed to set property of the readStream.");
+            NSLog(@"error: failed to set `HTTPShouldAutoredirect` property of the readStream.");
         }
         
         // Handle proxies
@@ -87,17 +90,37 @@
             NSLog(@"error: failed to open the readStream.");
         }
         
+        CFStreamClientContext context = {0,(__bridge void *)(self),NULL,NULL,NULL};
+        
+        CFReadStreamSetClient(self.readStream, kCFStreamEventHasBytesAvailable | kCFStreamEventErrorOccurred | kCFStreamEventEndEncountered, SJReadStreamCallBack, &context);
+        
+        // 在主线程回调
+        CFReadStreamScheduleWithRunLoop(self.readStream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+        
         self.closed = NO;
     }
     
     return self;
 }
 
-- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error isEof:(BOOL *)isEof
+
+- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error
 {
     if (self.closed)
     {
         return nil;
+    }
+    
+    if (!self.httpHeaders)
+    {
+        CFTypeRef message = CFReadStreamCopyProperty(self.readStream, kCFStreamPropertyHTTPResponseHeader);
+        
+        self.httpHeaders = (__bridge NSDictionary *)(CFHTTPMessageCopyAllHeaderFields((CFHTTPMessageRef)message));
+        
+        CFRelease(message);
+        
+        // 音频文件总长度
+        self.contentLength = [[self.httpHeaders objectForKey:@"Content-Length"] integerValue] + (NSUInteger)self.byteOffset;
     }
     
     UInt8 *bytes = (UInt8 *)malloc(maxLength);
@@ -113,21 +136,7 @@
         
     }else if (length == 0)
     {
-        *isEof = YES;
-        
         return nil;
-    }
-    
-    if (!self.httpHeaders)
-    {
-        CFTypeRef message = CFReadStreamCopyProperty(self.readStream, kCFStreamPropertyHTTPResponseHeader);
-        
-        self.httpHeaders = (__bridge NSDictionary *)(CFHTTPMessageCopyAllHeaderFields((CFHTTPMessageRef)message));
-        
-        CFRelease(message);
-        
-        // 音频文件总长度
-        self.contentLength = [[self.httpHeaders objectForKey:@"Content-Length"] integerValue] + self.byteOffset;
     }
     
     NSData *data = [NSData dataWithBytes:bytes length:length];
@@ -144,5 +153,37 @@
     
     CFReadStreamClose(self.readStream);
 }
+
+
+#pragma mark- SJReadStreamCallBack
+void SJReadStreamCallBack (CFReadStreamRef stream,CFStreamEventType eventType,void * clientCallBackInfo)
+{
+    SJAudioStream *audioStream = (__bridge SJAudioStream *)(clientCallBackInfo);
+    
+    switch (eventType)
+    {
+        case kCFStreamEventHasBytesAvailable:
+        {
+            [audioStream.delegate audioReadStreamHasBytesAvailable:audioStream];
+        }
+            break;
+            
+        case kCFStreamEventErrorOccurred:
+        {
+            [audioStream.delegate audioReadStreamErrorOccurred:audioStream];
+        }
+            break;
+            
+        case kCFStreamEventEndEncountered:
+        {
+            [audioStream.delegate audioReadStreamEndEncountered:audioStream];
+        }
+            break;
+            
+        default:
+            break;
+    }
+}
+
 
 @end
