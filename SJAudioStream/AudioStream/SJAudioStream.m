@@ -58,9 +58,9 @@
         
         CFRelease(message);
         
-        Boolean status = CFReadStreamSetProperty(self.readStream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue);
+        Boolean success = CFReadStreamSetProperty(self.readStream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue);
         
-        if (!status)
+        if (!success)
         {
             // 错误处理
             NSLog(@"error: failed to set `HTTPShouldAutoredirect` property of the readStream.");
@@ -80,9 +80,9 @@
         }
         
         // open the readStream
-        status = CFReadStreamOpen(self.readStream);
+        success = CFReadStreamOpen(self.readStream);
         
-        if (!status)
+        if (!success)
         {
             CFRelease(self.readStream);
             
