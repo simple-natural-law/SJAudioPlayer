@@ -405,40 +405,7 @@
         return;
     }
     
-    BOOL deletePackDesc = NO;
-    
-    // 如果 packetDescriptions 不存在，就按照CBR处理，平均每一帧的数据后生成packetDescriptions
-    if (packetDescriptions == NULL)
-    {
-        deletePackDesc = YES;
-        
-        UInt32 packetSize = numberOfBytes / numberOfPackets;
-        
-        AudioStreamPacketDescription *description = (AudioStreamPacketDescription *)malloc(sizeof(AudioStreamPacketDescription) * numberOfPackets);
-        
-        for (int i = 0; i < numberOfPackets; i++)
-        {
-            UInt32 packetOffset = packetSize * i;
-            description[i].mStartOffset = packetOffset;
-            description[i].mVariableFramesInPacket = 0;
-            
-            if (i == numberOfPackets - 1)
-            {
-                description[i].mDataByteSize = numberOfBytes - packetOffset;
-            }else
-            {
-                description[i].mDataByteSize = packetSize;
-            }
-        }
-        packetDescriptions = description;
-    }
-    
     [self.delegate audioFileStream:self receiveInputData:packets numberOfBytes:numberOfBytes numberOfPackets:numberOfPackets packetDescriptions:packetDescriptions];
-    
-    if (deletePackDesc)
-    {
-        free(packetDescriptions);
-    }
 }
 
 

@@ -14,7 +14,7 @@
 #import "SJAudioQueue.h"
 
 
-static NSUInteger const kDefaultBufferSize = 4096;
+static NSUInteger const kDefaultBufferSize = 2048;
 
 @interface SJAudioPlayer ()<SJAudioFileStreamDelegate, SJAudioStreamDelegate>
 {
