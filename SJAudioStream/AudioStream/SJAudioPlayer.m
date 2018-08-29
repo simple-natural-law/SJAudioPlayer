@@ -141,12 +141,15 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     while (done && !self.finishedDownload)
     {
-        if (!self.audioStream)
+        @autoreleasepool
         {
-            self.audioStream = [[SJAudioStream alloc] initWithURL:self.url byteOffset:self.byteOffset delegate:self];
+            if (!self.audioStream)
+            {
+                self.audioStream = [[SJAudioStream alloc] initWithURL:self.url byteOffset:self.byteOffset delegate:self];
+            }
+            
+            done = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
         }
-        
-        done = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
     }
 }
 
