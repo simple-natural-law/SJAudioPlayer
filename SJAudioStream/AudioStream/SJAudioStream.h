@@ -35,4 +35,6 @@
 /// 关闭ReadStream
 - (void)closeReadStream;
 
+- (BOOL)hasBytesAvailable;
+
 @end

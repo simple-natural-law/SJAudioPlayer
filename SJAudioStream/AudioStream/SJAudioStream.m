@@ -143,6 +143,12 @@
     CFReadStreamSetClient(self.readStream, kCFStreamEventNone, NULL, NULL);
 }
 
+
+- (BOOL)hasBytesAvailable
+{
+    return CFReadStreamHasBytesAvailable(self.readStream);
+}
+
 #pragma mark- SJReadStreamCallBack
 static void SJReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eventType, void *inClientInfo)
 {
@@ -157,6 +163,8 @@ static void SJReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
     {
         case kCFStreamEventHasBytesAvailable:
         {
+            NSLog(@"kCFStreamEventHasBytesAvailable");
+            
             [self.delegate audioStreamHasBytesAvailable:self];
         }
             break;
