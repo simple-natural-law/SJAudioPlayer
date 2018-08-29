@@ -42,9 +42,9 @@
         CFHTTPMessageRef message = CFHTTPMessageCreateRequest(NULL, (CFStringRef)@"GET", (__bridge CFURLRef _Nonnull)(url), kCFHTTPVersion1_1);
         
         // If we are creating this request to seek to a location, set the requested byte range in the headers.
-        if (self.byteOffset)
+        if (self.byteOffset > 0)
         {
-            NSString *range = [NSString stringWithFormat:@"bytes=%lu-",(unsigned long)self.byteOffset];
+            NSString *range = [NSString stringWithFormat:@"bytes=%lld-", self.byteOffset];
             
             CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Range"), (__bridge CFStringRef _Nullable)(range));
         }
@@ -163,8 +163,6 @@ static void SJReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
     {
         case kCFStreamEventHasBytesAvailable:
         {
-            NSLog(@"kCFStreamEventHasBytesAvailable");
-            
             [self.delegate audioStreamHasBytesAvailable:self];
         }
             break;
