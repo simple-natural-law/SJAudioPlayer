@@ -58,6 +58,8 @@
     if (self.player.contentLength > 0)
     {
         self.progress.progress = self.player.didDownloadLength/self.player.contentLength;
+        
+        NSLog(@"--- %f",self.progress.progress);
     }
     
     if (self.player.duration)
