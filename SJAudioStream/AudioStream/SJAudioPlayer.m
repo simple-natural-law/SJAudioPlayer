@@ -133,23 +133,18 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (void)downloadAudioData
 {
-    self.audioData = [[NSMutableData alloc] init];
-    
     self.finishedDownload = NO;
     
     BOOL done = YES;
     
     while (done && !self.finishedDownload)
     {
-        @autoreleasepool
+        if (!self.audioStream)
         {
-            if (!self.audioStream)
-            {
-                self.audioStream = [[SJAudioStream alloc] initWithURL:self.url byteOffset:self.byteOffset delegate:self];
-            }
-            
-            done = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+            self.audioStream = [[SJAudioStream alloc] initWithURL:self.url byteOffset:self.byteOffset delegate:self];
         }
+        
+        done = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
     }
 }
 
@@ -396,9 +391,15 @@ static UInt32 const kDefaultBufferSize = 4096;
 #pragma mark- SJAudioStreamDelegate
 - (void)audioStreamHasBytesAvailable:(SJAudioStream *)audioStream
 {
+    if (self.audioData == nil)
+    {
+        self.audioData = [[NSMutableData alloc] init];
+    }
+    
     NSError *readDataError = nil;
     
-    NSData *data = [self.audioStream readDataWithMaxLength:kDefaultBufferSize error:&readDataError];
+    // 每次最多读取 15KB 的数据（长度太小，audioStreamHasBytesAvailable方法调用次数太频繁，会导致CPU占用率过高）
+    NSData *data = [self.audioStream readDataWithMaxLength:(1024 * 15) error:&readDataError];
     
     if (readDataError)
     {
