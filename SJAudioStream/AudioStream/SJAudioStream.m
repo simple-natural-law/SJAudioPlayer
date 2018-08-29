@@ -144,11 +144,6 @@
 }
 
 
-- (BOOL)hasBytesAvailable
-{
-    return CFReadStreamHasBytesAvailable(self.readStream);
-}
-
 #pragma mark- SJReadStreamCallBack
 static void SJReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eventType, void *inClientInfo)
 {

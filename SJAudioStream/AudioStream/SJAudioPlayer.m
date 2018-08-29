@@ -14,7 +14,7 @@
 #import "SJAudioQueue.h"
 
 
-static UInt32 const kDefaultBufferSize = 4096;
+static UInt32 const kDefaultBufferSize = 2048;
 
 @interface SJAudioPlayer ()<SJAudioFileStreamDelegate, SJAudioStreamDelegate>
 {
@@ -398,8 +398,8 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     NSError *readDataError = nil;
     
-    // 每次最多读取 15KB 的数据（长度太小，audioStreamHasBytesAvailable方法调用次数太频繁，会导致CPU占用率过高）
-    NSData *data = [self.audioStream readDataWithMaxLength:(1024 * 15) error:&readDataError];
+    // 每次最多读取 20KB 的数据（长度太小，`audioStreamHasBytesAvailable`方法调用次数太频繁，会导致CPU占用率过高）
+    NSData *data = [self.audioStream readDataWithMaxLength:(kDefaultBufferSize * 10) error:&readDataError];
     
     if (readDataError)
     {
