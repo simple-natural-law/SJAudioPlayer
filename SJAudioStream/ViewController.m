@@ -10,7 +10,7 @@
 #import "SJAudioPlayer.h"
 
 
-@interface ViewController ()
+@interface ViewController ()<SJAudioPlayerDelegate>
 
 @property (nonatomic, strong) SJAudioPlayer *player;
 
@@ -44,6 +44,8 @@
     
     self.player = [[SJAudioPlayer alloc] initWithUrl:url];
     
+    self.player.delegate = self;
+    
     [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(updateProgress) userInfo:nil repeats:YES];
 }
 
@@ -54,11 +56,6 @@
     
     self.durationLabel.text = [NSString stringWithFormat:@"%d",duration];
     self.progressLabel.text = [NSString stringWithFormat:@"%d",progress];
-    
-    if (self.player.contentLength > 0)
-    {
-        self.progress.progress = self.player.didDownloadLength/self.player.contentLength;
-    }
     
     if (self.player.duration)
     {
@@ -86,6 +83,11 @@
     
 }
 
+
+- (void)audioPlayer:(SJAudioPlayer *)audioPlayer didUpdatedAudioDataDownloadProgress:(float)progress
+{
+    self.progress.progress = progress;
+}
 
 
 - (void)didReceiveMemoryWarning {

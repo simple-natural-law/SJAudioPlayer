@@ -417,18 +417,35 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     self.didDownloadLength += [data length];
     
+//    dispatch_async(dispatch_get_main_queue(), ^{
+//        
+//        float progress = 0;
+//        
+//        if (self.audioStream.contentLength > 0)
+//        {
+//            progress = self.didDownloadLength / self.audioStream.contentLength;
+//        }
+//        
+//        [self.delegate audioPlayer:self didUpdatedAudioDataDownloadProgress:progress];
+//    });
+    
     pthread_mutex_lock(&_mutex);
     [self.audioData appendData:data];
     if (self.audioData.length >= kDefaultBufferSize)
     {
-        pthread_cond_signal(&_cond);
+        if (!self.pauseRequired)
+        {
+            pthread_cond_signal(&_cond);
+        }
     }
     pthread_mutex_unlock(&_mutex);
 }
 
 - (void)audioStreamEndEncountered:(SJAudioStream *)audioStream
 {
-    //self.finishedDownload = YES;
+    self.finishedDownload = YES;
+    
+    NSLog(@"finishedDownload");
 }
 
 - (void)audioStreamErrorOccurred:(SJAudioStream *)audioStream
@@ -463,7 +480,8 @@ static UInt32 const kDefaultBufferSize = 4096;
             [self.audioQueue stop:YES];
             self.started = NO;
             self.status  = SJAudioPlayerStatusIdle;
-            self.stopRequired = NO;
+            self.stopRequired  = NO;
+            self.pauseRequired = NO;
             
             NSLog(@"stop");
             

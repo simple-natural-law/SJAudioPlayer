@@ -18,6 +18,14 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 };
 
 
+@class SJAudioPlayer;
+
+@protocol SJAudioPlayerDelegate <NSObject>
+
+- (void)audioPlayer:(SJAudioPlayer *)audioPlayer didUpdatedAudioDataDownloadProgress:(float)progress;
+
+@end
+
 
 @interface SJAudioPlayer : NSObject
 
@@ -29,9 +37,8 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 @property (nonatomic, readonly, assign) SJAudioPlayerStatus status;
 
-@property (nonatomic, readonly, assign) unsigned long long contentLength;
+@property (nonatomic, weak) id<SJAudioPlayerDelegate> delegate;
 
-@property (nonatomic, readonly, assign) unsigned long long didDownloadLength;
 
 - (instancetype)initWithUrl:(NSURL *)url;
 
