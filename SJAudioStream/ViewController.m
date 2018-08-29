@@ -47,7 +47,7 @@
 
 - (void)updateProgress
 {
-    int duration = floor(self.player.duration);
+    int duration = ceil(self.player.duration);
     int progress = ceil(self.player.progress);
     
     self.durationLabel.text = [NSString stringWithFormat:@"%d",duration];

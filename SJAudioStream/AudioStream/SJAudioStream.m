@@ -19,9 +19,9 @@
 
 @property (nonatomic, strong) NSDictionary *httpHeaders;
 
-@property (nonatomic, assign) BOOL closed;
-
 @property (nonatomic, assign) CFReadStreamRef readStream;
+
+@property (nonatomic, weak)   id<SJAudioStreamDelegate> delegate;
 
 @end
 
@@ -29,15 +29,15 @@
 @implementation SJAudioStream
 
 
-- (instancetype)initWithURL:(NSURL *)url byteOffset:(SInt64)byteOffset
+- (instancetype)initWithURL:(NSURL *)url byteOffset:(SInt64)byteOffset delegate:(id<SJAudioStreamDelegate>)delegate
 {
     self = [super init];
     
     if (self)
     {
-        self.closed = YES;
-        
         self.byteOffset = byteOffset;
+        
+        self.delegate = delegate;
         
         CFHTTPMessageRef message = CFHTTPMessageCreateRequest(NULL, (CFStringRef)@"GET", (__bridge CFURLRef _Nonnull)(url), kCFHTTPVersion1_1);
         
@@ -86,21 +86,20 @@
             NSLog(@"error: failed to open the readStream.");
         }
         
-        self.closed = NO;
+        CFStreamClientContext context = {0, (__bridge void *)(self), NULL, NULL, NULL};
+        
+        CFReadStreamSetClient(self.readStream, kCFStreamEventHasBytesAvailable | kCFStreamEventErrorOccurred | kCFStreamEventEndEncountered, SJReadStreamCallBack, &context);
+        
+        CFReadStreamScheduleWithRunLoop(self.readStream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
     }
     
     return self;
 }
 
 
-- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error isEof:(BOOL *)isEof
+- (NSData *)readDataWithMaxLength:(NSUInteger)maxLength error:(NSError **)error
 {
-    if (self.closed)
-    {
-        return nil;
-    }
-    
-    UInt8 *bytes = (UInt8 *)malloc(maxLength);
+    UInt8 bytes[maxLength];
     
     // 如果当前还没有数据可供读取，此函数会阻塞调用线程直到有数据可供读取。
     CFIndex length = CFReadStreamRead(self.readStream, bytes, maxLength);
@@ -114,8 +113,6 @@
         
     }else if (length == 0)
     {
-        *isEof = YES;
-        
         return nil;
     }
     
@@ -133,20 +130,53 @@
     
     NSData *data = [NSData dataWithBytes:bytes length:length];
     
-    free(bytes);
-    
     return data;
 }
 
 
 - (void)closeReadStream
 {
-    self.closed = YES;
-    
     CFReadStreamClose(self.readStream);
     
     CFReadStreamUnscheduleFromRunLoop(self.readStream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+    
+    CFReadStreamSetClient(self.readStream, kCFStreamEventNone, NULL, NULL);
 }
 
+#pragma mark- SJReadStreamCallBack
+static void SJReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eventType, void *inClientInfo)
+{
+    SJAudioStream *audioStream = (__bridge SJAudioStream *)inClientInfo;
+    
+    [audioStream handleReadFromStream:aStream eventType:eventType];
+}
+
+- (void)handleReadFromStream:(CFReadStreamRef)stream eventType:(CFStreamEventType)eventType
+{
+    switch (eventType)
+    {
+        case kCFStreamEventHasBytesAvailable:
+        {
+            [self.delegate audioStreamHasBytesAvailable:self];
+        }
+            break;
+            
+        case kCFStreamEventErrorOccurred:
+        {
+            [self.delegate audioStreamErrorOccurred:self];
+        }
+            break;
+            
+        case kCFStreamEventEndEncountered:
+        {
+            [self.delegate audioStreamEndEncountered:self];
+        }
+            break;
+            
+        default:
+            
+            break;
+    }
+}
 
 @end

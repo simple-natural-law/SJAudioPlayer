@@ -16,7 +16,7 @@
 
 static UInt32 const kDefaultBufferSize = 2048;
 
-@interface SJAudioPlayer ()<SJAudioFileStreamDelegate>
+@interface SJAudioPlayer ()<SJAudioFileStreamDelegate, SJAudioStreamDelegate>
 {
     pthread_mutex_t _mutex;
     pthread_cond_t  _cond;
@@ -113,16 +113,6 @@ static UInt32 const kDefaultBufferSize = 2048;
 {
     self.started = YES;
     
-    if (self.readDataFormLocalFile)
-    {
-        self.fileHandle = [NSFileHandle fileHandleForReadingAtPath:self.url.path];
-        
-        self.contentLength = [[[NSFileManager defaultManager] attributesOfItemAtPath:self.url.path error:nil] fileSize];
-    }else
-    {
-        self.audioStream = [[SJAudioStream alloc] initWithURL:self.url byteOffset:self.byteOffset];
-    }
-    
     NSThread *playAudioThread = [[NSThread alloc] initWithTarget:self selector:@selector(playAudioData) object:nil];
     
     [playAudioThread setName:@"com.playAudio.thread"];
@@ -134,7 +124,6 @@ static UInt32 const kDefaultBufferSize = 2048;
 
 - (void)playAudioData
 {
-    NSError *readDataError = nil;
     NSError *openAudioFileStreamError = nil;
     NSError *parseDataError = nil;
     
@@ -144,10 +133,47 @@ static UInt32 const kDefaultBufferSize = 2048;
     
     NSUInteger didReadLength = 0;
     
-    while (self.started && self.status != SJAudioPlayerStatusFinished)
+    BOOL done = YES;
+    
+    while (done && self.started && self.status != SJAudioPlayerStatusFinished)
     {
         @autoreleasepool
         {
+            pthread_mutex_lock(&_mutex);
+            
+            if (self.pauseRequired)
+            {
+                NSLog(@"play audio: pause");
+                
+                [self.audioQueue pause];
+                
+                self.status = SJAudioPlayerStatusPaused;
+                
+                pthread_cond_wait(&_cond, &_mutex); // 阻塞
+                
+                if (!self.stopRequired)
+                {
+                    [self.audioQueue resume];
+                    
+                    self.pauseRequired = NO;
+                    
+                    self.status = SJAudioPlayerStatusPlaying;
+                    
+                    NSLog(@"play audio: play");
+                }
+            }
+            pthread_mutex_unlock(&_mutex);
+            
+            if (self.seekRequired)
+            {
+                self.byteOffset = [self.audioFileStream seekToTime:&_seekTime];
+                [self.audioQueue reset];
+                [self.audioStream closeReadStream];
+                self.audioStream = nil;
+                
+                self.seekRequired = NO;
+            }
+            
             if (self.isEof)
             {
                 [self.audioQueue stop:NO];
@@ -157,11 +183,16 @@ static UInt32 const kDefaultBufferSize = 2048;
                 NSLog(@"play audio: complete");
             }
             
-            NSData *data = nil;
-            
             if (self.readDataFormLocalFile)
             {
-                data = [self.fileHandle readDataOfLength:kDefaultBufferSize];
+                if (!self.fileHandle)
+                {
+                    self.fileHandle = [NSFileHandle fileHandleForReadingAtPath:self.url.path];
+                    
+                    self.contentLength = [[[NSFileManager defaultManager] attributesOfItemAtPath:self.url.path error:nil] fileSize];
+                }
+                
+                NSData *data = [self.fileHandle readDataOfLength:kDefaultBufferSize];
 
                 didReadLength += [data length];
 
@@ -170,41 +201,36 @@ static UInt32 const kDefaultBufferSize = 2048;
                     self.isEof = YES;
                 }
                 
+                if (data.length)
+                {
+                    if (!self.audioFileStream)
+                    {
+                        self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:hintForFileExtension(self.url.pathExtension) fileSize:self.contentLength error:&openAudioFileStreamError];
+                        
+                        if (openAudioFileStreamError)
+                        {
+                            NSLog(@"error: failed to open AudioFileStream.");
+                        }
+                        
+                        self.audioFileStream.delegate = self;
+                    }
+                    
+                    [self.audioFileStream parseData:data error:&parseDataError];
+                    
+                    if (parseDataError)
+                    {
+                        NSLog(@"error: failed to parse audio data.");
+                    }
+                }
+                
             }else
             {
-                data = [self.audioStream readDataWithMaxLength:kDefaultBufferSize error:&readDataError isEof:&_isEof];
-                
-                if (readDataError)
+                if (!self.audioStream)
                 {
-                    NSLog(@"error: failed to read data.");
-                }
-            }
-            
-            if (data.length)
-            {
-                if (!self.audioFileStream)
-                {
-                    if (!self.readDataFormLocalFile)
-                    {
-                        self.contentLength = self.audioStream.contentLength;
-                    }
-                    
-                    self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:hintForFileExtension(self.url.pathExtension) fileSize:self.contentLength error:&openAudioFileStreamError];
-                    
-                    if (openAudioFileStreamError)
-                    {
-                        NSLog(@"error: failed to open AudioFileStream.");
-                    }
-                    
-                    self.audioFileStream.delegate = self;
+                    self.audioStream = [[SJAudioStream alloc] initWithURL:self.url byteOffset:self.byteOffset delegate:self];
                 }
                 
-                [self.audioFileStream parseData:data error:&parseDataError];
-                
-                if (parseDataError)
-                {
-                    NSLog(@"error: failed to parse audio data.");
-                }
+                done = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
             }
         }
     }
@@ -277,16 +303,7 @@ static UInt32 const kDefaultBufferSize = 2048;
 {
     self.seekTime = progress;
     
-    if (self.isEof)
-    {
-        self.byteOffset = [self.audioFileStream seekToTime:&_seekTime];
-    }else
-    {
-        self.byteOffset = [self.audioFileStream seekToTime:&_seekTime];
-        [self.audioQueue reset];
-        [self.audioStream closeReadStream];
-        self.audioStream = nil;
-    }
+    self.seekRequired = YES;
 }
 
 - (NSTimeInterval)progress
@@ -304,35 +321,58 @@ static UInt32 const kDefaultBufferSize = 2048;
     self.audioQueue = [[SJAudioQueue alloc] initWithFormat:format bufferSize:kDefaultBufferSize macgicCookie:magicCookie];
 }
 
+#pragma mark- SJAudioStreamDelegate
+- (void)audioStreamHasBytesAvailable:(SJAudioStream *)audioStream
+{
+    NSError *readDataError = nil;
+    NSError *parseDataError = nil;
+    NSError *openAudioFileStreamError = nil;
+    
+    NSData *data = [self.audioStream readDataWithMaxLength:kDefaultBufferSize error:&readDataError];
+    
+    if (readDataError)
+    {
+        NSLog(@"error: failed to read data.");
+    }
+    
+    if (data.length)
+    {
+        if (!self.audioFileStream)
+        {
+            self.contentLength = self.audioStream.contentLength;
+            
+            self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:hintForFileExtension(self.url.pathExtension) fileSize:self.contentLength error:&openAudioFileStreamError];
+            
+            if (openAudioFileStreamError)
+            {
+                NSLog(@"error: failed to open AudioFileStream.");
+            }
+            
+            self.audioFileStream.delegate = self;
+        }
+        
+        [self.audioFileStream parseData:data error:&parseDataError];
+        
+        if (parseDataError)
+        {
+            NSLog(@"error: failed to parse audio data.");
+        }
+    }
+}
+
+- (void)audioStreamEndEncountered:(SJAudioStream *)audioStream
+{
+    self.isEof = YES;
+}
+
+- (void)audioStreamErrorOccurred:(SJAudioStream *)audioStream
+{
+    
+}
 
 #pragma mark- SJAudioFileStreamDelegate
 - (void)audioFileStream:(SJAudioFileStream *)audioFileStream receiveInputData:(const void *)inputData numberOfBytes:(UInt32)numberOfBytes numberOfPackets:(UInt32)numberOfPackets packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions
 {
-    pthread_mutex_lock(&_mutex);
-    
-    if (self.pauseRequired)
-    {
-        NSLog(@"play audio: pause");
-        
-        [self.audioQueue pause];
-        
-        self.status = SJAudioPlayerStatusPaused;
-        
-        pthread_cond_wait(&_cond, &_mutex); // 阻塞
-        
-        if (!self.stopRequired)
-        {
-            [self.audioQueue resume];
-            
-            self.pauseRequired = NO;
-            
-            self.status = SJAudioPlayerStatusPlaying;
-            
-            NSLog(@"play audio: play");
-        }
-    }
-    pthread_mutex_unlock(&_mutex);
-    
     BOOL success = [self.audioQueue playData:[NSData dataWithBytes:inputData length:numberOfBytes] packetCount:numberOfPackets packetDescriptions:packetDescriptions isEof:self.isEof];
     
     if (!success)
