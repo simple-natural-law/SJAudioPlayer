@@ -128,7 +128,7 @@
         self.contentLength = [[self.httpHeaders objectForKey:@"Content-Length"] integerValue] + (NSUInteger)self.byteOffset;
     }
     
-    NSData *data = [NSData dataWithBytes:bytes length:length];
+    NSData *data = [NSData dataWithBytes:bytes length:(NSUInteger)length];
     
     return data;
 }
