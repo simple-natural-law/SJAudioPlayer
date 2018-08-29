@@ -205,7 +205,7 @@ static UInt32 const kDefaultBufferSize = 2048;
                 {
                     if (!self.audioFileStream)
                     {
-                        self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:hintForFileExtension(self.url.pathExtension) fileSize:self.contentLength error:&openAudioFileStreamError];
+                        self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:[self getAudioFileTypeIdForFileExtension:self.url.pathExtension] fileSize:self.contentLength error:&openAudioFileStreamError];
                         
                         if (openAudioFileStreamError)
                         {
@@ -321,6 +321,47 @@ static UInt32 const kDefaultBufferSize = 2048;
     self.audioQueue = [[SJAudioQueue alloc] initWithFormat:format bufferSize:kDefaultBufferSize macgicCookie:magicCookie];
 }
 
+/// 根据 URL的 pathExtension 识别音频格式
+- (AudioFileTypeID)getAudioFileTypeIdForFileExtension:(NSString *)fileExtension
+{
+    AudioFileTypeID fileTypeHint = 0;
+    
+    if ([fileExtension isEqualToString:@"mp3"])
+    {
+        fileTypeHint = kAudioFileMP3Type;
+        
+    }else if ([fileExtension isEqualToString:@"wav"])
+    {
+        fileTypeHint = kAudioFileWAVEType;
+        
+    }else if ([fileExtension isEqualToString:@"aifc"])
+    {
+        fileTypeHint = kAudioFileAIFCType;
+        
+    }else if ([fileExtension isEqualToString:@"aiff"])
+    {
+        fileTypeHint = kAudioFileAIFFType;
+        
+    }else if ([fileExtension isEqualToString:@"m4a"])
+    {
+        fileTypeHint = kAudioFileM4AType;
+        
+    }else if ([fileExtension isEqualToString:@"mp4"])
+    {
+        fileTypeHint = kAudioFileMPEG4Type;
+        
+    }else if ([fileExtension isEqualToString:@"caf"])
+    {
+        fileTypeHint = kAudioFileCAFType;
+        
+    }else if ([fileExtension isEqualToString:@"aac"])
+    {
+        fileTypeHint = kAudioFileAAC_ADTSType;
+    }
+    
+    return fileTypeHint;
+}
+
 #pragma mark- SJAudioStreamDelegate
 - (void)audioStreamHasBytesAvailable:(SJAudioStream *)audioStream
 {
@@ -389,47 +430,6 @@ static UInt32 const kDefaultBufferSize = 2048;
     [self createAudioQueue];
     
     self.status = SJAudioPlayerStatusWaiting;
-}
-
-/// 根据 URL的 pathExtension 识别音频格式
-AudioFileTypeID hintForFileExtension (NSString *fileExtension)
-{
-    AudioFileTypeID fileTypeHint = 0;
-    
-    if ([fileExtension isEqualToString:@"mp3"])
-    {
-        fileTypeHint = kAudioFileMP3Type;
-        
-    }else if ([fileExtension isEqualToString:@"wav"])
-    {
-        fileTypeHint = kAudioFileWAVEType;
-        
-    }else if ([fileExtension isEqualToString:@"aifc"])
-    {
-        fileTypeHint = kAudioFileAIFCType;
-        
-    }else if ([fileExtension isEqualToString:@"aiff"])
-    {
-        fileTypeHint = kAudioFileAIFFType;
-        
-    }else if ([fileExtension isEqualToString:@"m4a"])
-    {
-        fileTypeHint = kAudioFileM4AType;
-        
-    }else if ([fileExtension isEqualToString:@"mp4"])
-    {
-        fileTypeHint = kAudioFileMPEG4Type;
-        
-    }else if ([fileExtension isEqualToString:@"caf"])
-    {
-        fileTypeHint = kAudioFileCAFType;
-        
-    }else if ([fileExtension isEqualToString:@"aac"])
-    {
-        fileTypeHint = kAudioFileAAC_ADTSType;
-    }
-    
-    return fileTypeHint;
 }
 
 @end
