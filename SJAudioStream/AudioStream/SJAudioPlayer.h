@@ -29,6 +29,9 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 @property (nonatomic, readonly, assign) SJAudioPlayerStatus status;
 
+@property (nonatomic, readonly, assign) unsigned long long contentLength;
+
+@property (nonatomic, readonly, assign) unsigned long long didDownloadLength;
 
 - (instancetype)initWithUrl:(NSURL *)url;
 

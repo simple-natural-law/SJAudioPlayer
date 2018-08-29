@@ -14,6 +14,8 @@
 
 @property (nonatomic, strong) SJAudioPlayer *player;
 
+@property (weak, nonatomic) IBOutlet UIProgressView *progress;
+
 @property (weak, nonatomic) IBOutlet UISlider *slider;
 
 @property (weak, nonatomic) IBOutlet UILabel *durationLabel;
@@ -53,7 +55,15 @@
     self.durationLabel.text = [NSString stringWithFormat:@"%d",duration];
     self.progressLabel.text = [NSString stringWithFormat:@"%d",progress];
     
-    self.slider.value = self.player.progress/self.player.duration;
+    if (self.player.contentLength > 0)
+    {
+        self.progress.progress = self.player.didDownloadLength/self.player.contentLength;
+    }
+    
+    if (self.player.duration)
+    {
+        self.slider.value = self.player.progress/self.player.duration;
+    }
 }
 
 - (IBAction)play:(id)sender

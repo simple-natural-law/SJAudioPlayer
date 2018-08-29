@@ -14,13 +14,15 @@
 #import "SJAudioQueue.h"
 
 
-static UInt32 const kDefaultBufferSize = 2048;
+static UInt32 const kDefaultBufferSize = 4096;
 
 @interface SJAudioPlayer ()<SJAudioFileStreamDelegate, SJAudioStreamDelegate>
 {
     pthread_mutex_t _mutex;
     pthread_cond_t  _cond;
 }
+
+@property (nonatomic, strong) NSURL *url;
 
 @property (nonatomic, strong) SJAudioStream *audioStream;
 
@@ -30,7 +32,7 @@ static UInt32 const kDefaultBufferSize = 2048;
 
 @property (nonatomic, strong) SJAudioQueue *audioQueue;
 
-@property (nonatomic, assign) SInt64 byteOffset;
+@property (nonatomic, assign) SJAudioPlayerStatus status;
 
 @property (nonatomic, assign) BOOL started;
 
@@ -46,21 +48,21 @@ static UInt32 const kDefaultBufferSize = 2048;
 
 @property (nonatomic, assign) BOOL pauseRequired;
 
+@property (nonatomic, assign) BOOL finishedDownload;
+
+@property (nonatomic, assign) SInt64 byteOffset;
+
 @property (nonatomic, assign) NSTimeInterval seekTime;
-
-@property (nonatomic, strong) NSURL *url;
-
-@property (nonatomic, assign) unsigned long long contentLength;
-
-@property (nonatomic, assign) SJAudioPlayerStatus status;
 
 @property (nonatomic, assign) NSTimeInterval duration;
 
 @property (nonatomic, assign) NSTimeInterval progress;
 
-@property (nonatomic, assign) BOOL finishedDownload;
-
 @property (nonatomic, strong) NSMutableData *audioData;
+
+@property (nonatomic, assign) unsigned long long contentLength;
+
+@property (nonatomic, assign) unsigned long long didDownloadLength;
 
 @end
 
@@ -192,6 +194,8 @@ static UInt32 const kDefaultBufferSize = 2048;
                     self.fileHandle = [NSFileHandle fileHandleForReadingAtPath:self.url.path];
                     
                     self.contentLength = [[[NSFileManager defaultManager] attributesOfItemAtPath:self.url.path error:nil] fileSize];
+                    
+                    self.didDownloadLength = self.contentLength;
                 }
                 
                 data = [self.fileHandle readDataOfLength:kDefaultBufferSize];
@@ -281,7 +285,8 @@ static UInt32 const kDefaultBufferSize = 2048;
     [self.audioFileStream close];
     self.audioFileStream = nil;
     
-    self.contentLength = 0;
+    self.contentLength     = 0;
+    self.didDownloadLength = 0;
 }
 
 
@@ -398,13 +403,15 @@ static UInt32 const kDefaultBufferSize = 2048;
     
     NSError *readDataError = nil;
     
-    // 每次最多读取 20KB 的数据（长度太小，`audioStreamHasBytesAvailable`方法调用次数太频繁，会导致CPU占用率过高）
+    // 每次最多读取 40KB 的数据（长度太小，`audioStreamHasBytesAvailable`方法调用次数太频繁，会导致CPU占用率过高）
     NSData *data = [self.audioStream readDataWithMaxLength:(kDefaultBufferSize * 10) error:&readDataError];
     
     if (readDataError)
     {
         NSLog(@"error: failed to read data.");
     }
+    
+    self.didDownloadLength += [data length];
     
     pthread_mutex_lock(&_mutex);
     [self.audioData appendData:data];
