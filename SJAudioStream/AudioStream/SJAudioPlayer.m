@@ -382,7 +382,7 @@ static UInt32 const kDefaultBufferSize = 2048;
         {
             self.contentLength = self.audioStream.contentLength;
             
-            self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:hintForFileExtension(self.url.pathExtension) fileSize:self.contentLength error:&openAudioFileStreamError];
+            self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:[self getAudioFileTypeIdForFileExtension:self.url.pathExtension] fileSize:self.contentLength error:&openAudioFileStreamError];
             
             if (openAudioFileStreamError)
             {
