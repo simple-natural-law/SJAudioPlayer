@@ -59,7 +59,7 @@
         if (!success)
         {
             // 错误处理
-            NSLog(@"error: failed to set `HTTPShouldAutoredirect` property of the readStream.");
+            NSLog(@"SJAudioStream: failed to set `HTTPShouldAutoredirect` property of the readStream.");
         }
         
         // Handle proxies
@@ -83,7 +83,7 @@
             CFRelease(self.readStream);
             
             // 错误处理
-            NSLog(@"error: failed to open the readStream.");
+            NSLog(@"SJAudioStream: failed to open the readStream.");
         }
         
         CFStreamClientContext context = {0, (__bridge void *)(self), NULL, NULL, NULL};

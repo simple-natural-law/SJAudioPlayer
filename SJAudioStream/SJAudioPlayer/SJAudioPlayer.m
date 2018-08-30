@@ -80,7 +80,7 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (instancetype)initWithUrl:(NSURL *)url;
 {
-    NSAssert(url, @"url should be not nil.");
+    NSAssert(url, @"SJAudioPlayer: url should be not nil.");
     
     self = [super init];
     
@@ -253,7 +253,7 @@ static UInt32 const kDefaultBufferSize = 4096;
                     
                     if (openAudioFileStreamError)
                     {
-                        NSLog(@"error: failed to open AudioFileStream.");
+                        NSLog(@"SJAudioPlayer: failed to open AudioFileStream.");
                     }
                     
                     self.audioFileStream.delegate = self;
@@ -263,7 +263,7 @@ static UInt32 const kDefaultBufferSize = 4096;
                 
                 if (parseDataError)
                 {
-                    NSLog(@"error: failed to parse audio data.");
+                    NSLog(@"SJAudioPlayer: failed to parse audio data.");
                 }
             }
         }
@@ -431,7 +431,7 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     if (readDataError)
     {
-        NSLog(@"error: failed to read data.");
+        NSLog(@"SJAudioPlayer: failed to read data.");
     }
     
     self.didDownloadLength += [data length];
@@ -471,7 +471,7 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     if (!success)
     {
-        NSLog(@"error: failed to play packet data.");
+        NSLog(@"SJAudioPlayer: failed to play packet data.");
     }
     
     pthread_mutex_lock(&_mutex);
