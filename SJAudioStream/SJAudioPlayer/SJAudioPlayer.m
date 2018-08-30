@@ -121,7 +121,20 @@ static UInt32 const kDefaultBufferSize = 4096;
 {
     self.started = YES;
     
-    [self startDownloadAudioData];
+    if (self.readDataFormLocalFile)
+    {
+        self.fileHandle = [NSFileHandle fileHandleForReadingAtPath:self.url.path];
+        
+        self.contentLength = [[[NSFileManager defaultManager] attributesOfItemAtPath:self.url.path error:nil] fileSize];
+        
+        self.didDownloadLength = self.contentLength;
+        
+        [self updateAudioDownloadPercentageWithDataLength:self.didDownloadLength];
+        
+    }else
+    {
+        [self startDownloadAudioData];
+    }
     
     [self startPlayAudioData];
 }
@@ -195,15 +208,6 @@ static UInt32 const kDefaultBufferSize = 4096;
             
             if (self.readDataFormLocalFile)
             {
-                if (!self.fileHandle)
-                {
-                    self.fileHandle = [NSFileHandle fileHandleForReadingAtPath:self.url.path];
-                    
-                    self.contentLength = [[[NSFileManager defaultManager] attributesOfItemAtPath:self.url.path error:nil] fileSize];
-                    
-                    self.didDownloadLength = self.contentLength;
-                }
-                
                 data = [self.fileHandle readDataOfLength:kDefaultBufferSize];
 
                 offset += [data length];
@@ -220,9 +224,6 @@ static UInt32 const kDefaultBufferSize = 4096;
                 {
                     if (self.finishedDownload)
                     {
-                        //data = [self.audioData subdataWithRange:NSMakeRange(0, self.audioData.length)];
-                        //[self.audioData replaceBytesInRange:NSMakeRange(0, self.audioData.length) withBytes:NULL length:0];
-                        
                         data = [self.audioData subdataWithRange:NSMakeRange(offset - self.byteOffset, self.audioData.length - (offset - self.byteOffset))];
                         
                         self.isEof = YES;
@@ -236,9 +237,6 @@ static UInt32 const kDefaultBufferSize = 4096;
                     }
                 }else
                 {
-                    //data = [self.audioData subdataWithRange:NSMakeRange(0, kDefaultBufferSize)];
-                    //[self.audioData replaceBytesInRange:NSMakeRange(0, kDefaultBufferSize) withBytes:NULL length:0];
-                    
                     data = [self.audioData subdataWithRange:NSMakeRange(offset - self.byteOffset, kDefaultBufferSize)];
                 }
                 pthread_mutex_unlock(&_mutex);
@@ -250,11 +248,6 @@ static UInt32 const kDefaultBufferSize = 4096;
             {
                 if (!self.audioFileStream)
                 {
-                    if (!self.readDataFormLocalFile)
-                    {
-                        self.contentLength = self.audioStream.contentLength;
-                    }
-                    
                     self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:[self getAudioFileTypeIdForFileExtension:self.url.pathExtension] fileSize:self.contentLength error:&openAudioFileStreamError];
                     
                     if (openAudioFileStreamError)
@@ -278,34 +271,42 @@ static UInt32 const kDefaultBufferSize = 4096;
             {
                 offset = [self.audioFileStream seekToTime:&_seekTime];
                 
+                if (self.readDataFormLocalFile)
+                {
+                    [self.fileHandle seekToFileOffset:offset];
+                }else
+                {
+                    if (self.finishedDownload)
+                    {
+                        if (offset < self.byteOffset)
+                        {
+                            [self.audioStream closeReadStream];
+                            
+                            self.audioStream = nil;
+                            
+                            [self startDownloadAudioData];
+                        }
+                    }else
+                    {
+                        self.byteOffset = offset;
+                        
+                        [self.audioStream closeReadStream];
+                        
+                        pthread_mutex_lock(&_mutex);
+                        self.audioData = nil;
+                        pthread_mutex_unlock(&_mutex);
+                        
+                        self.audioStream = nil;
+                    }
+                }
+                
                 self.timingOffset = self.seekTime - self.audioQueue.playedTime;
                 
                 [self.audioQueue reset];
                 
                 self.seekRequired = NO;
                 
-                if (self.finishedDownload)
-                {
-                    if (offset < self.byteOffset)
-                    {
-                        [self.audioStream closeReadStream];
-                        
-                        self.audioStream = nil;
-                        
-                        [self startDownloadAudioData];
-                    }
-                }else
-                {
-                    self.byteOffset = offset;
-                    
-                    [self.audioStream closeReadStream];
-                    
-                    pthread_mutex_lock(&_mutex);
-                    self.audioData = nil;
-                    pthread_mutex_unlock(&_mutex);
-                    
-                    self.audioStream = nil;
-                }
+                self.status = SJAudioPlayerStatusWaiting;
                 
                 NSLog(@"seek");
             }
@@ -456,13 +457,15 @@ static UInt32 const kDefaultBufferSize = 4096;
 }
 
 
-- (void)updateAudioDownloadPercentageWithDataLength:(float)dataLength
+- (void)updateAudioDownloadPercentageWithDataLength:(unsigned long long)dataLength
 {
     float percentage = 0.0;
     
-    if (self.audioStream.contentLength > 0)
+    if (self.contentLength > 0)
     {
-        percentage = dataLength / self.audioStream.contentLength;
+        float length = dataLength;
+        
+        percentage = length / self.contentLength;
     }
     
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -477,6 +480,8 @@ static UInt32 const kDefaultBufferSize = 4096;
     if (self.audioData == nil)
     {
         self.audioData = [[NSMutableData alloc] init];
+        
+        self.contentLength = self.audioStream.contentLength;
         
         self.didDownloadLength += self.byteOffset;
     }
@@ -493,9 +498,7 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     self.didDownloadLength += [data length];
     
-    float didDownloadLength = self.didDownloadLength;
-    
-    [self updateAudioDownloadPercentageWithDataLength:didDownloadLength];
+    [self updateAudioDownloadPercentageWithDataLength:self.didDownloadLength];
     
     pthread_mutex_lock(&_mutex);
     [self.audioData appendData:data];
