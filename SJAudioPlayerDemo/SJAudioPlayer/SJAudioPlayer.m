@@ -126,8 +126,6 @@ static UInt32 const kDefaultBufferSize = 4096;
             }
         }
         
-        self.pausedByInterrupt = NO;
-        
         [self start];
     }else
     {
@@ -228,7 +226,7 @@ static UInt32 const kDefaultBufferSize = 4096;
             {
                 NSLog(@"pause");
                 
-                [self.audioQueue pause];
+                [self.audioQueue pause:self.pausedByInterrupt];
                 
                 self.status = SJAudioPlayerStatusPaused;
                 
@@ -385,6 +383,7 @@ static UInt32 const kDefaultBufferSize = 4096;
     self.stopRequired  = NO;
     self.pauseRequired = NO;
     self.seekRequired  = NO;
+    self.pausedByInterrupt = NO;
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
     
@@ -617,9 +616,9 @@ static UInt32 const kDefaultBufferSize = 4096;
     {
         if (self.status == SJAudioPlayerStatusPlaying)
         {
-            [self pause];
-            
             self.pausedByInterrupt = YES;
+            
+            [self pause];
         }
     }else if (interruptionType == AVAudioSessionInterruptionTypeEnded)
     {
