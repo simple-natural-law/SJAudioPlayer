@@ -103,12 +103,31 @@ static UInt32 const kDefaultBufferSize = 4096;
 #pragma mark - methods
 - (void)play
 {
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
-    // 激活音频会话控制
-    [[AVAudioSession sharedInstance] setActive:YES error:nil];
-    
     if (!self.started)
     {
+        // 监听中断事件
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterreption:) name:AVAudioSessionInterruptionNotification object:[AVAudioSession sharedInstance]];
+        
+        NSError *error = nil;
+        
+        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:&error];
+        
+        if (error)
+        {
+            NSLog(@"Error setting audio session category! %@",error);
+        }else
+        {
+            // 激活音频会话控制
+            [[AVAudioSession sharedInstance] setActive:YES error:&error];
+            
+            if (error)
+            {
+                NSLog(@"Error setting audio session active! %@", error);
+            }
+        }
+        
+        self.pausedByInterrupt = NO;
+        
         [self start];
     }else
     {
@@ -367,6 +386,8 @@ static UInt32 const kDefaultBufferSize = 4096;
     self.pauseRequired = NO;
     self.seekRequired  = NO;
     
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
+    
     self.status     = SJAudioPlayerStatusIdle;
     self.audioData  = nil;
     
@@ -584,6 +605,40 @@ static UInt32 const kDefaultBufferSize = 4096;
     [self createAudioQueue];
     
     self.status = SJAudioPlayerStatusWaiting;
+}
+
+
+#pragma mark- AVAudioSessionInterruptionNotification
+- (void)handleInterreption:(NSNotification *)notification
+{
+    AVAudioSessionInterruptionType interruptionType = [[[notification userInfo] objectForKey:AVAudioSessionInterruptionTypeKey] unsignedIntegerValue];
+    
+    if (interruptionType == AVAudioSessionInterruptionTypeBegan)
+    {
+        if (self.status == SJAudioPlayerStatusPlaying)
+        {
+            [self pause];
+            
+            self.pausedByInterrupt = YES;
+        }
+    }else if (interruptionType == AVAudioSessionInterruptionTypeEnded)
+    {
+        NSError *error = nil;
+        
+        [[AVAudioSession sharedInstance] setActive:YES error:&error];
+        
+        if (error)
+        {
+            NSLog(@"Error setting audio session active! %@", error);
+        }
+        
+        if (self.status == SJAudioPlayerStatusPaused && self.pausedByInterrupt)
+        {
+            [self resume];
+            
+            self.pausedByInterrupt = NO;
+        }
+    }
 }
 
 @end
