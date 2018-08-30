@@ -7,10 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1A0D9A062074671B007B5CCC /* SJAudioFileStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99FA2074671B007B5CCC /* SJAudioFileStream.m */; };
-		1A0D9A072074671B007B5CCC /* SJAudioQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99FC2074671B007B5CCC /* SJAudioQueue.m */; };
-		1A0D9A082074671B007B5CCC /* SJAudioPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D99FE2074671B007B5CCC /* SJAudioPlayer.m */; };
-		1A0D9A092074671B007B5CCC /* SJAudioStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A0D9A002074671B007B5CCC /* SJAudioStream.m */; };
 		1AB0EA2120736C17002070E3 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2020736C17002070E3 /* AppDelegate.m */; };
 		1AB0EA2420736C17002070E3 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2320736C17002070E3 /* ViewController.m */; };
 		1AB0EA2720736C17002070E3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2520736C17002070E3 /* Main.storyboard */; };
@@ -18,17 +14,13 @@
 		1AB0EA2C20736C29002070E3 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2A20736C29002070E3 /* LaunchScreen.storyboard */; };
 		1AB0EA2F20736C29002070E3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2E20736C29002070E3 /* main.m */; };
 		1AB0EA3D20736D76002070E3 /* MP3Sample.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 1AB0EA3920736D76002070E3 /* MP3Sample.mp3 */; };
+		340A554B21379A53003502C2 /* SJAudioPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554321379A52003502C2 /* SJAudioPlayer.m */; };
+		340A554C21379A53003502C2 /* SJAudioStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554421379A52003502C2 /* SJAudioStream.m */; };
+		340A554D21379A53003502C2 /* SJAudioFileStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554621379A52003502C2 /* SJAudioFileStream.m */; };
+		340A554E21379A53003502C2 /* SJAudioQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554A21379A52003502C2 /* SJAudioQueue.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1A0D99F92074671B007B5CCC /* SJAudioFileStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioFileStream.h; sourceTree = "<group>"; };
-		1A0D99FA2074671B007B5CCC /* SJAudioFileStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioFileStream.m; sourceTree = "<group>"; };
-		1A0D99FB2074671B007B5CCC /* SJAudioQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioQueue.h; sourceTree = "<group>"; };
-		1A0D99FC2074671B007B5CCC /* SJAudioQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioQueue.m; sourceTree = "<group>"; };
-		1A0D99FD2074671B007B5CCC /* SJAudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioPlayer.h; sourceTree = "<group>"; };
-		1A0D99FE2074671B007B5CCC /* SJAudioPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioPlayer.m; sourceTree = "<group>"; };
-		1A0D99FF2074671B007B5CCC /* SJAudioStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioStream.h; sourceTree = "<group>"; };
-		1A0D9A002074671B007B5CCC /* SJAudioStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioStream.m; sourceTree = "<group>"; };
 		1AB0EA1C20736C16002070E3 /* SJAudioStream.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SJAudioStream.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1AB0EA1F20736C17002070E3 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		1AB0EA2020736C17002070E3 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -40,6 +32,14 @@
 		1AB0EA2D20736C29002070E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1AB0EA2E20736C29002070E3 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		1AB0EA3920736D76002070E3 /* MP3Sample.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = MP3Sample.mp3; sourceTree = "<group>"; };
+		340A554321379A52003502C2 /* SJAudioPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioPlayer.m; sourceTree = "<group>"; };
+		340A554421379A52003502C2 /* SJAudioStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioStream.m; sourceTree = "<group>"; };
+		340A554521379A52003502C2 /* SJAudioQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioQueue.h; sourceTree = "<group>"; };
+		340A554621379A52003502C2 /* SJAudioFileStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioFileStream.m; sourceTree = "<group>"; };
+		340A554721379A52003502C2 /* SJAudioStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioStream.h; sourceTree = "<group>"; };
+		340A554821379A52003502C2 /* SJAudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioPlayer.h; sourceTree = "<group>"; };
+		340A554921379A52003502C2 /* SJAudioFileStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioFileStream.h; sourceTree = "<group>"; };
+		340A554A21379A52003502C2 /* SJAudioQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioQueue.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,21 +53,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		1A0D99F22074671B007B5CCC /* AudioStream */ = {
-			isa = PBXGroup;
-			children = (
-				1A0D99F92074671B007B5CCC /* SJAudioFileStream.h */,
-				1A0D99FA2074671B007B5CCC /* SJAudioFileStream.m */,
-				1A0D99FB2074671B007B5CCC /* SJAudioQueue.h */,
-				1A0D99FC2074671B007B5CCC /* SJAudioQueue.m */,
-				1A0D99FF2074671B007B5CCC /* SJAudioStream.h */,
-				1A0D9A002074671B007B5CCC /* SJAudioStream.m */,
-				1A0D99FD2074671B007B5CCC /* SJAudioPlayer.h */,
-				1A0D99FE2074671B007B5CCC /* SJAudioPlayer.m */,
-			);
-			path = AudioStream;
-			sourceTree = "<group>";
-		};
 		1AB0EA1320736C16002070E3 = {
 			isa = PBXGroup;
 			children = (
@@ -87,7 +72,7 @@
 		1AB0EA1E20736C16002070E3 /* SJAudioStream */ = {
 			isa = PBXGroup;
 			children = (
-				1A0D99F22074671B007B5CCC /* AudioStream */,
+				340A554221379A52003502C2 /* SJAudioPlayer */,
 				1AB0EA1F20736C17002070E3 /* AppDelegate.h */,
 				1AB0EA2020736C17002070E3 /* AppDelegate.m */,
 				1AB0EA2220736C17002070E3 /* ViewController.h */,
@@ -109,6 +94,21 @@
 			);
 			path = Resource;
 			sourceTree = SOURCE_ROOT;
+		};
+		340A554221379A52003502C2 /* SJAudioPlayer */ = {
+			isa = PBXGroup;
+			children = (
+				340A554721379A52003502C2 /* SJAudioStream.h */,
+				340A554421379A52003502C2 /* SJAudioStream.m */,
+				340A554921379A52003502C2 /* SJAudioFileStream.h */,
+				340A554621379A52003502C2 /* SJAudioFileStream.m */,
+				340A554521379A52003502C2 /* SJAudioQueue.h */,
+				340A554A21379A52003502C2 /* SJAudioQueue.m */,
+				340A554821379A52003502C2 /* SJAudioPlayer.h */,
+				340A554321379A52003502C2 /* SJAudioPlayer.m */,
+			);
+			path = SJAudioPlayer;
+			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
@@ -186,13 +186,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1A0D9A082074671B007B5CCC /* SJAudioPlayer.m in Sources */,
-				1A0D9A092074671B007B5CCC /* SJAudioStream.m in Sources */,
+				340A554E21379A53003502C2 /* SJAudioQueue.m in Sources */,
 				1AB0EA2420736C17002070E3 /* ViewController.m in Sources */,
 				1AB0EA2F20736C29002070E3 /* main.m in Sources */,
+				340A554B21379A53003502C2 /* SJAudioPlayer.m in Sources */,
+				340A554D21379A53003502C2 /* SJAudioFileStream.m in Sources */,
 				1AB0EA2120736C17002070E3 /* AppDelegate.m in Sources */,
-				1A0D9A072074671B007B5CCC /* SJAudioQueue.m in Sources */,
-				1A0D9A062074671B007B5CCC /* SJAudioFileStream.m in Sources */,
+				340A554C21379A53003502C2 /* SJAudioStream.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
