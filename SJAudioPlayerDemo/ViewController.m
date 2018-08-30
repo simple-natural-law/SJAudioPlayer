@@ -92,6 +92,10 @@
     self.progress.progress = percentage;
 }
 
+- (void)audioPlayer:(SJAudioPlayer *)audioPlayer didChangedStatus:(SJAudioPlayerStatus)status
+{
+    
+}
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

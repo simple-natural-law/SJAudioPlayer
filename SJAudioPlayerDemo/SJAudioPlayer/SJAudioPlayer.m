@@ -215,20 +215,16 @@ static UInt32 const kDefaultBufferSize = 4096;
             {
                 [self.audioQueue stop:NO];
                 
-                self.status = SJAudioPlayerStatusFinished;
-                
-                NSLog(@"finished");
+                [self setAudioPlayerStatus:SJAudioPlayerStatusFinished];
             }
             
             pthread_mutex_lock(&_mutex);
             
             if (self.pauseRequired)
             {
-                NSLog(@"pause");
-                
                 [self.audioQueue pause:self.pausedByInterrupt];
                 
-                self.status = SJAudioPlayerStatusPaused;
+                [self setAudioPlayerStatus:SJAudioPlayerStatusPaused];
                 
                 pthread_cond_wait(&_cond, &_mutex);
                 
@@ -236,19 +232,18 @@ static UInt32 const kDefaultBufferSize = 4096;
                 {
                     [self.audioQueue stop:YES];
                     self.started = NO;
-                    self.status  = SJAudioPlayerStatusIdle;
                     self.stopRequired  = NO;
                     self.pauseRequired = NO;
                     
-                    NSLog(@"stop");
+                    [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
                     
                 }else
                 {
                     [self.audioQueue resume];
-                    self.pauseRequired = NO;
-                    self.status = SJAudioPlayerStatusPlaying;
                     
-                    NSLog(@"play");
+                    self.pauseRequired = NO;
+                    
+                    [self setAudioPlayerStatus:SJAudioPlayerStatusPlaying];
                 }
             }
             pthread_mutex_unlock(&_mutex);
@@ -258,7 +253,8 @@ static UInt32 const kDefaultBufferSize = 4096;
                 [self.audioQueue stop:YES];
                 self.started = NO;
                 self.stopRequired = NO;
-                self.status  = SJAudioPlayerStatusIdle;
+                
+                [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
             }
             
             if (self.seekRequired)
@@ -299,8 +295,6 @@ static UInt32 const kDefaultBufferSize = 4096;
                 [self.audioQueue reset];
                 
                 self.seekRequired = NO;
-
-                NSLog(@"seek");
             }
             
             
@@ -329,11 +323,11 @@ static UInt32 const kDefaultBufferSize = 4096;
                         self.isEof = YES;
                     }else
                     {
-                        self.status = SJAudioPlayerStatusWaiting;
+                        [self setAudioPlayerStatus:SJAudioPlayerStatusWaiting];
                         
                         pthread_cond_wait(&_cond, &_mutex);
                         
-                        self.status = SJAudioPlayerStatusPlaying;
+                        [self setAudioPlayerStatus:SJAudioPlayerStatusPlaying];
                     }
                 }else
                 {
@@ -522,20 +516,38 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (void)updateAudioDownloadPercentageWithDataLength:(unsigned long long)dataLength
 {
-    float percentage = 0.0;
-    
-    if (self.contentLength > 0)
+    if (self.delegate && [self.delegate respondsToSelector:@selector(audioPlayer:updateAudioDownloadPercentage:)])
     {
-        float length = dataLength;
+        float percentage = 0.0;
         
-        percentage = length / self.contentLength;
+        if (self.contentLength > 0)
+        {
+            float length = dataLength;
+            
+            percentage = length / self.contentLength;
+        }
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+            [self.delegate audioPlayer:self updateAudioDownloadPercentage:percentage];
+        });
     }
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        
-        [self.delegate audioPlayer:self updateAudioDownloadPercentage:percentage];
-    });
 }
+
+
+- (void)setAudioPlayerStatus:(SJAudioPlayerStatus)status
+{
+    self.status = status;
+    
+    if (self.delegate && [self.delegate respondsToSelector:@selector(audioPlayer:didChangedStatus:)])
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+            [self.delegate audioPlayer:self didChangedStatus:status];
+        });
+    }
+}
+
 
 #pragma mark- SJAudioStreamDelegate
 - (void)audioStreamHasBytesAvailable:(SJAudioStream *)audioStream
