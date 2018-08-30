@@ -9,29 +9,25 @@
 /* Begin PBXBuildFile section */
 		1AB0EA2120736C17002070E3 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2020736C17002070E3 /* AppDelegate.m */; };
 		1AB0EA2420736C17002070E3 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2320736C17002070E3 /* ViewController.m */; };
-		1AB0EA2720736C17002070E3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2520736C17002070E3 /* Main.storyboard */; };
-		1AB0EA2920736C29002070E3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2820736C29002070E3 /* Assets.xcassets */; };
-		1AB0EA2C20736C29002070E3 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2A20736C29002070E3 /* LaunchScreen.storyboard */; };
 		1AB0EA2F20736C29002070E3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2E20736C29002070E3 /* main.m */; };
-		1AB0EA3D20736D76002070E3 /* MP3Sample.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 1AB0EA3920736D76002070E3 /* MP3Sample.mp3 */; };
 		340A554B21379A53003502C2 /* SJAudioPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554321379A52003502C2 /* SJAudioPlayer.m */; };
 		340A554C21379A53003502C2 /* SJAudioStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554421379A52003502C2 /* SJAudioStream.m */; };
 		340A554D21379A53003502C2 /* SJAudioFileStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554621379A52003502C2 /* SJAudioFileStream.m */; };
 		340A554E21379A53003502C2 /* SJAudioQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554A21379A52003502C2 /* SJAudioQueue.m */; };
+		340A55562137FBF7003502C2 /* MP3Sample.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 340A55502137FBF7003502C2 /* MP3Sample.mp3 */; };
+		340A55572137FBF7003502C2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 340A55512137FBF7003502C2 /* Assets.xcassets */; };
+		340A55582137FBF7003502C2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 340A55522137FBF7003502C2 /* LaunchScreen.storyboard */; };
+		340A55592137FBF7003502C2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 340A55542137FBF7003502C2 /* Main.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1AB0EA1C20736C16002070E3 /* SJAudioStream.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SJAudioStream.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1AB0EA1C20736C16002070E3 /* SJAudioPlayerDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SJAudioPlayerDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1AB0EA1F20736C17002070E3 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		1AB0EA2020736C17002070E3 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		1AB0EA2220736C17002070E3 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		1AB0EA2320736C17002070E3 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		1AB0EA2620736C17002070E3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		1AB0EA2820736C29002070E3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		1AB0EA2B20736C29002070E3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1AB0EA2D20736C29002070E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1AB0EA2E20736C29002070E3 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		1AB0EA3920736D76002070E3 /* MP3Sample.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = MP3Sample.mp3; sourceTree = "<group>"; };
 		340A554321379A52003502C2 /* SJAudioPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioPlayer.m; sourceTree = "<group>"; };
 		340A554421379A52003502C2 /* SJAudioStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioStream.m; sourceTree = "<group>"; };
 		340A554521379A52003502C2 /* SJAudioQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioQueue.h; sourceTree = "<group>"; };
@@ -40,6 +36,10 @@
 		340A554821379A52003502C2 /* SJAudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioPlayer.h; sourceTree = "<group>"; };
 		340A554921379A52003502C2 /* SJAudioFileStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioFileStream.h; sourceTree = "<group>"; };
 		340A554A21379A52003502C2 /* SJAudioQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioQueue.m; sourceTree = "<group>"; };
+		340A55502137FBF7003502C2 /* MP3Sample.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = MP3Sample.mp3; sourceTree = "<group>"; };
+		340A55512137FBF7003502C2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		340A55532137FBF7003502C2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		340A55552137FBF7003502C2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,7 +56,7 @@
 		1AB0EA1320736C16002070E3 = {
 			isa = PBXGroup;
 			children = (
-				1AB0EA1E20736C16002070E3 /* SJAudioStream */,
+				1AB0EA1E20736C16002070E3 /* SJAudioPlayerDemo */,
 				1AB0EA1D20736C16002070E3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -64,12 +64,12 @@
 		1AB0EA1D20736C16002070E3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1AB0EA1C20736C16002070E3 /* SJAudioStream.app */,
+				1AB0EA1C20736C16002070E3 /* SJAudioPlayerDemo.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		1AB0EA1E20736C16002070E3 /* SJAudioStream */ = {
+		1AB0EA1E20736C16002070E3 /* SJAudioPlayerDemo */ = {
 			isa = PBXGroup;
 			children = (
 				340A554221379A52003502C2 /* SJAudioPlayer */,
@@ -77,23 +77,12 @@
 				1AB0EA2020736C17002070E3 /* AppDelegate.m */,
 				1AB0EA2220736C17002070E3 /* ViewController.h */,
 				1AB0EA2320736C17002070E3 /* ViewController.m */,
-				1AB0EA3520736D76002070E3 /* Resource */,
+				340A554F2137FBF7003502C2 /* Resource */,
 				1AB0EA2D20736C29002070E3 /* Info.plist */,
 				1AB0EA2E20736C29002070E3 /* main.m */,
 			);
-			path = SJAudioStream;
+			path = SJAudioPlayerDemo;
 			sourceTree = "<group>";
-		};
-		1AB0EA3520736D76002070E3 /* Resource */ = {
-			isa = PBXGroup;
-			children = (
-				1AB0EA2520736C17002070E3 /* Main.storyboard */,
-				1AB0EA2820736C29002070E3 /* Assets.xcassets */,
-				1AB0EA2A20736C29002070E3 /* LaunchScreen.storyboard */,
-				1AB0EA3920736D76002070E3 /* MP3Sample.mp3 */,
-			);
-			path = Resource;
-			sourceTree = SOURCE_ROOT;
 		};
 		340A554221379A52003502C2 /* SJAudioPlayer */ = {
 			isa = PBXGroup;
@@ -110,12 +99,23 @@
 			path = SJAudioPlayer;
 			sourceTree = "<group>";
 		};
+		340A554F2137FBF7003502C2 /* Resource */ = {
+			isa = PBXGroup;
+			children = (
+				340A55502137FBF7003502C2 /* MP3Sample.mp3 */,
+				340A55512137FBF7003502C2 /* Assets.xcassets */,
+				340A55522137FBF7003502C2 /* LaunchScreen.storyboard */,
+				340A55542137FBF7003502C2 /* Main.storyboard */,
+			);
+			path = Resource;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1AB0EA1B20736C16002070E3 /* SJAudioStream */ = {
+		1AB0EA1B20736C16002070E3 /* SJAudioPlayerDemo */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1AB0EA3220736C29002070E3 /* Build configuration list for PBXNativeTarget "SJAudioStream" */;
+			buildConfigurationList = 1AB0EA3220736C29002070E3 /* Build configuration list for PBXNativeTarget "SJAudioPlayerDemo" */;
 			buildPhases = (
 				1AB0EA1820736C16002070E3 /* Sources */,
 				1AB0EA1920736C16002070E3 /* Frameworks */,
@@ -125,9 +125,9 @@
 			);
 			dependencies = (
 			);
-			name = SJAudioStream;
+			name = SJAudioPlayerDemo;
 			productName = SJAudioStream;
-			productReference = 1AB0EA1C20736C16002070E3 /* SJAudioStream.app */;
+			productReference = 1AB0EA1C20736C16002070E3 /* SJAudioPlayerDemo.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -149,7 +149,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 1AB0EA1720736C16002070E3 /* Build configuration list for PBXProject "SJAudioStream" */;
+			buildConfigurationList = 1AB0EA1720736C16002070E3 /* Build configuration list for PBXProject "SJAudioPlayerDemo" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -162,7 +162,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1AB0EA1B20736C16002070E3 /* SJAudioStream */,
+				1AB0EA1B20736C16002070E3 /* SJAudioPlayerDemo */,
 			);
 		};
 /* End PBXProject section */
@@ -172,10 +172,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1AB0EA2C20736C29002070E3 /* LaunchScreen.storyboard in Resources */,
-				1AB0EA3D20736D76002070E3 /* MP3Sample.mp3 in Resources */,
-				1AB0EA2920736C29002070E3 /* Assets.xcassets in Resources */,
-				1AB0EA2720736C17002070E3 /* Main.storyboard in Resources */,
+				340A55582137FBF7003502C2 /* LaunchScreen.storyboard in Resources */,
+				340A55572137FBF7003502C2 /* Assets.xcassets in Resources */,
+				340A55562137FBF7003502C2 /* MP3Sample.mp3 in Resources */,
+				340A55592137FBF7003502C2 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -199,20 +199,20 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		1AB0EA2520736C17002070E3 /* Main.storyboard */ = {
+		340A55522137FBF7003502C2 /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1AB0EA2620736C17002070E3 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-		1AB0EA2A20736C29002070E3 /* LaunchScreen.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1AB0EA2B20736C29002070E3 /* Base */,
+				340A55532137FBF7003502C2 /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		340A55542137FBF7003502C2 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				340A55552137FBF7003502C2 /* Base */,
+			);
+			name = Main.storyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -334,7 +334,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 8AWR7HVK86;
-				INFOPLIST_FILE = SJAudioStream/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/SJAudioPlayerDemo/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -352,7 +352,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 8AWR7HVK86;
-				INFOPLIST_FILE = SJAudioStream/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/SJAudioPlayerDemo/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -367,7 +367,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1AB0EA1720736C16002070E3 /* Build configuration list for PBXProject "SJAudioStream" */ = {
+		1AB0EA1720736C16002070E3 /* Build configuration list for PBXProject "SJAudioPlayerDemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1AB0EA3020736C29002070E3 /* Debug */,
@@ -376,7 +376,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1AB0EA3220736C29002070E3 /* Build configuration list for PBXNativeTarget "SJAudioStream" */ = {
+		1AB0EA3220736C29002070E3 /* Build configuration list for PBXNativeTarget "SJAudioPlayerDemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1AB0EA3320736C29002070E3 /* Debug */,
