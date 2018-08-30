@@ -588,13 +588,11 @@ static UInt32 const kDefaultBufferSize = 4096;
 - (void)audioStreamEndEncountered:(SJAudioStream *)audioStream
 {
     self.finishedDownload = YES;
-    
-    NSLog(@"finishedDownload");
 }
 
 - (void)audioStreamErrorOccurred:(SJAudioStream *)audioStream
 {
-    NSLog(@"audioStreamErrorOccurred");
+    NSLog(@"SJAudioStream: error occurred.");
 }
 
 #pragma mark- SJAudioFileStreamDelegate
