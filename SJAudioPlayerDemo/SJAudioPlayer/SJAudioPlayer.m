@@ -331,6 +331,11 @@ static UInt32 const kDefaultBufferSize = 4096;
             {
                 if (!self.audioFileStream)
                 {
+                    if (!self.readDataFormLocalFile)
+                    {
+                        self.contentLength = self.audioStream.contentLength;
+                    }
+                    
                     self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:[self getAudioFileTypeIdForFileExtension:self.url.pathExtension] fileSize:self.contentLength error:&openAudioFileStreamError];
                     
                     if (openAudioFileStreamError)
@@ -518,8 +523,6 @@ static UInt32 const kDefaultBufferSize = 4096;
     if (self.audioData == nil)
     {
         self.audioData = [[NSMutableData alloc] init];
-        
-        self.contentLength = self.audioStream.contentLength;
         
         self.didDownloadLength += self.byteOffset;
     }

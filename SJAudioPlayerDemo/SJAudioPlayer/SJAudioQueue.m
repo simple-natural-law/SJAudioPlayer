@@ -241,7 +241,7 @@ static int const SJAudioQueueBufferCount = 3;
 {
     [self setVolume:0.0];
     
-    [NSThread sleepForTimeInterval:0.3];
+    [NSThread sleepForTimeInterval:0.5];
     
     OSStatus status = AudioQueuePause(self.audioQueue);
     
@@ -445,7 +445,7 @@ static int const SJAudioQueueBufferCount = 3;
 - (void)setVolumeParameter
 {
     // 音频淡入淡出， 首先设置音量渐变过程使用的时间。
-    [self setParameter:kAudioQueueParam_VolumeRampTime value:self.volume > 0.0 ? 0.5 : 0.3 error:NULL];
+    [self setParameter:kAudioQueueParam_VolumeRampTime value:0.5 error:NULL];
     
     [self setParameter:kAudioQueueParam_Volume value:self.volume error:NULL];
 }
