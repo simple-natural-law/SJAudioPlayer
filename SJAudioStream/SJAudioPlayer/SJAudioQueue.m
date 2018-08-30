@@ -55,8 +55,6 @@ static int const SJAudioQueueBufferCount = 3;
 
 - (void)dealloc
 {
-    [self disposeAudioQueue];
-    
     pthread_mutex_destroy(&_mutex);
     pthread_cond_destroy(&_cond);
 }
@@ -272,7 +270,7 @@ static int const SJAudioQueueBufferCount = 3;
     }
     
     self.started    = NO;
-    self.playedTime = 0;
+    self.playedTime = 0.0;
     
     return status == noErr;
 }

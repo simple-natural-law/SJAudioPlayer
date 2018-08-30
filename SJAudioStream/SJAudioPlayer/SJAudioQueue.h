@@ -39,4 +39,6 @@
 
 - (BOOL)flush;
 
+- (void)disposeAudioQueue;
+
 @end

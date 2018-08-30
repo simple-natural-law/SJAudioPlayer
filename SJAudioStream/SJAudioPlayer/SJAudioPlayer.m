@@ -135,8 +135,6 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (void)downloadAudioData
 {
-    [self updateAudioDownloadPercentageWithDataLength:0.0];
-    
     self.finishedDownload = NO;
     
     BOOL done = YES;
@@ -282,6 +280,8 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     self.status     = SJAudioPlayerStatusIdle;
     self.audioData  = nil;
+    
+    [self.audioQueue disposeAudioQueue];
     self.audioQueue = nil;
     
     [self.fileHandle closeFile];
@@ -293,9 +293,12 @@ static UInt32 const kDefaultBufferSize = 4096;
     [self.audioFileStream close];
     self.audioFileStream = nil;
     
+    self.duration          = 0.0;
     self.byteOffset        = 0;
     self.contentLength     = 0;
     self.didDownloadLength = 0;
+    
+    [self updateAudioDownloadPercentageWithDataLength:0.0];
 }
 
 
@@ -343,6 +346,7 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     self.seekRequired = YES;
 }
+
 
 - (NSTimeInterval)progress
 {
