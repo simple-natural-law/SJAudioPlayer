@@ -12,7 +12,6 @@
 #import <pthread.h>
 
 
-
 @interface SJAudioQueueBuffer : NSObject
 
 @property (nonatomic, assign) AudioQueueBufferRef audioQueueBufferRef;
@@ -40,13 +39,13 @@ static int const SJAudioQueueBufferCount = 3;
 
 @property (nonatomic, strong) NSMutableArray<SJAudioQueueBuffer *> *reusableBufferArray;
 
-@property (nonatomic, assign, readwrite) BOOL available;
+@property (nonatomic, assign) BOOL available;
 
-@property (nonatomic, assign, readwrite) BOOL isRunning;
+@property (nonatomic, assign) BOOL isRunning;
 
-@property (nonatomic, assign, readwrite) AudioStreamBasicDescription format;
+@property (nonatomic, assign) AudioStreamBasicDescription format;
 
-@property (nonatomic, assign, readwrite) NSTimeInterval playedTime;
+@property (nonatomic, assign) NSTimeInterval playedTime;
 
 @end
 
@@ -240,14 +239,19 @@ static int const SJAudioQueueBufferCount = 3;
 */
 - (void)pause
 {
-    [self setVolume:0];
+    [self setVolume:0.0];
+    
+    [NSThread sleepForTimeInterval:0.3];
     
     OSStatus status = AudioQueuePause(self.audioQueue);
     
-    self.started = status == noErr;
+    self.started = (status == noErr);
 }
 
-
+- (void)pauseAudioQueue
+{
+    AudioQueuePause(self.audioQueue);
+}
 
 /*
  停止播放
@@ -441,7 +445,7 @@ static int const SJAudioQueueBufferCount = 3;
 - (void)setVolumeParameter
 {
     // 音频淡入淡出， 首先设置音量渐变过程使用的时间。
-    [self setParameter:kAudioQueueParam_VolumeRampTime value:0.5 error:NULL];
+    [self setParameter:kAudioQueueParam_VolumeRampTime value:self.volume > 0.0 ? 0.5 : 0.3 error:NULL];
     
     [self setParameter:kAudioQueueParam_Volume value:self.volume error:NULL];
 }
