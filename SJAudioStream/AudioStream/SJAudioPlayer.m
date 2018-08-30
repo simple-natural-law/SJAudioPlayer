@@ -135,6 +135,8 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (void)downloadAudioData
 {
+    [self updateAudioDownloadPercentageWithDataLength:0.0];
+    
     self.finishedDownload = NO;
     
     BOOL done = YES;
@@ -147,6 +149,8 @@ static UInt32 const kDefaultBufferSize = 4096;
         }
         
         done = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+        
+        [NSThread sleepForTimeInterval:0.005];
     }
 }
 
@@ -397,6 +401,21 @@ static UInt32 const kDefaultBufferSize = 4096;
 }
 
 
+- (void)updateAudioDownloadPercentageWithDataLength:(float)dataLength
+{
+    float percentage = 0.0;
+    
+    if (self.audioStream.contentLength > 0)
+    {
+        percentage = dataLength / self.audioStream.contentLength;
+    }
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        
+        [self.delegate audioPlayer:self updateAudioDownloadPercentage:percentage];
+    });
+}
+
 #pragma mark- SJAudioStreamDelegate
 - (void)audioStreamHasBytesAvailable:(SJAudioStream *)audioStream
 {
@@ -407,8 +426,8 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     NSError *readDataError = nil;
     
-    // 每次读取 48KB 的数据（长度太小，`audioStreamHasBytesAvailable`方法调用次数太频繁，会导致CPU占用率过高）
-    NSData *data = [self.audioStream readDataWithMaxLength:(kDefaultBufferSize * 12) error:&readDataError];
+    // 每次读取 20KB 的数据（长度太小，`audioStreamHasBytesAvailable`方法调用次数太频繁，会导致CPU占用率过高）
+    NSData *data = [self.audioStream readDataWithMaxLength:(kDefaultBufferSize * 5) error:&readDataError];
     
     if (readDataError)
     {
@@ -417,17 +436,9 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     self.didDownloadLength += [data length];
     
-//    dispatch_async(dispatch_get_main_queue(), ^{
-//        
-//        float progress = 0;
-//        
-//        if (self.audioStream.contentLength > 0)
-//        {
-//            progress = self.didDownloadLength / self.audioStream.contentLength;
-//        }
-//        
-//        [self.delegate audioPlayer:self didUpdatedAudioDataDownloadProgress:progress];
-//    });
+    float didDownloadLength = self.didDownloadLength;
+    
+    [self updateAudioDownloadPercentageWithDataLength:didDownloadLength];
     
     pthread_mutex_lock(&_mutex);
     [self.audioData appendData:data];

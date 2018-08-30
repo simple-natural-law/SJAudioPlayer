@@ -51,7 +51,7 @@
 
 - (void)updateProgress
 {
-    int duration = ceil(self.player.duration);
+    int duration = floor(self.player.duration);
     int progress = ceil(self.player.progress);
     
     self.durationLabel.text = [NSString stringWithFormat:@"%d",duration];
@@ -84,9 +84,9 @@
 }
 
 
-- (void)audioPlayer:(SJAudioPlayer *)audioPlayer didUpdatedAudioDataDownloadProgress:(float)progress
+- (void)audioPlayer:(SJAudioPlayer *)audioPlayer updateAudioDownloadPercentage:(float)percentage
 {
-    self.progress.progress = progress;
+    self.progress.progress = percentage;
 }
 
 
