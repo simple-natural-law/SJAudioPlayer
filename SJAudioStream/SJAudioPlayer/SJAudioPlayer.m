@@ -247,7 +247,7 @@ static UInt32 const kDefaultBufferSize = 4096;
             if (self.seekRequired)
             {
                 offset = [self.audioFileStream seekToTime:&_seekTime];
-                
+
                 if (self.readDataFormLocalFile)
                 {
                     [self.fileHandle seekToFileOffset:offset];
@@ -258,33 +258,31 @@ static UInt32 const kDefaultBufferSize = 4096;
                         if (offset < self.byteOffset)
                         {
                             [self.audioStream closeReadStream];
-                            
+
                             self.audioStream = nil;
-                            
+
                             [self startDownloadAudioData];
                         }
                     }else
                     {
                         self.byteOffset = offset;
-                        
+
                         [self.audioStream closeReadStream];
-                        
+
                         pthread_mutex_lock(&_mutex);
                         self.audioData = nil;
                         pthread_mutex_unlock(&_mutex);
-                        
+
                         self.audioStream = nil;
                     }
                 }
-                
+
                 self.timingOffset = self.seekTime - self.audioQueue.playedTime;
-                
+
                 [self.audioQueue reset];
                 
                 self.seekRequired = NO;
-                
-                self.status = SJAudioPlayerStatusWaiting;
-                
+
                 NSLog(@"seek");
             }
             
@@ -404,7 +402,7 @@ static UInt32 const kDefaultBufferSize = 4096;
 - (void)resume
 {
     pthread_mutex_lock(&_mutex);
-    if (self.pauseRequired && self.status != SJAudioPlayerStatusWaiting)
+    if (self.pauseRequired && self.status != SJAudioPlayerStatusWaiting )
     {
         pthread_cond_signal(&_cond);
     }

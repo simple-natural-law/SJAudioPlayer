@@ -306,6 +306,8 @@ static int const SJAudioQueueBufferCount = 3;
 {
     OSStatus status = AudioQueueReset(self.audioQueue);
     
+    [self setVolume:1.0];
+    
     return status == noErr;
 }
 
