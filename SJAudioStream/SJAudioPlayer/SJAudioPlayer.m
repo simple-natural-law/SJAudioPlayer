@@ -203,6 +203,91 @@ static UInt32 const kDefaultBufferSize = 4096;
                 NSLog(@"finished");
             }
             
+            pthread_mutex_lock(&_mutex);
+            
+            if (self.pauseRequired)
+            {
+                NSLog(@"pause");
+                
+                [self.audioQueue pause];
+                
+                self.status = SJAudioPlayerStatusPaused;
+                
+                pthread_cond_wait(&_cond, &_mutex);
+                
+                if (self.stopRequired)
+                {
+                    [self.audioQueue stop:YES];
+                    self.started = NO;
+                    self.status  = SJAudioPlayerStatusIdle;
+                    self.stopRequired  = NO;
+                    self.pauseRequired = NO;
+                    
+                    NSLog(@"stop");
+                    
+                }else
+                {
+                    [self.audioQueue resume];
+                    self.pauseRequired = NO;
+                    self.status = SJAudioPlayerStatusPlaying;
+                    
+                    NSLog(@"play");
+                }
+            }
+            pthread_mutex_unlock(&_mutex);
+            
+            if (self.stopRequired)
+            {
+                [self.audioQueue stop:YES];
+                self.started = NO;
+                self.stopRequired = NO;
+                self.status  = SJAudioPlayerStatusIdle;
+            }
+            
+            if (self.seekRequired)
+            {
+                offset = [self.audioFileStream seekToTime:&_seekTime];
+                
+                if (self.readDataFormLocalFile)
+                {
+                    [self.fileHandle seekToFileOffset:offset];
+                }else
+                {
+                    if (self.finishedDownload)
+                    {
+                        if (offset < self.byteOffset)
+                        {
+                            [self.audioStream closeReadStream];
+                            
+                            self.audioStream = nil;
+                            
+                            [self startDownloadAudioData];
+                        }
+                    }else
+                    {
+                        self.byteOffset = offset;
+                        
+                        [self.audioStream closeReadStream];
+                        
+                        pthread_mutex_lock(&_mutex);
+                        self.audioData = nil;
+                        pthread_mutex_unlock(&_mutex);
+                        
+                        self.audioStream = nil;
+                    }
+                }
+                
+                self.timingOffset = self.seekTime - self.audioQueue.playedTime;
+                
+                [self.audioQueue reset];
+                
+                self.seekRequired = NO;
+                
+                self.status = SJAudioPlayerStatusWaiting;
+                
+                NSLog(@"seek");
+            }
+            
             
             NSData *data = nil;
             
@@ -265,51 +350,6 @@ static UInt32 const kDefaultBufferSize = 4096;
                     NSLog(@"SJAudioPlayer: failed to parse audio data.");
                 }
             }
-            
-            
-            if (self.seekRequired)
-            {
-                offset = [self.audioFileStream seekToTime:&_seekTime];
-                
-                if (self.readDataFormLocalFile)
-                {
-                    [self.fileHandle seekToFileOffset:offset];
-                }else
-                {
-                    if (self.finishedDownload)
-                    {
-                        if (offset < self.byteOffset)
-                        {
-                            [self.audioStream closeReadStream];
-                            
-                            self.audioStream = nil;
-                            
-                            [self startDownloadAudioData];
-                        }
-                    }else
-                    {
-                        self.byteOffset = offset;
-                        
-                        [self.audioStream closeReadStream];
-                        
-                        pthread_mutex_lock(&_mutex);
-                        self.audioData = nil;
-                        pthread_mutex_unlock(&_mutex);
-                        
-                        self.audioStream = nil;
-                    }
-                }
-                
-                self.timingOffset = self.seekTime - self.audioQueue.playedTime;
-                
-                [self.audioQueue reset];
-                
-                self.seekRequired = NO;
-                
-                self.status = SJAudioPlayerStatusWaiting;
-                
-                NSLog(@"seek");
-            }
         }
     }
     
@@ -339,8 +379,8 @@ static UInt32 const kDefaultBufferSize = 4096;
     [self.audioFileStream close];
     self.audioFileStream = nil;
     
-    self.duration          = 0.0;
     self.byteOffset        = 0;
+    self.duration          = 0.0;
     self.timingOffset      = 0.0;
     self.seekTime          = 0.0;
     self.contentLength     = 0;
@@ -533,48 +573,6 @@ static UInt32 const kDefaultBufferSize = 4096;
     {
         NSLog(@"SJAudioPlayer: failed to play packet data.");
     }
-    
-    pthread_mutex_lock(&_mutex);
-    
-    if (self.pauseRequired)
-    {
-        NSLog(@"pause");
-        
-        [self.audioQueue pause];
-        
-        self.status = SJAudioPlayerStatusPaused;
-        
-        pthread_cond_wait(&_cond, &_mutex);
-        
-        if (self.stopRequired)
-        {
-            [self.audioQueue stop:YES];
-            self.started = NO;
-            self.status  = SJAudioPlayerStatusIdle;
-            self.stopRequired  = NO;
-            self.pauseRequired = NO;
-            
-            NSLog(@"stop");
-            
-        }else
-        {
-            [self.audioQueue resume];
-            self.pauseRequired = NO;
-            self.status = SJAudioPlayerStatusPlaying;
-            
-            NSLog(@"play");
-        }
-    }
-    
-    if (self.stopRequired)
-    {
-        [self.audioQueue stop:YES];
-        self.started = NO;
-        self.stopRequired = NO;
-        self.status  = SJAudioPlayerStatusIdle;
-    }
-    
-    pthread_mutex_unlock(&_mutex);
 }
 
 

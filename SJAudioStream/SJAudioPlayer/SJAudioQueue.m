@@ -406,7 +406,7 @@ static int const SJAudioQueueBufferCount = 3;
 {
     if (_format.mSampleRate == 0)
     {
-        return 0;
+        return 0.0;
     }
     
     AudioTimeStamp time;

@@ -57,9 +57,12 @@
     self.durationLabel.text = [NSString stringWithFormat:@"%d",duration];
     self.progressLabel.text = [NSString stringWithFormat:@"%d",progress];
     
-    if (self.player.duration)
+    if (self.player.duration > 0.0)
     {
         self.slider.value = self.player.progress/self.player.duration;
+    }else
+    {
+        self.slider.value = 0.0;
     }
 }
 
