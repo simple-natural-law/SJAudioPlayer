@@ -80,7 +80,7 @@
 
 - (IBAction)seek:(UISlider *)sender
 {
-    
+    [self.player seekToProgress:(sender.value * self.player.duration)];
 }
 
 
