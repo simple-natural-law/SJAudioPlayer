@@ -44,9 +44,11 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 @property (nonatomic, weak) id<SJAudioPlayerDelegate> delegate;
 
 
-- (instancetype)initWithUrl:(NSURL *)url;
+- (instancetype)init;
 
-- (void)play;
+- (void)play:(NSURL *)url;
+
+- (void)resume;
 
 - (void)pause;
 

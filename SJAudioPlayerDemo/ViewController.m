@@ -14,6 +14,8 @@
 
 @property (nonatomic, strong) SJAudioPlayer *player;
 
+@property (nonatomic, strong) NSURL *url;
+
 @property (weak, nonatomic) IBOutlet UIProgressView *progress;
 
 @property (weak, nonatomic) IBOutlet UISlider *slider;
@@ -32,21 +34,19 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
+    self.player = [[SJAudioPlayer alloc] init];
+    
+    self.player.delegate = self;
+    
     NSString *urlString = @"http://music.163.com/song/media/outer/url?id=166321.mp3";
 
     //NSString *urlString = @"http://music.163.com/song/media/outer/url?id=166317.mp3";
     
-    NSURL *url = [NSURL URLWithString:urlString];
+    self.url = [NSURL URLWithString:urlString];
     
     //NSString *path = [[NSBundle mainBundle] pathForResource:@"MP3Sample" ofType:@"mp3"];
 
-    //NSURL *url = [NSURL fileURLWithPath:path];
-    
-    self.player = [[SJAudioPlayer alloc] initWithUrl:url];
-    
-    self.player.delegate = self;
-    
-    [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(updateProgress) userInfo:nil repeats:YES];
+    //self.url = [NSURL fileURLWithPath:path];
 }
 
 - (void)updateProgress
@@ -68,7 +68,15 @@
 
 - (IBAction)play:(id)sender
 {
-    [self.player play];
+    if (self.player.status == SJAudioPlayerStatusIdle)
+    {
+        [self.player play:self.url];
+        
+        [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(updateProgress) userInfo:nil repeats:YES];
+    }else
+    {
+        [self.player resume];
+    }
 }
 
 - (IBAction)pause:(id)sender
@@ -94,7 +102,36 @@
 
 - (void)audioPlayer:(SJAudioPlayer *)audioPlayer didChangedStatus:(SJAudioPlayerStatus)status
 {
-    
+    switch (status)
+    {
+        case SJAudioPlayerStatusIdle:
+        {
+            NSLog(@"SJAudioPlayerStatusIdle");
+        }
+            break;
+        case SJAudioPlayerStatusWaiting:
+        {
+            NSLog(@"SJAudioPlayerStatusWaiting");
+        }
+            break;
+        case SJAudioPlayerStatusPlaying:
+        {
+            NSLog(@"SJAudioPlayerStatusPlaying");
+        }
+            break;
+        case SJAudioPlayerStatusPaused:
+        {
+            NSLog(@"SJAudioPlayerStatusPaused");
+        }
+            break;
+        case SJAudioPlayerStatusFinished:
+        {
+            NSLog(@"SJAudioPlayerStatusFinished");
+        }
+            break;
+        default:
+            break;
+    }
 }
 
 - (void)didReceiveMemoryWarning {

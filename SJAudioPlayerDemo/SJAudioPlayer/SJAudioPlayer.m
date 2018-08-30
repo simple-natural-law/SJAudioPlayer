@@ -80,31 +80,36 @@ static UInt32 const kDefaultBufferSize = 4096;
 }
 
 
-- (instancetype)initWithUrl:(NSURL *)url;
+- (instancetype)init
 {
-    NSAssert(url, @"SJAudioPlayer: url should be not nil.");
-    
     self = [super init];
     
     if (self)
     {
-        self.url     = url;
-        self.started = NO;
-        
-        self.readDataFormLocalFile = [self.url isFileURL];
-        
         pthread_mutex_init(&_mutex, NULL);
         pthread_cond_init(&_cond, NULL);
     }
+    
     return self;
 }
 
 
-#pragma mark - methods
-- (void)play
+#pragma mark - Methods
+- (void)play:(NSURL *)url
 {
-    if (!self.started)
+    NSAssert(url, @"SJAudioPlayer: url should be not nil.");
+    
+    if ([self.url.absoluteString isEqualToString:url.absoluteString])
     {
+        [self resume];
+    }else
+    {
+        [self stop];
+        
+        self.url = url;
+        
+        self.readDataFormLocalFile = [self.url isFileURL];
+        
         // 监听中断事件
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterreption:) name:AVAudioSessionInterruptionNotification object:[AVAudioSession sharedInstance]];
         
@@ -127,9 +132,6 @@ static UInt32 const kDefaultBufferSize = 4096;
         }
         
         [self start];
-    }else
-    {
-        [self resume];
     }
 }
 
@@ -379,9 +381,6 @@ static UInt32 const kDefaultBufferSize = 4096;
     self.seekRequired  = NO;
     self.pausedByInterrupt = NO;
     
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
-    
-    self.status     = SJAudioPlayerStatusIdle;
     self.audioData  = nil;
     
     [self.audioQueue disposeAudioQueue];
@@ -403,7 +402,11 @@ static UInt32 const kDefaultBufferSize = 4096;
     self.contentLength     = 0;
     self.didDownloadLength = 0;
     
+    [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
+    
     [self updateAudioDownloadPercentageWithDataLength:0.0];
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
 }
 
 
@@ -442,6 +445,11 @@ static UInt32 const kDefaultBufferSize = 4096;
         }
     }
     pthread_mutex_unlock(&_mutex);
+    
+    while (self.status != SJAudioPlayerStatusIdle)
+    {
+        [NSThread sleepForTimeInterval:0.1];
+    }
 }
 
 
@@ -537,6 +545,11 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (void)setAudioPlayerStatus:(SJAudioPlayerStatus)status
 {
+    if (self.status == status)
+    {
+        return;
+    }
+    
     self.status = status;
     
     if (self.delegate && [self.delegate respondsToSelector:@selector(audioPlayer:didChangedStatus:)])
