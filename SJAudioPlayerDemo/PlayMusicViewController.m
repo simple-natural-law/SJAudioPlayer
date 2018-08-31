@@ -9,7 +9,7 @@
 #import "PlayMusicViewController.h"
 #import "SJAudioPlayer/SJAudioPlayer.h"
 #import "SDWebImage/UIImageView+WebCache.h"
-
+#import <MediaPlayer/MediaPlayer.h>
 
 @interface PlayMusicViewController ()<SJAudioPlayerDelegate>
 
@@ -53,6 +53,8 @@
     
     self.titleLabel.text = @"SJAudioPlayer";
     
+    // 允许接受远程控制
+    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
     
     /*
      播放本地音频文件
@@ -69,7 +71,7 @@
     */
     self.musicList = @[@{@"music_url":@"http://music.163.com/song/media/outer/url?id=166321.mp3", @"pic":@"http://imgsrc.baidu.com/forum/w=580/sign=0828c5ea79ec54e741ec1a1689399bfd/e3d9f2d3572c11df80fbf7f7612762d0f703c238.jpg", @"artist":@"毛阿敏", @"music_name":@"爱上张无忌"},
                        @{@"music_url":@"http://music.163.com/song/media/outer/url?id=27902537.mp3", @"pic":@"http://attach.bbs.miui.com/forum/201401/10/225901w011gxc00mz0gao9.jpg", @"artist":@"杨宗纬 / 叶蓓", @"music_name":@"我们好像在哪见过"},
-                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=166317.mp3", @"pic":@"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1535729826868&di=ab3a9c6bc4fc12fcebb6a63e5dc32893&imgtype=jpg&src=http%3A%2F%2Fimg0.imgtn.bdimg.com%2Fit%2Fu%3D1503310080%2C1140367239%26fm%3D214%26gp%3D0.jpg", @"artist":@"金学峰", @"music_name":@"心爱"}];
+                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=166317.mp3", @"pic":@"https://imgcache.cjmx.com/tv/201605/20160522195825907.jpg", @"artist":@"金学峰", @"music_name":@"心爱"}];
     
     
     self.currentIndex = 0;
@@ -92,6 +94,8 @@
     if (self.player.duration > 0.0)
     {
         self.slider.value = self.player.progress/self.player.duration;
+        
+        [self configNowPlayingInfoCenter];
     }else
     {
         self.slider.value = 0.0;
@@ -169,12 +173,12 @@
     {
         [self.player pause];
         
-        sender.selected = NO;
+        self.playOrPauseButton.selected = NO;
     }else
     {
         [self.player play];
         
-        sender.selected = YES;
+        self.playOrPauseButton.selected = YES;
     }
 }
 
@@ -193,16 +197,17 @@
     self.musicNameLabel.text = currentMusicInfo[@"music_name"];
     self.artistLabel.text    = currentMusicInfo[@"artist"];
     
+    self.musiceImageView.image = [UIImage imageNamed:@"music_placeholder"];
+    
     CATransition *transition  = [CATransition animation];
     transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn];
-    transition.duration = 0.2;
+    transition.duration = 0.3;
     transition.type     = kCATransitionFade;
-    
     [self.musiceImageView.layer addAnimation:transition forKey:@"fade"];
     
     __weak typeof(self) weakself = self;
     
-    [self.musiceImageView sd_setImageWithURL:[NSURL URLWithString:currentMusicInfo[@"pic"]] placeholderImage:[UIImage imageNamed:@"music_placeholder"] completed:^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
+    [self.musiceImageView sd_setImageWithURL:[NSURL URLWithString:currentMusicInfo[@"pic"]] completed:^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
         
         __strong typeof(weakself) strongself = weakself;
         
@@ -264,6 +269,85 @@
             break;
     }
 }
+
+
+
+// 监听后台控制逻辑
+- (void)remoteControlReceivedWithEvent:(UIEvent *)event
+{
+    if (event.type == UIEventTypeRemoteControl)
+    {
+        switch (event.subtype)
+        {
+            case UIEventSubtypeRemoteControlTogglePlayPause:
+            {
+                [self playOrPause:nil];
+            }
+                break;
+                
+            case UIEventSubtypeRemoteControlPlay:
+            {
+                [self playOrPause:nil];
+            }
+                break;
+                
+            case UIEventSubtypeRemoteControlPause:
+            {
+                [self playOrPause:nil];
+            }
+                break;
+                
+            case UIEventSubtypeRemoteControlStop:
+            {
+                [self.player stop];
+            }
+                break;
+                
+            case UIEventSubtypeRemoteControlNextTrack:
+            {
+                [self nextMusic:nil];
+            }
+                break;
+                
+            case UIEventSubtypeRemoteControlPreviousTrack:
+            {
+                [self lastMusic:nil];
+            }
+                break;
+                
+            default:
+                break;
+        }
+    }
+}
+
+#pragma -mark 设置锁屏状态下音乐播放的信息(歌曲信息和图片)和播放进度更新
+- (void)configNowPlayingInfoCenter
+{
+    NSMutableDictionary *dic = [[NSMutableDictionary alloc] init];
+    
+    [dic setObject:self.currentMusicInfo[@"music_name"] forKey:MPMediaItemPropertyTitle];
+    
+    [dic setObject:self.currentMusicInfo[@"artist"] forKey:MPMediaItemPropertyAlbumTitle];
+    
+    // 当前音乐已经播放的时间
+    [dic setObject:[NSNumber numberWithFloat:self.player.progress] forKey:MPNowPlayingInfoPropertyElapsedPlaybackTime];
+    
+    // 设置进度光标的速度(原速播放)
+    [dic setObject:[NSNumber numberWithFloat:1.0] forKey:MPNowPlayingInfoPropertyPlaybackRate];
+    
+    // 音乐的剩余播放时间
+    [dic setObject:[NSNumber numberWithFloat:self.player.duration] forKey:MPMediaItemPropertyPlaybackDuration];
+    
+    // 设置锁屏封面
+    MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage:self.musiceImageView.image];
+    
+    [dic setObject:artwork forKey:MPMediaItemPropertyArtwork];
+    
+    [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:dic];
+}
+
+
 
 
 - (void)didReceiveMemoryWarning {
