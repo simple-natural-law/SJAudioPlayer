@@ -257,6 +257,8 @@
         {
             NSLog(@"SJAudioPlayer: Finished");
             
+            self.playOrPauseButton.selected = NO;
+            
             [self nextMusic:nil];
         }
             break;

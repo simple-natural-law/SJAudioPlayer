@@ -217,7 +217,7 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     NSUInteger offset = 0;
     
-    while (self.started && self.status != SJAudioPlayerStatusFinished)
+    while (self.started)
     {
         @autoreleasepool
         {
@@ -225,9 +225,9 @@ static UInt32 const kDefaultBufferSize = 4096;
             {
                 [self.audioQueue stop:NO];
                 
-                [self cleanUp];
+                self.started = NO;
                 
-                [self setAudioPlayerStatus:SJAudioPlayerStatusFinished];
+                break;
             }
             
             pthread_mutex_lock(&_mutex);
@@ -246,9 +246,9 @@ static UInt32 const kDefaultBufferSize = 4096;
                     
                     self.stopReadHTTPData = YES;
                     
-                    [self cleanUp];
+                    self.started = NO;
                     
-                    [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
+                    break;
                     
                 }else
                 {
@@ -267,9 +267,9 @@ static UInt32 const kDefaultBufferSize = 4096;
                 
                 self.stopReadHTTPData = YES;
                 
-                [self cleanUp];
+                self.started = NO;
                 
-                [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
+                break;
             }
             
             if (self.seekRequired)
@@ -391,6 +391,13 @@ static UInt32 const kDefaultBufferSize = 4096;
             }
         }
     }
+    
+    if (self.isEof)
+    {
+        [self setAudioPlayerStatus:SJAudioPlayerStatusFinished];
+    }
+    
+    [self cleanUp];
 }
 
 
@@ -453,6 +460,11 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (void)stop
 {
+    if (!self.stopRequired)
+    {
+        [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
+    }
+    
     pthread_mutex_lock(&_mutex);
     if (!self.stopRequired)
     {
@@ -464,6 +476,8 @@ static UInt32 const kDefaultBufferSize = 4096;
         }
     }
     pthread_mutex_unlock(&_mutex);
+    
+    [NSThread sleepForTimeInterval:0.1];
 }
 
 
