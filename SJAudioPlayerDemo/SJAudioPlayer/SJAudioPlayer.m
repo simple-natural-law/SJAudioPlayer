@@ -562,11 +562,11 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     self.status = status;
     
-    if (self.delegate && [self.delegate respondsToSelector:@selector(audioPlayer:didChangedStatus:)])
+    if (self.delegate && [self.delegate respondsToSelector:@selector(audioPlayer:statusDidChanged:)])
     {
         dispatch_async(dispatch_get_main_queue(), ^{
             
-            [self.delegate audioPlayer:self didChangedStatus:status];
+            [self.delegate audioPlayer:self statusDidChanged:status];
         });
     }
 }

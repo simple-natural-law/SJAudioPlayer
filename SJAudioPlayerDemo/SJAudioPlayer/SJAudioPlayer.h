@@ -26,7 +26,7 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 - (void)audioPlayer:(SJAudioPlayer *)audioPlayer updateAudioDownloadPercentage:(float)percentage;
 
-- (void)audioPlayer:(SJAudioPlayer *)audioPlayer didChangedStatus:(SJAudioPlayerStatus)status;
+- (void)audioPlayer:(SJAudioPlayer *)audioPlayer statusDidChanged:(SJAudioPlayerStatus)status;
 
 @end
 

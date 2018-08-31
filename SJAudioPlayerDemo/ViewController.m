@@ -92,7 +92,7 @@
     self.progress.progress = percentage;
 }
 
-- (void)audioPlayer:(SJAudioPlayer *)audioPlayer didChangedStatus:(SJAudioPlayerStatus)status
+- (void)audioPlayer:(SJAudioPlayer *)audioPlayer statusDidChanged:(SJAudioPlayerStatus)status
 {
     switch (status)
     {
