@@ -14,13 +14,19 @@
 
 @property (nonatomic, strong) SJAudioPlayer *player;
 
-@property (weak, nonatomic) IBOutlet UIProgressView *progress;
+@property (weak, nonatomic) IBOutlet UIImageView *backgroundImageView;
+
+@property (weak, nonatomic) IBOutlet UILabel *titleLabel;
+
+@property (weak, nonatomic) IBOutlet UIImageView *musiceImageView;
+
+@property (weak, nonatomic) IBOutlet UIProgressView *progressView;
 
 @property (weak, nonatomic) IBOutlet UISlider *slider;
 
-@property (weak, nonatomic) IBOutlet UILabel *durationLabel;
+@property (weak, nonatomic) IBOutlet UILabel *playedTimeLabel;
 
-@property (weak, nonatomic) IBOutlet UILabel *progressLabel;
+@property (weak, nonatomic) IBOutlet UILabel *durationLabel;
 
 @end
 
@@ -55,7 +61,7 @@
     int progress = ceil(self.player.progress);
     
     self.durationLabel.text = [NSString stringWithFormat:@"%d",duration];
-    self.progressLabel.text = [NSString stringWithFormat:@"%d",progress];
+    self.playedTimeLabel.text = [NSString stringWithFormat:@"%d",progress];
     
     if (self.player.duration > 0.0)
     {
@@ -66,20 +72,42 @@
     }
 }
 
-- (IBAction)play:(id)sender
+
+- (IBAction)showMusicList:(id)sender
 {
-    [self.player play];
+    
 }
 
-- (IBAction)pause:(id)sender
+
+- (IBAction)likeTheMusic:(id)sender
 {
-    [self.player pause];
+    
 }
 
-- (IBAction)stop:(id)sender
+
+- (IBAction)changePlaySequence:(id)sender
 {
-    [self.player stop];
+    
 }
+
+
+- (IBAction)lastMusic:(id)sender
+{
+    
+}
+
+
+- (IBAction)nextMusic:(id)sender
+{
+    
+}
+
+
+- (IBAction)playOrPause:(id)sender
+{
+    
+}
+
 
 - (IBAction)seek:(UISlider *)sender
 {
@@ -89,7 +117,7 @@
 
 - (void)audioPlayer:(SJAudioPlayer *)audioPlayer updateAudioDownloadPercentage:(float)percentage
 {
-    self.progress.progress = percentage;
+    self.progressView.progress = percentage;
 }
 
 - (void)audioPlayer:(SJAudioPlayer *)audioPlayer statusDidChanged:(SJAudioPlayerStatus)status

@@ -55,6 +55,9 @@
                                             <constraint firstAttribute="width" constant="46" id="m7V-4R-She"/>
                                         </constraints>
                                         <state key="normal" image="menu"/>
+                                        <connections>
+                                            <action selector="showMusicList:" destination="eVa-CY-Nae" eventType="touchUpInside" id="h29-h7-5Tf"/>
+                                        </connections>
                                     </button>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Rq8-nT-Xoq">
                                         <rect key="frame" x="66" y="12" width="243" height="21"/>
@@ -72,6 +75,10 @@
                                             <constraint firstAttribute="width" constant="46" id="5fw-xw-9au"/>
                                         </constraints>
                                         <state key="normal" image="empty_heart"/>
+                                        <state key="selected" image="red_heart"/>
+                                        <connections>
+                                            <action selector="likeTheMusic:" destination="eVa-CY-Nae" eventType="touchUpInside" id="hF2-ge-RKY"/>
+                                        </connections>
                                     </button>
                                 </subviews>
                                 <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
@@ -112,18 +119,30 @@
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Nbv-ms-SBQ">
                                                 <rect key="frame" x="0.0" y="0.0" width="75" height="64"/>
                                                 <state key="normal" image="shuffle_icon"/>
+                                                <connections>
+                                                    <action selector="changePlaySequence:" destination="eVa-CY-Nae" eventType="touchUpInside" id="Ady-xL-RG8"/>
+                                                </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Zgg-wr-cOh">
                                                 <rect key="frame" x="75" y="0.0" width="75" height="64"/>
                                                 <state key="normal" image="prev_song"/>
+                                                <connections>
+                                                    <action selector="lastMusic:" destination="eVa-CY-Nae" eventType="touchUpInside" id="P13-cQ-bcq"/>
+                                                </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tuX-y5-JJt">
                                                 <rect key="frame" x="150" y="0.0" width="75" height="64"/>
                                                 <state key="normal" image="big_play_button"/>
+                                                <connections>
+                                                    <action selector="playOrPause:" destination="eVa-CY-Nae" eventType="touchUpInside" id="REf-ni-EKS"/>
+                                                </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fFV-g7-xwY">
                                                 <rect key="frame" x="225" y="0.0" width="75" height="64"/>
                                                 <state key="normal" image="next_song"/>
+                                                <connections>
+                                                    <action selector="nextMusic:" destination="eVa-CY-Nae" eventType="touchUpInside" id="Rss-9I-Sqe"/>
+                                                </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="wXY-17-pXR">
                                                 <rect key="frame" x="300" y="0.0" width="75" height="64"/>
@@ -178,20 +197,23 @@
                                                 <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.80000000000000004" translatesAutoresizingMaskIntoConstraints="NO" id="P21-HP-GPL">
+                                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="P21-HP-GPL">
                                                 <rect key="frame" x="45" y="18" width="269" height="2"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="2" id="uCX-GB-fTC"/>
                                                 </constraints>
                                                 <color key="progressTintColor" red="0.0" green="0.0" blue="0.0" alpha="0.20000000000000001" colorSpace="custom" customColorSpace="sRGB"/>
                                             </progressView>
-                                            <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="TUu-of-1Uc" customClass="MusicSlider">
+                                            <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="TUu-of-1Uc">
                                                 <rect key="frame" x="43" y="2" width="273" height="33"/>
                                                 <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="32" id="WSa-Ma-eSy"/>
                                                 </constraints>
                                                 <color key="maximumTrackTintColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <connections>
+                                                    <action selector="seek:" destination="eVa-CY-Nae" eventType="valueChanged" id="xxR-2z-61F"/>
+                                                </connections>
                                             </slider>
                                         </subviews>
                                         <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
@@ -277,9 +299,13 @@
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="albumImageLeftConstraint" destination="7CV-Ip-zTC" id="BY0-fv-OY7"/>
-                        <outlet property="albumImageRightConstraint" destination="0og-Ed-cpF" id="v1d-q6-saR"/>
-                        <outlet property="albumImageView" destination="fzG-5a-IF7" id="S4p-NK-xAA"/>
+                        <outlet property="backgroundImageView" destination="Bwd-8r-12y" id="fcr-hE-VSr"/>
+                        <outlet property="durationLabel" destination="2O5-yw-xLd" id="xQ8-Df-Qf3"/>
+                        <outlet property="musiceImageView" destination="fzG-5a-IF7" id="Pas-I9-nZg"/>
+                        <outlet property="playedTimeLabel" destination="Hlb-s4-6cd" id="4jD-GM-zZy"/>
+                        <outlet property="progressView" destination="P21-HP-GPL" id="e5M-hE-Nvj"/>
+                        <outlet property="slider" destination="TUu-of-1Uc" id="DtD-yt-Q6j"/>
+                        <outlet property="titleLabel" destination="Rq8-nT-Xoq" id="Z9w-Qc-53I"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="uYm-qV-suX" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -295,6 +321,7 @@
         <image name="music_placeholder" width="308" height="308"/>
         <image name="next_song" width="20" height="28"/>
         <image name="prev_song" width="20" height="28"/>
+        <image name="red_heart" width="23" height="21"/>
         <image name="shuffle_icon" width="17" height="14"/>
     </resources>
 </document>
