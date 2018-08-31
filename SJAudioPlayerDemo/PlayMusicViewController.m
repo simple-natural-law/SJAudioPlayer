@@ -230,6 +230,7 @@
         case SJAudioPlayerStatusIdle:
         {
             NSLog(@"SJAudioPlayer: Idle");
+            
             self.playOrPauseButton.selected = NO;
         }
             break;
@@ -241,12 +242,14 @@
         case SJAudioPlayerStatusPlaying:
         {
             NSLog(@"SJAudioPlayer: Playing");
+            
             self.playOrPauseButton.selected = YES;
         }
             break;
         case SJAudioPlayerStatusPaused:
         {
             NSLog(@"SJAudioPlayer: Paused");
+            
             self.playOrPauseButton.selected = NO;
         }
             break;
@@ -263,8 +266,7 @@
 }
 
 
-
-// 监听后台控制逻辑
+#pragma mark- 监听远程控制
 - (void)remoteControlReceivedWithEvent:(UIEvent *)event
 {
     if (event.type == UIEventTypeRemoteControl)
