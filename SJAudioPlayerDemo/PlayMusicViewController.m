@@ -234,6 +234,16 @@
 {
     _currentMusicInfo = currentMusicInfo;
     
+    self.musicNameLabel.text = currentMusicInfo[@"music_name"];
+    self.artistLabel.text    = currentMusicInfo[@"artist"];
+    
+    CATransition *transition  = [CATransition animation];
+    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn];
+    transition.duration = 0.2;
+    transition.type     = kCATransitionFade;
+    
+    [self.musiceImageView.layer addAnimation:transition forKey:@"fade"];
+    
     __weak typeof(self) weakself = self;
     
     [self.musiceImageView sd_setImageWithURL:[NSURL URLWithString:currentMusicInfo[@"pic"]] placeholderImage:[UIImage imageNamed:@"music_placeholder"] completed:^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
@@ -242,10 +252,6 @@
         
         strongself.backgroundImageView.image = image;
     }];
-    
-    self.musicNameLabel.text = currentMusicInfo[@"music_name"];
-    
-    self.artistLabel.text    = currentMusicInfo[@"artist"];
 }
 
 

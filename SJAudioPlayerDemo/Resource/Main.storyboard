@@ -221,6 +221,7 @@
                                                     <constraint firstAttribute="height" constant="2" id="uCX-GB-fTC"/>
                                                 </constraints>
                                                 <color key="progressTintColor" red="1" green="1" blue="1" alpha="0.40000000000000002" colorSpace="custom" customColorSpace="sRGB"/>
+                                                <color key="trackTintColor" red="1" green="1" blue="1" alpha="0.20000000000000001" colorSpace="custom" customColorSpace="sRGB"/>
                                             </progressView>
                                             <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="TUu-of-1Uc">
                                                 <rect key="frame" x="43" y="2" width="273" height="33"/>

@@ -238,9 +238,8 @@ static UInt32 const kDefaultBufferSize = 4096;
                 if (self.stopRequired)
                 {
                     [self.audioQueue stop:YES];
-                    self.started = NO;
-                    self.stopRequired  = NO;
-                    self.pauseRequired = NO;
+                    
+                    [self cleanUp];
                     
                     [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
                     
@@ -258,8 +257,8 @@ static UInt32 const kDefaultBufferSize = 4096;
             if (self.stopRequired)
             {
                 [self.audioQueue stop:YES];
-                self.started = NO;
-                self.stopRequired = NO;
+                
+                [self cleanUp];
                 
                 [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
             }
