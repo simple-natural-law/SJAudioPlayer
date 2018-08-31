@@ -32,13 +32,25 @@
                                         <rect key="frame" x="0.0" y="0.0" width="375" height="812"/>
                                         <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.29999999999999999" colorSpace="custom" customColorSpace="sRGB"/>
                                     </view>
+                                    <visualEffectView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="KYU-s1-he7">
+                                        <rect key="frame" x="0.0" y="0.0" width="375" height="812"/>
+                                        <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="Dhj-PO-Ewc">
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="812"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                        </view>
+                                        <blurEffect style="light"/>
+                                    </visualEffectView>
                                 </subviews>
                                 <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
+                                    <constraint firstAttribute="trailing" secondItem="KYU-s1-he7" secondAttribute="trailing" id="2pC-LI-Ive"/>
                                     <constraint firstItem="Bwd-8r-12y" firstAttribute="top" secondItem="WPj-Te-9Dc" secondAttribute="top" id="3nP-8x-LDZ"/>
                                     <constraint firstItem="Lg0-zW-Ytn" firstAttribute="top" secondItem="WPj-Te-9Dc" secondAttribute="top" id="8q6-e2-J6j"/>
+                                    <constraint firstItem="KYU-s1-he7" firstAttribute="leading" secondItem="WPj-Te-9Dc" secondAttribute="leading" id="K3c-Pl-JKO"/>
                                     <constraint firstAttribute="bottom" secondItem="Bwd-8r-12y" secondAttribute="bottom" id="LTk-jA-buj"/>
+                                    <constraint firstAttribute="bottom" secondItem="KYU-s1-he7" secondAttribute="bottom" id="MVo-yH-hAn"/>
                                     <constraint firstAttribute="trailing" secondItem="Bwd-8r-12y" secondAttribute="trailing" id="Oa8-HA-zLq"/>
+                                    <constraint firstItem="KYU-s1-he7" firstAttribute="top" secondItem="WPj-Te-9Dc" secondAttribute="top" id="Q7l-H0-BNG"/>
                                     <constraint firstAttribute="bottom" secondItem="Lg0-zW-Ytn" secondAttribute="bottom" id="evq-oo-pZL"/>
                                     <constraint firstItem="Lg0-zW-Ytn" firstAttribute="leading" secondItem="WPj-Te-9Dc" secondAttribute="leading" id="lUR-kX-Yqr"/>
                                     <constraint firstItem="Bwd-8r-12y" firstAttribute="leading" secondItem="WPj-Te-9Dc" secondAttribute="leading" id="phb-QV-1De"/>
@@ -277,7 +289,7 @@
                                 </constraints>
                             </view>
                         </subviews>
-                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
                             <constraint firstItem="zMJ-CT-WwR" firstAttribute="leading" secondItem="wg7-Zc-vBf" secondAttribute="leading" id="8NZ-Xf-AQC"/>
                             <constraint firstAttribute="bottom" secondItem="WPj-Te-9Dc" secondAttribute="bottom" id="Bm7-Dz-SXN"/>
