@@ -10,6 +10,7 @@
 #import "SJAudioPlayer/SJAudioPlayer.h"
 #import "SDWebImage/UIImageView+WebCache.h"
 
+
 @interface PlayMusicViewController ()<SJAudioPlayerDelegate>
 
 @property (weak, nonatomic) IBOutlet UIImageView *backgroundImageView;
