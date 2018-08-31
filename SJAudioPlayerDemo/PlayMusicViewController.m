@@ -197,17 +197,9 @@
     self.musicNameLabel.text = currentMusicInfo[@"music_name"];
     self.artistLabel.text    = currentMusicInfo[@"artist"];
     
-    self.musiceImageView.image = [UIImage imageNamed:@"music_placeholder"];
-    
-    CATransition *transition  = [CATransition animation];
-    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn];
-    transition.duration = 0.3;
-    transition.type     = kCATransitionFade;
-    [self.musiceImageView.layer addAnimation:transition forKey:@"fade"];
-    
     __weak typeof(self) weakself = self;
     
-    [self.musiceImageView sd_setImageWithURL:[NSURL URLWithString:currentMusicInfo[@"pic"]] completed:^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
+    [self.musiceImageView sd_setImageWithURL:[NSURL URLWithString:currentMusicInfo[@"pic"]] placeholderImage:[UIImage imageNamed:@"music_placeholder"] completed:^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
         
         __strong typeof(weakself) strongself = weakself;
         
