@@ -10,6 +10,7 @@
 		1AB0EA2120736C17002070E3 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2020736C17002070E3 /* AppDelegate.m */; };
 		1AB0EA2420736C17002070E3 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2320736C17002070E3 /* ViewController.m */; };
 		1AB0EA2F20736C29002070E3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB0EA2E20736C29002070E3 /* main.m */; };
+		340520D4213927A000453F36 /* Music.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 340520D3213927A000453F36 /* Music.storyboard */; };
 		340A554B21379A53003502C2 /* SJAudioPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554321379A52003502C2 /* SJAudioPlayer.m */; };
 		340A554C21379A53003502C2 /* SJAudioStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554421379A52003502C2 /* SJAudioStream.m */; };
 		340A554D21379A53003502C2 /* SJAudioFileStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554621379A52003502C2 /* SJAudioFileStream.m */; };
@@ -28,6 +29,7 @@
 		1AB0EA2320736C17002070E3 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		1AB0EA2D20736C29002070E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1AB0EA2E20736C29002070E3 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		340520D3213927A000453F36 /* Music.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Music.storyboard; sourceTree = "<group>"; };
 		340A554321379A52003502C2 /* SJAudioPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioPlayer.m; sourceTree = "<group>"; };
 		340A554421379A52003502C2 /* SJAudioStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioStream.m; sourceTree = "<group>"; };
 		340A554521379A52003502C2 /* SJAudioQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioQueue.h; sourceTree = "<group>"; };
@@ -106,6 +108,7 @@
 				340A55512137FBF7003502C2 /* Assets.xcassets */,
 				340A55522137FBF7003502C2 /* LaunchScreen.storyboard */,
 				340A55542137FBF7003502C2 /* Main.storyboard */,
+				340520D3213927A000453F36 /* Music.storyboard */,
 			);
 			path = Resource;
 			sourceTree = "<group>";
@@ -175,6 +178,7 @@
 				340A55582137FBF7003502C2 /* LaunchScreen.storyboard in Resources */,
 				340A55572137FBF7003502C2 /* Assets.xcassets in Resources */,
 				340A55562137FBF7003502C2 /* Sample.mp3 in Resources */,
+				340520D4213927A000453F36 /* Music.storyboard in Resources */,
 				340A55592137FBF7003502C2 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
