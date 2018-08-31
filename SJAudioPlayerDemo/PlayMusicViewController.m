@@ -229,33 +229,48 @@
     {
         case SJAudioPlayerStatusIdle:
         {
-            NSLog(@"SJAudioPlayer: Idle");
+            if (DEBUG)
+            {
+                NSLog(@"SJAudioPlayer: Idle");
+            }
             
             self.playOrPauseButton.selected = NO;
         }
             break;
         case SJAudioPlayerStatusWaiting:
         {
-            NSLog(@"SJAudioPlayer: Waiting");
+            if (DEBUG)
+            {
+                NSLog(@"SJAudioPlayer: Waiting");
+            }
         }
             break;
         case SJAudioPlayerStatusPlaying:
         {
-            NSLog(@"SJAudioPlayer: Playing");
+            if (DEBUG)
+            {
+                NSLog(@"SJAudioPlayer: Playing");
+            }
             
             self.playOrPauseButton.selected = YES;
         }
             break;
         case SJAudioPlayerStatusPaused:
         {
-            NSLog(@"SJAudioPlayer: Paused");
+            if (DEBUG)
+            {
+                NSLog(@"SJAudioPlayer: Paused");
+            }
             
             self.playOrPauseButton.selected = NO;
         }
             break;
         case SJAudioPlayerStatusFinished:
         {
-            NSLog(@"SJAudioPlayer: Finished");
+            if (DEBUG)
+            {
+                NSLog(@"SJAudioPlayer: Finished");
+            }
             
             self.playOrPauseButton.selected = NO;
             
