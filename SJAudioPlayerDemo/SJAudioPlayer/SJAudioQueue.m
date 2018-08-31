@@ -22,8 +22,8 @@
 
 @end
 
-//////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 
 static int const SJAudioQueueBufferCount = 3;
 
@@ -274,6 +274,11 @@ static int const SJAudioQueueBufferCount = 3;
     }else
     {
         status = AudioQueueStop(self.audioQueue, false);
+        
+        while (self.isRuning)
+        {
+            [NSThread sleepForTimeInterval:0.1];
+        }
     }
     
     self.started    = NO;
@@ -328,7 +333,10 @@ static int const SJAudioQueueBufferCount = 3;
 {
     if ([data length] > self.bufferSize)
     {
-        NSLog(@"SJAudioQueue: size of the data will be played is more than the `bufferSize`.");
+        if (DEBUG)
+        {
+            NSLog(@"SJAudioQueue: size of the data will be played is more than the `bufferSize`.");
+        }
         
         return NO;
     }
@@ -448,7 +456,7 @@ static int const SJAudioQueueBufferCount = 3;
 - (void)setVolumeParameter
 {
     // 音频淡入淡出， 首先设置音量渐变过程使用的时间。
-    [self setParameter:kAudioQueueParam_VolumeRampTime value:0.4 error:NULL];
+    [self setParameter:kAudioQueueParam_VolumeRampTime value:(self.volume > 0.0 ? 0.6 : 0.4) error:NULL];
     
     [self setParameter:kAudioQueueParam_Volume value:self.volume error:NULL];
 }

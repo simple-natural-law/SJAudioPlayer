@@ -80,12 +80,19 @@ static UInt32 const kDefaultBufferSize = 4096;
 }
 
 
-- (instancetype)init
+- (instancetype)initWithUrl:(NSURL *)url
 {
+    NSAssert(url, @"SJAudioPlayer: url should be not nil.");
+    
     self = [super init];
     
     if (self)
     {
+        self.started = NO;
+        self.url     = url;
+        
+        self.readDataFormLocalFile = [self.url isFileURL];
+        
         pthread_mutex_init(&_mutex, NULL);
         pthread_cond_init(&_cond, NULL);
     }
@@ -95,21 +102,13 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 
 #pragma mark - Methods
-- (void)play:(NSURL *)url
+- (void)play
 {
-    NSAssert(url, @"SJAudioPlayer: url should be not nil.");
-    
-    if ([self.url.absoluteString isEqualToString:url.absoluteString])
+    if (self.started)
     {
         [self resume];
     }else
     {
-        [self stop];
-        
-        self.url = url;
-        
-        self.readDataFormLocalFile = [self.url isFileURL];
-        
         // 监听中断事件
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterreption:) name:AVAudioSessionInterruptionNotification object:[AVAudioSession sharedInstance]];
         
@@ -119,7 +118,10 @@ static UInt32 const kDefaultBufferSize = 4096;
         
         if (error)
         {
-            NSLog(@"Error setting audio session category! %@",error);
+            if (DEBUG)
+            {
+                NSLog(@"SJAudioPlayer: error setting audio session category! %@",error);
+            }
         }else
         {
             // 激活音频会话控制
@@ -127,7 +129,10 @@ static UInt32 const kDefaultBufferSize = 4096;
             
             if (error)
             {
-                NSLog(@"Error setting audio session active! %@", error);
+                if (DEBUG)
+                {
+                    NSLog(@"SJAudioPlayer: error setting audio session active! %@", error);
+                }
             }
         }
         
@@ -261,7 +266,7 @@ static UInt32 const kDefaultBufferSize = 4096;
             
             if (self.seekRequired)
             {
-                offset = [self.audioFileStream seekToTime:&_seekTime];
+                offset = (NSUInteger)[self.audioFileStream seekToTime:&_seekTime];
 
                 if (self.readDataFormLocalFile)
                 {
@@ -320,7 +325,9 @@ static UInt32 const kDefaultBufferSize = 4096;
                 {
                     if (self.finishedDownload)
                     {
-                        data = [self.audioData subdataWithRange:NSMakeRange(offset - self.byteOffset, self.audioData.length - (offset - self.byteOffset))];
+                        NSUInteger location = offset - (NSUInteger)self.byteOffset;
+                        
+                        data = [self.audioData subdataWithRange:NSMakeRange(location, self.audioData.length - location)];
                         
                         self.isEof = YES;
                     }else
@@ -333,7 +340,9 @@ static UInt32 const kDefaultBufferSize = 4096;
                     }
                 }else
                 {
-                    data = [self.audioData subdataWithRange:NSMakeRange(offset - self.byteOffset, kDefaultBufferSize)];
+                    NSUInteger location = offset - (NSUInteger)self.byteOffset;
+                    
+                    data = [self.audioData subdataWithRange:NSMakeRange(location, kDefaultBufferSize)];
                 }
                 pthread_mutex_unlock(&_mutex);
                 
@@ -353,7 +362,10 @@ static UInt32 const kDefaultBufferSize = 4096;
                     
                     if (openAudioFileStreamError)
                     {
-                        NSLog(@"SJAudioPlayer: failed to open AudioFileStream.");
+                        if (DEBUG)
+                        {
+                            NSLog(@"SJAudioFileStream: failed to open AudioFileStream.");
+                        }
                     }
                     
                     self.audioFileStream.delegate = self;
@@ -363,7 +375,10 @@ static UInt32 const kDefaultBufferSize = 4096;
                 
                 if (parseDataError)
                 {
-                    NSLog(@"SJAudioPlayer: failed to parse audio data.");
+                    if (DEBUG)
+                    {
+                        NSLog(@"SJAudioFileStream: failed to parse audio data.");
+                    }
                 }
             }
         }
@@ -445,11 +460,6 @@ static UInt32 const kDefaultBufferSize = 4096;
         }
     }
     pthread_mutex_unlock(&_mutex);
-    
-    while (self.status != SJAudioPlayerStatusIdle)
-    {
-        [NSThread sleepForTimeInterval:0.1];
-    }
 }
 
 
@@ -579,7 +589,10 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     if (readDataError)
     {
-        NSLog(@"SJAudioPlayer: failed to read data.");
+        if (DEBUG)
+        {
+            NSLog(@"SJAudioFileStream: failed to read data.");
+        }
     }
     
     self.didDownloadLength += [data length];
@@ -605,7 +618,10 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (void)audioStreamErrorOccurred:(SJAudioStream *)audioStream
 {
-    NSLog(@"SJAudioStream: error occurred.");
+    if (DEBUG)
+    {
+        NSLog(@"SJAudioStream: error occurred.");
+    }
 }
 
 #pragma mark- SJAudioFileStreamDelegate
@@ -615,7 +631,10 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     if (!success)
     {
-        NSLog(@"SJAudioPlayer: failed to play packet data.");
+        if (DEBUG)
+        {
+            NSLog(@"SJAudioQueue: failed to play packet data.");
+        }
     }
 }
 
@@ -651,7 +670,10 @@ static UInt32 const kDefaultBufferSize = 4096;
         
         if (error)
         {
-            NSLog(@"Error setting audio session active! %@", error);
+            if (DEBUG)
+            {
+                NSLog(@"SJAudioPlayer: Error setting audio session active! %@", error);
+            }
         }
         
         if (self.status == SJAudioPlayerStatusPaused && self.pausedByInterrupt)
