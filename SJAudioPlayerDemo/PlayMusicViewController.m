@@ -67,11 +67,8 @@
 
 - (void)updateProgress
 {
-    int duration = floor(self.player.duration);
-    int progress = ceil(self.player.progress);
-    
-    self.durationLabel.text = [NSString stringWithFormat:@"%d",duration];
-    self.playedTimeLabel.text = [NSString stringWithFormat:@"%d",progress];
+    self.durationLabel.text = [self timeIntervalToMMSSFormat:self.player.duration];
+    self.playedTimeLabel.text = [self timeIntervalToMMSSFormat:self.player.progress];
     
     if (self.player.duration > 0.0)
     {
@@ -191,6 +188,15 @@
     self.musicNameLabel.text = currentMusicInfo[@"music_name"];
     
     self.artistLabel.text    = currentMusicInfo[@"artist"];
+}
+
+
+- (NSString *)timeIntervalToMMSSFormat:(NSTimeInterval)interval
+{
+    NSInteger ti = (NSInteger)interval;
+    NSInteger seconds = ti % 60;
+    NSInteger minutes = (ti / 60) % 60;
+    return [NSString stringWithFormat:@"%02ld:%02ld", (long)minutes, (long)seconds];
 }
 
 
