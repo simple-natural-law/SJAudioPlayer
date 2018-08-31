@@ -1,16 +1,16 @@
 //
-//  ViewController.m
+//  PlayMusicViewController.m
 //  SJAudioPlayerDemo
 //
 //  Created by 张诗健 on 2017/4/3.
 //  Copyright © 2017年 张诗健. All rights reserved.
 //
 
-#import "ViewController.h"
+#import "PlayMusicViewController.h"
 #import "SJAudioPlayer/SJAudioPlayer.h"
 
 
-@interface ViewController ()<SJAudioPlayerDelegate>
+@interface PlayMusicViewController ()<SJAudioPlayerDelegate>
 
 @property (nonatomic, strong) SJAudioPlayer *player;
 
@@ -25,7 +25,7 @@
 @end
 
 
-@implementation ViewController
+@implementation PlayMusicViewController
 
 - (void)viewDidLoad
 {

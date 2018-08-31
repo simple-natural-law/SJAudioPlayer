@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14113" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14113" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="eVa-CY-Nae">
     <device id="retina5_9" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
@@ -10,10 +10,10 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Music View Controller-->
+        <!--Play Music View Controller-->
         <scene sceneID="hIu-70-Ab6">
             <objects>
-                <viewController storyboardIdentifier="music" id="eVa-CY-Nae" customClass="MusicViewController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="PlayMusicViewController" id="eVa-CY-Nae" customClass="PlayMusicViewController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="r2z-LF-pbB"/>
                         <viewControllerLayoutGuide type="bottom" id="nta-IW-poR"/>
@@ -178,23 +178,33 @@
                                                 <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
+                                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.80000000000000004" translatesAutoresizingMaskIntoConstraints="NO" id="P21-HP-GPL">
+                                                <rect key="frame" x="45" y="18" width="269" height="2"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="2" id="uCX-GB-fTC"/>
+                                                </constraints>
+                                                <color key="progressTintColor" red="0.0" green="0.0" blue="0.0" alpha="0.20000000000000001" colorSpace="custom" customColorSpace="sRGB"/>
+                                            </progressView>
                                             <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="TUu-of-1Uc" customClass="MusicSlider">
-                                                <rect key="frame" x="43" y="3" width="273" height="31"/>
+                                                <rect key="frame" x="43" y="2" width="273" height="33"/>
                                                 <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <constraints>
-                                                    <constraint firstAttribute="height" constant="30" id="WSa-Ma-eSy"/>
+                                                    <constraint firstAttribute="height" constant="32" id="WSa-Ma-eSy"/>
                                                 </constraints>
-                                                <color key="maximumTrackTintColor" red="1" green="1" blue="1" alpha="0.29999999999999999" colorSpace="custom" customColorSpace="sRGB"/>
+                                                <color key="maximumTrackTintColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                             </slider>
                                         </subviews>
                                         <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="36" id="2nW-fd-8sj"/>
+                                            <constraint firstItem="P21-HP-GPL" firstAttribute="leading" secondItem="TUu-of-1Uc" secondAttribute="leading" id="4K0-Xg-XO6"/>
                                             <constraint firstItem="TUu-of-1Uc" firstAttribute="centerY" secondItem="wdC-An-tN7" secondAttribute="centerY" id="4bx-e0-bKe"/>
+                                            <constraint firstItem="P21-HP-GPL" firstAttribute="centerY" secondItem="TUu-of-1Uc" secondAttribute="centerY" constant="1" id="7uW-1n-BpT"/>
                                             <constraint firstAttribute="trailing" secondItem="2O5-yw-xLd" secondAttribute="trailing" id="8zj-aL-Bbx"/>
                                             <constraint firstItem="Hlb-s4-6cd" firstAttribute="leading" secondItem="wdC-An-tN7" secondAttribute="leading" id="AFH-9c-brZ"/>
                                             <constraint firstItem="TUu-of-1Uc" firstAttribute="leading" secondItem="Hlb-s4-6cd" secondAttribute="trailing" constant="10" id="CWc-H7-gdJ"/>
                                             <constraint firstItem="2O5-yw-xLd" firstAttribute="centerY" secondItem="wdC-An-tN7" secondAttribute="centerY" id="EIe-qW-jNg"/>
+                                            <constraint firstItem="P21-HP-GPL" firstAttribute="trailing" secondItem="TUu-of-1Uc" secondAttribute="trailing" id="guW-pu-BrQ"/>
                                             <constraint firstItem="Hlb-s4-6cd" firstAttribute="centerY" secondItem="wdC-An-tN7" secondAttribute="centerY" id="jVl-cN-VcM"/>
                                             <constraint firstItem="2O5-yw-xLd" firstAttribute="leading" secondItem="TUu-of-1Uc" secondAttribute="trailing" constant="10" id="wWG-m2-ohj"/>
                                         </constraints>

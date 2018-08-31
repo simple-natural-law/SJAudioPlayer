@@ -1,5 +1,5 @@
 //
-//  ViewController.h
+//  PlayMusicViewController.h
 //  SJAudioPlayerDemo
 //
 //  Created by 张诗健 on 2017/4/3.
@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ViewController : UIViewController
+@interface PlayMusicViewController : UIViewController
 
 
 @end
