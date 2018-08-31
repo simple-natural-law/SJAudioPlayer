@@ -1,6 +1,6 @@
 //
 //  SJAudioStream.h
-//  SJAudioStream
+//  SJAudioPlayer
 //
 //  Created by 张诗健 on 16/4/28.
 //  Copyright © 2016年 张诗健. All rights reserved.

@@ -1,9 +1,9 @@
 //
 //  SJAudioQueue.m
-//  SJAudioStream
+//  SJAudioPlayer
 //
 //  Created by 张诗健 on 15/12/30.
-//  Copyright © 2015年 zhangshijian. All rights reserved.
+//  Copyright © 2015年 张诗健. All rights reserved.
 //
 
 

@@ -1,9 +1,9 @@
 //
 //  SJAudioFileStream.m
-//  SJAudioStream
+//  SJAudioPlayer
 //
-//  Created by zhangshijian on 15/12/14.
-//  Copyright © 2015年 zhangshijian. All rights reserved.
+//  Created by 张诗健 on 15/12/14.
+//  Copyright © 2015年 张诗健. All rights reserved.
 //
 
 #import "SJAudioFileStream.h"

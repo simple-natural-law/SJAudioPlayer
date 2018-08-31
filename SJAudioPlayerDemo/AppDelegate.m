@@ -1,9 +1,9 @@
 //
 //  AppDelegate.m
-//  SJAudioStream
+//  SJAudioPlayerDemo
 //
-//  Created by 讯心科技 on 2018/4/3.
-//  Copyright © 2018年 讯心科技. All rights reserved.
+//  Created by 张诗健 on 2017/4/3.
+//  Copyright © 2017年 张诗健. All rights reserved.
 //
 
 #import "AppDelegate.h"
