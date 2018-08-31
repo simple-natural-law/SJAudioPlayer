@@ -50,6 +50,8 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 @property (nonatomic, assign) BOOL finishedDownload;
 
+@property (nonatomic, assign) BOOL stopReadHTTPData;
+
 @property (nonatomic, assign) SInt64 byteOffset;
 
 @property (nonatomic, assign) NSTimeInterval seekTime;
@@ -187,10 +189,11 @@ static UInt32 const kDefaultBufferSize = 4096;
 - (void)downloadAudioData
 {
     self.finishedDownload = NO;
+    self.stopReadHTTPData = NO;
     
     BOOL done = YES;
     
-    while (done && !self.finishedDownload)
+    while (done && !self.finishedDownload && !self.stopReadHTTPData)
     {
         if (!self.audioStream)
         {
@@ -239,6 +242,8 @@ static UInt32 const kDefaultBufferSize = 4096;
                 {
                     [self.audioQueue stop:YES];
                     
+                    self.stopReadHTTPData = YES;
+                    
                     [self cleanUp];
                     
                     [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
@@ -257,6 +262,8 @@ static UInt32 const kDefaultBufferSize = 4096;
             if (self.stopRequired)
             {
                 [self.audioQueue stop:YES];
+                
+                self.stopReadHTTPData = YES;
                 
                 [self cleanUp];
                 
