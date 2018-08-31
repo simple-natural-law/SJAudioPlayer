@@ -480,6 +480,11 @@ static UInt32 const kDefaultBufferSize = 4096;
     return self.timingOffset + self.audioQueue.playedTime;
 }
 
+- (BOOL)isPlaying
+{
+    return (self.status == SJAudioPlayerStatusPlaying);
+}
+
 
 - (AudioFileTypeID)getAudioFileTypeIdForFileExtension:(NSString *)fileExtension
 {
@@ -642,8 +647,6 @@ static UInt32 const kDefaultBufferSize = 4096;
     AudioStreamBasicDescription format = self.audioFileStream.format;
     
     self.audioQueue = [[SJAudioQueue alloc] initWithFormat:format bufferSize:kDefaultBufferSize macgicCookie:magicCookie];
-    
-    self.status = SJAudioPlayerStatusWaiting;
     
     self.duration = self.audioFileStream.duration;
 }

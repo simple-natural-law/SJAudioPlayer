@@ -108,7 +108,7 @@
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="zMJ-CT-WwR">
                                 <rect key="frame" x="0.0" y="89" width="375" height="481"/>
                                 <subviews>
-                                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="music_placeholder" translatesAutoresizingMaskIntoConstraints="NO" id="fzG-5a-IF7">
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="music_placeholder" translatesAutoresizingMaskIntoConstraints="NO" id="fzG-5a-IF7">
                                         <rect key="frame" x="35" y="88.666666666666657" width="305" height="305"/>
                                         <constraints>
                                             <constraint firstAttribute="width" secondItem="fzG-5a-IF7" secondAttribute="height" multiplier="1:1" id="KGH-S0-7I6"/>
@@ -145,6 +145,7 @@
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tuX-y5-JJt">
                                                 <rect key="frame" x="150" y="0.0" width="75" height="64"/>
                                                 <state key="normal" image="big_play_button"/>
+                                                <state key="selected" image="big_pause_button"/>
                                                 <connections>
                                                     <action selector="playOrPause:" destination="eVa-CY-Nae" eventType="touchUpInside" id="REf-ni-EKS"/>
                                                 </connections>
@@ -311,8 +312,10 @@
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="artistLabel" destination="Tl0-TT-dkd" id="ATs-tm-A65"/>
                         <outlet property="backgroundImageView" destination="Bwd-8r-12y" id="fcr-hE-VSr"/>
                         <outlet property="durationLabel" destination="2O5-yw-xLd" id="xQ8-Df-Qf3"/>
+                        <outlet property="musicNameLabel" destination="fE4-kx-vCa" id="TsJ-ZF-Qig"/>
                         <outlet property="musiceImageView" destination="fzG-5a-IF7" id="Pas-I9-nZg"/>
                         <outlet property="playedTimeLabel" destination="Hlb-s4-6cd" id="4jD-GM-zZy"/>
                         <outlet property="progressView" destination="P21-HP-GPL" id="e5M-hE-Nvj"/>
@@ -326,6 +329,7 @@
         </scene>
     </scenes>
     <resources>
+        <image name="big_pause_button" width="60" height="60"/>
         <image name="big_play_button" width="60" height="60"/>
         <image name="empty_heart" width="23" height="21"/>
         <image name="menu" width="25" height="17"/>

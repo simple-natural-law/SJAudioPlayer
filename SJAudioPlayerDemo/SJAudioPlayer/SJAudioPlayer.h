@@ -54,4 +54,6 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 - (void)stop;
 
+- (BOOL)isPlaying;
+
 @end
