@@ -423,8 +423,6 @@ static UInt32 const kDefaultBufferSize = 4096;
     self.contentLength     = 0;
     self.didDownloadLength = 0;
     
-    [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
-    
     [self updateAudioDownloadPercentageWithDataLength:0.0];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
