@@ -396,8 +396,6 @@ static UInt32 const kDefaultBufferSize = 4096;
     self.seekRequired  = NO;
     self.pausedByInterrupt = NO;
     
-    self.audioData  = nil;
-    
     [self.audioQueue disposeAudioQueue];
     self.audioQueue = nil;
     
@@ -409,6 +407,8 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     [self.audioFileStream close];
     self.audioFileStream = nil;
+    
+    self.audioData  = nil;
     
     self.byteOffset        = 0;
     self.duration          = 0.0;

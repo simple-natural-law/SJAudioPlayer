@@ -31,11 +31,15 @@
 
 @property (weak, nonatomic) IBOutlet UILabel *durationLabel;
 
+@property (weak, nonatomic) IBOutlet UIButton *playOrPauseButton;
+
 @property (nonatomic, strong) SJAudioPlayer *player;
 
 @property (nonatomic, strong) NSArray *musicList;
 
 @property (nonatomic, strong) NSDictionary *currentMusicInfo;
+
+@property (nonatomic, assign) NSInteger currentIndex;
 
 @end
 
@@ -47,14 +51,28 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
+    self.titleLabel.text = @"SJAudioPlayer";
     
     
-    //    NSString *path = [[NSBundle mainBundle] pathForResource:@"Sample" ofType:@"mp3"];
+    /*
+     播放本地音频文件
+     
+     NSString *path = [[NSBundle mainBundle] pathForResource:@"Sample" ofType:@"mp3"];
     
-    //    NSURL *url = [NSURL fileURLWithPath:path];
+     NSURL *url = [NSURL fileURLWithPath:path];
+    */
     
-    self.musicList = @[@{@"music_url":@"http://music.163.com/song/media/outer/url?id=166321.mp3", @"pic":@"http://imgsrc.baidu.com/forum/w=580/sign=0828c5ea79ec54e741ec1a1689399bfd/e3d9f2d3572c11df80fbf7f7612762d0f703c238.jpg", @"artist":@"毛阿敏", @"music_name":@"爱上张无忌"}];
     
+    
+    /*
+     播放远程音频文件
+    */
+    self.musicList = @[@{@"music_url":@"http://music.163.com/song/media/outer/url?id=166321.mp3", @"pic":@"http://imgsrc.baidu.com/forum/w=580/sign=0828c5ea79ec54e741ec1a1689399bfd/e3d9f2d3572c11df80fbf7f7612762d0f703c238.jpg", @"artist":@"毛阿敏", @"music_name":@"爱上张无忌"},
+                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=27902537.mp3", @"pic":@"http://attach.bbs.miui.com/forum/201401/10/225901w011gxc00mz0gao9.jpg", @"artist":@"杨宗纬 / 叶蓓", @"music_name":@"我们好像在哪见过"},
+                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=166317.mp3", @"pic":@"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1535729826868&di=ab3a9c6bc4fc12fcebb6a63e5dc32893&imgtype=jpg&src=http%3A%2F%2Fimg0.imgtn.bdimg.com%2Fit%2Fu%3D1503310080%2C1140367239%26fm%3D214%26gp%3D0.jpg", @"artist":@"金学峰", @"music_name":@"心爱"}];
+    
+    
+    self.currentIndex = 0;
     self.currentMusicInfo = self.musicList.firstObject;
     
     NSURL *url = [NSURL URLWithString:self.currentMusicInfo[@"music_url"]];
@@ -68,7 +86,7 @@
 
 - (void)updateProgress
 {
-    self.durationLabel.text = [self timeIntervalToMMSSFormat:self.player.duration];
+    self.durationLabel.text   = [self timeIntervalToMMSSFormat:self.player.duration];
     self.playedTimeLabel.text = [self timeIntervalToMMSSFormat:self.player.progress];
     
     if (self.player.duration > 0.0)
@@ -101,13 +119,47 @@
 
 - (IBAction)lastMusic:(id)sender
 {
+    self.currentIndex--;
     
+    if (self.currentIndex < 0)
+    {
+        self.currentIndex = self.musicList.count - 1;
+    }
+    
+    self.currentMusicInfo = self.musicList[self.currentIndex];
+    
+    [self.player stop];
+    
+    NSURL *url = [NSURL URLWithString:self.currentMusicInfo[@"music_url"]];
+    
+    self.player = [[SJAudioPlayer alloc] initWithUrl:url];
+    
+    self.player.delegate = self;
+    
+    [self.player play];
 }
 
 
 - (IBAction)nextMusic:(id)sender
 {
+    self.currentIndex++;
     
+    if (self.currentIndex >= self.musicList.count)
+    {
+        self.currentIndex = 0;
+    }
+    
+    self.currentMusicInfo = self.musicList[self.currentIndex];
+    
+    [self.player stop];
+    
+    NSURL *url = [NSURL URLWithString:self.currentMusicInfo[@"music_url"]];
+    
+    self.player = [[SJAudioPlayer alloc] initWithUrl:url];
+    
+    self.player.delegate = self;
+    
+    [self.player play];
 }
 
 
@@ -145,6 +197,7 @@
         case SJAudioPlayerStatusIdle:
         {
             NSLog(@"SJAudioPlayerStatusIdle");
+            self.playOrPauseButton.selected = NO;
         }
             break;
         case SJAudioPlayerStatusWaiting:
@@ -155,16 +208,20 @@
         case SJAudioPlayerStatusPlaying:
         {
             NSLog(@"SJAudioPlayerStatusPlaying");
+            self.playOrPauseButton.selected = YES;
         }
             break;
         case SJAudioPlayerStatusPaused:
         {
             NSLog(@"SJAudioPlayerStatusPaused");
+            self.playOrPauseButton.selected = NO;
         }
             break;
         case SJAudioPlayerStatusFinished:
         {
             NSLog(@"SJAudioPlayerStatusFinished");
+            
+            [self nextMusic:nil];
         }
             break;
         default:

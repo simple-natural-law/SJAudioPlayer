@@ -72,11 +72,11 @@
                                         </connections>
                                     </button>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Rq8-nT-Xoq">
-                                        <rect key="frame" x="66" y="12" width="243" height="21"/>
+                                        <rect key="frame" x="66" y="7.6666666666666643" width="243" height="30"/>
                                         <constraints>
-                                            <constraint firstAttribute="height" constant="21" id="CaR-pI-AZY"/>
+                                            <constraint firstAttribute="height" constant="30" id="CaR-pI-AZY"/>
                                         </constraints>
-                                        <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                        <fontDescription key="fontDescription" type="system" weight="medium" pointSize="18"/>
                                         <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                         <nil key="highlightedColor"/>
                                     </label>
@@ -322,6 +322,7 @@
                         <outlet property="durationLabel" destination="2O5-yw-xLd" id="xQ8-Df-Qf3"/>
                         <outlet property="musicNameLabel" destination="fE4-kx-vCa" id="TsJ-ZF-Qig"/>
                         <outlet property="musiceImageView" destination="fzG-5a-IF7" id="Pas-I9-nZg"/>
+                        <outlet property="playOrPauseButton" destination="tuX-y5-JJt" id="PnB-xC-Nkd"/>
                         <outlet property="playedTimeLabel" destination="Hlb-s4-6cd" id="4jD-GM-zZy"/>
                         <outlet property="progressView" destination="P21-HP-GPL" id="e5M-hE-Nvj"/>
                         <outlet property="slider" destination="TUu-of-1Uc" id="DtD-yt-Q6j"/>
