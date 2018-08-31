@@ -32,15 +32,15 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-    NSString *urlString = @"http://music.163.com/song/media/outer/url?id=166321.mp3";
+    //NSString *urlString = @"http://music.163.com/song/media/outer/url?id=166321.mp3";
 
     //NSString *urlString = @"http://music.163.com/song/media/outer/url?id=166317.mp3";
     
-    NSURL *url = [NSURL URLWithString:urlString];
+    //NSURL *url = [NSURL URLWithString:urlString];
     
-    //NSString *path = [[NSBundle mainBundle] pathForResource:@"MP3Sample" ofType:@"mp3"];
+    NSString *path = [[NSBundle mainBundle] pathForResource:@"Sample" ofType:@"mp3"];
 
-    //NSURL *url = [NSURL fileURLWithPath:path];
+    NSURL *url = [NSURL fileURLWithPath:path];
     
     self.player = [[SJAudioPlayer alloc] initWithUrl:url];
     

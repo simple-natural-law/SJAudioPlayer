@@ -14,7 +14,7 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
     SJAudioPlayerStatusWaiting  = 1,
     SJAudioPlayerStatusPlaying  = 2,
     SJAudioPlayerStatusPaused   = 3,
-    SJAudioPlayerStatusFinished = 4
+    SJAudioPlayerStatusFinished = 4,
 };
 
 

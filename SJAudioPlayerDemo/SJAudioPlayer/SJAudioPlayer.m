@@ -481,16 +481,6 @@ static UInt32 const kDefaultBufferSize = 4096;
 }
 
 
-- (void)createAudioQueue
-{
-    NSData *magicCookie = [self.audioFileStream getMagicCookieData];
-    
-    AudioStreamBasicDescription format = self.audioFileStream.format;
-    
-    self.audioQueue = [[SJAudioQueue alloc] initWithFormat:format bufferSize:kDefaultBufferSize macgicCookie:magicCookie];
-}
-
-/// 根据 URL的 pathExtension 识别音频格式
 - (AudioFileTypeID)getAudioFileTypeIdForFileExtension:(NSString *)fileExtension
 {
     AudioFileTypeID fileTypeHint = 0;
@@ -618,6 +608,12 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (void)audioStreamErrorOccurred:(SJAudioStream *)audioStream
 {
+    [self.audioStream closeReadStream];
+    
+    [NSThread sleepForTimeInterval:1.0];
+    
+    self.audioStream = [[SJAudioStream alloc] initWithURL:self.url byteOffset:self.audioData.length delegate:self];;
+    
     if (DEBUG)
     {
         NSLog(@"SJAudioStream: error occurred.");
@@ -641,11 +637,15 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (void)audioFileStreamReadyToProducePackets:(SJAudioFileStream *)audioFileStream
 {
-    self.duration = self.audioFileStream.duration;
+    NSData *magicCookie = [self.audioFileStream getMagicCookieData];
     
-    [self createAudioQueue];
+    AudioStreamBasicDescription format = self.audioFileStream.format;
+    
+    self.audioQueue = [[SJAudioQueue alloc] initWithFormat:format bufferSize:kDefaultBufferSize macgicCookie:magicCookie];
     
     self.status = SJAudioPlayerStatusWaiting;
+    
+    self.duration = self.audioFileStream.duration;
 }
 
 
