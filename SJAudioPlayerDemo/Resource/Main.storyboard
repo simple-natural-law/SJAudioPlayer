@@ -210,7 +210,7 @@
                                                 <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="P21-HP-GPL">
+                                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="P21-HP-GPL">
                                                 <rect key="frame" x="45" y="18" width="269" height="2"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="2" id="uCX-GB-fTC"/>
