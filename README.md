@@ -7,8 +7,10 @@
 
 `SJAudioPlayer`暂不支持将音频数据缓存到本地，其只是将音频数据下载并保存到内存缓存中，并在下载音频数据的同时，从内存缓存中读取数据并解析和播放音频数据。因此`SJAudioPlayer`暂时也还不适合播放数据量较大的远程音频文件，如果需要实现缓存，可以联系我，我会尽快完善。（要实现缓存，只需要将原先保存到内存缓存中的音频数据改为写入文件，然后从文件中读取数据就好，你完全可以在该项目源代码的基础之上改动少量代码来实现缓存需求。）
 
+<figure class="half">
 <img src="https://github.com/zhangshijian/SJAudioPlayer/raw/master/Images/IMG_1.PNG" width="375" height="667" />
 <img src="https://github.com/zhangshijian/SJAudioPlayer/raw/master/Images/IMG_2.PNG" width="375" height="667" />
+</figure>
 
 ## 使用
 
