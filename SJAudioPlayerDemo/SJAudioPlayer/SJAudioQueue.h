@@ -29,7 +29,7 @@
 
 - (BOOL)playData:(NSData *)data packetCount:(UInt32)packetCount packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions isEof:(BOOL)isEof;
 
-- (void)pause:(BOOL)immediately;
+- (void)pause;
 
 - (BOOL)resume;
 

@@ -228,33 +228,33 @@ static int const SJAudioQueueBufferCount = 3;
 }
 
 
-
 /*
  暂停播放
  
  OSStatus AudioQueuePause(AudioQueueRef inAQ);
-  
- 这个方法一旦调用后播放就会立即暂停，这就意味着`AudioQueueOutputCallback`回调也会暂停，这时需要特别关注线
- 程的调度以防止线程陷入无限等待。
+
+ 注意：
+ 这个方法一旦调用后播放就会立即暂停，这就意味着`AudioQueueOutputCallback`回调也会暂停，这时需
+ 要特别关注线程的调度以防止线程陷入无限等待（音频播放被打断时，要特别注意这个情况）。
 */
-- (void)pause:(BOOL)immediately
+- (void)pause
 {
     [self setVolume:0.0];
     
-    if (!immediately)
-    {
-        [NSThread sleepForTimeInterval:0.4];
-    }
+    // 让播放声音大小淡出之后，再暂停。
+    [NSThread sleepForTimeInterval:0.4];
     
     OSStatus status = AudioQueuePause(self.audioQueue);
     
-    self.started = (status == noErr);
+    if (status != noErr)
+    {
+        if (DEBUG)
+        {
+            NSLog(@"SJAudioQueue: failed to pasue audio queue.");
+        }
+    }
 }
 
-- (void)pauseAudioQueue
-{
-    AudioQueuePause(self.audioQueue);
-}
 
 /*
  停止播放

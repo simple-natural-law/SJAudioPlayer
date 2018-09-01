@@ -160,12 +160,34 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (void)resume
 {
-    pthread_mutex_lock(&_mutex);
-    if (self.pauseRequired && self.status != SJAudioPlayerStatusWaiting )
+    if (self.pausedByInterrupt && self.status == SJAudioPlayerStatusPaused)
     {
-        pthread_cond_signal(&_cond);
+        NSError *error = nil;
+        
+        [[AVAudioSession sharedInstance] setActive:YES error:&error];
+        
+        if (error)
+        {
+            if (DEBUG)
+            {
+                NSLog(@"SJAudioPlayer: Error setting audio session active! %@", error);
+            }
+        }
+        
+        [self.audioQueue resume];
+        
+        [self setAudioPlayerStatus:SJAudioPlayerStatusPlaying];
+        
+        self.pausedByInterrupt = NO;
+    }else
+    {
+        pthread_mutex_lock(&_mutex);
+        if (self.pauseRequired && self.status != SJAudioPlayerStatusWaiting )
+        {
+            pthread_cond_signal(&_cond);
+        }
+        pthread_mutex_unlock(&_mutex);
     }
-    pthread_mutex_unlock(&_mutex);
 }
 
 
@@ -304,7 +326,7 @@ static UInt32 const kDefaultBufferSize = 4096;
             
             if (self.pauseRequired)
             {
-                [self.audioQueue pause:self.pausedByInterrupt];
+                [self.audioQueue pause];
                 
                 [self setAudioPlayerStatus:SJAudioPlayerStatusPaused];
                 
@@ -461,7 +483,7 @@ static UInt32 const kDefaultBufferSize = 4096;
             }
         }
     }
-    
+
     if (self.isEof)
     {
         [self setAudioPlayerStatus:SJAudioPlayerStatusFinished];
@@ -696,32 +718,36 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     if (interruptionType == AVAudioSessionInterruptionTypeBegan)
     {
-        if (self.status == SJAudioPlayerStatusPlaying)
+        // AudioQueue此时已经被系统暂停，这个时候AudioQueue由于没有可以复用的Buffer，会阻塞播放音频的线程。
+        if (self.status == SJAudioPlayerStatusPlaying || self.status == SJAudioPlayerStatusWaiting)
         {
             self.pausedByInterrupt = YES;
             
-            [self pause];
+            [self setAudioPlayerStatus:SJAudioPlayerStatusPaused];
+            
         }
+        
     }else if (interruptionType == AVAudioSessionInterruptionTypeEnded)
     {
-        NSError *error = nil;
-        
-        [[AVAudioSession sharedInstance] setActive:YES error:&error];
-        
-        if (error)
+        if (self.status == SJAudioPlayerStatusPaused && self.pausedByInterrupt)
         {
-            if (DEBUG)
+            NSError *error = nil;
+            
+            [[AVAudioSession sharedInstance] setActive:YES error:&error];
+            
+            if (error)
             {
-                NSLog(@"SJAudioPlayer: Error setting audio session active! %@", error);
+                if (DEBUG)
+                {
+                    NSLog(@"SJAudioPlayer: Error setting audio session active! %@", error);
+                }
             }
-        }else
-        {
-            if (self.status == SJAudioPlayerStatusPaused && self.pausedByInterrupt)
-            {
-                [self resume];
-                
-                self.pausedByInterrupt = NO;
-            }
+            
+            [self.audioQueue resume];
+            
+            [self setAudioPlayerStatus:SJAudioPlayerStatusPlaying];
+            
+            self.pausedByInterrupt = NO;
         }
     }
 }
