@@ -32,7 +32,6 @@
 		340A554C21379A53003502C2 /* SJAudioStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554421379A52003502C2 /* SJAudioStream.m */; };
 		340A554D21379A53003502C2 /* SJAudioFileStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554621379A52003502C2 /* SJAudioFileStream.m */; };
 		340A554E21379A53003502C2 /* SJAudioQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554A21379A52003502C2 /* SJAudioQueue.m */; };
-		340A55562137FBF7003502C2 /* Sample.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 340A55502137FBF7003502C2 /* Sample.mp3 */; };
 		340A55572137FBF7003502C2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 340A55512137FBF7003502C2 /* Assets.xcassets */; };
 		340A55582137FBF7003502C2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 340A55522137FBF7003502C2 /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
@@ -89,7 +88,6 @@
 		340A554821379A52003502C2 /* SJAudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioPlayer.h; sourceTree = "<group>"; };
 		340A554921379A52003502C2 /* SJAudioFileStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SJAudioFileStream.h; sourceTree = "<group>"; };
 		340A554A21379A52003502C2 /* SJAudioQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioQueue.m; sourceTree = "<group>"; };
-		340A55502137FBF7003502C2 /* Sample.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = Sample.mp3; sourceTree = "<group>"; };
 		340A55512137FBF7003502C2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		340A55532137FBF7003502C2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -197,7 +195,6 @@
 		340A554F2137FBF7003502C2 /* Resource */ = {
 			isa = PBXGroup;
 			children = (
-				340A55502137FBF7003502C2 /* Sample.mp3 */,
 				340A55512137FBF7003502C2 /* Assets.xcassets */,
 				340A55522137FBF7003502C2 /* LaunchScreen.storyboard */,
 				340520D3213927A000453F36 /* Main.storyboard */,
@@ -269,7 +266,6 @@
 			files = (
 				340A55582137FBF7003502C2 /* LaunchScreen.storyboard in Resources */,
 				340A55572137FBF7003502C2 /* Assets.xcassets in Resources */,
-				340A55562137FBF7003502C2 /* Sample.mp3 in Resources */,
 				340520D4213927A000453F36 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
