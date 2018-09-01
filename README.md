@@ -9,7 +9,8 @@
 
 ![IMG_1](https://github.com/zhangshijian/SJAudioPlayer/raw/master/Images/IMG_1.PNG)
 ![IMG_2](https://github.com/zhangshijian/SJAudioPlayer/raw/master/Images/IMG_2.PNG)
-![IMG_3](https://github.com/zhangshijian/SJAudioPlayer/raw/master/Images/IMG_3.PNG)
+
+<img src="https://github.com/zhangshijian/SJAudioPlayer/raw/master/Images/IMG_1.PNG" width="375" height="667" />
 
 ## 使用
 
