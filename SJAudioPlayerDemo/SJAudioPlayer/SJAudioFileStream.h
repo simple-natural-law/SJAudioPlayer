@@ -2,8 +2,8 @@
 //  SJAudioFileStream.h
 //  SJAudioPlayer
 //
-//  Created by 张诗健 on 15/12/14.
-//  Copyright © 2015年 张诗健. All rights reserved.
+//  Created by 张诗健 on 16/12/14.
+//  Copyright © 2016年 张诗健. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>

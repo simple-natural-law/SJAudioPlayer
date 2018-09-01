@@ -2,7 +2,7 @@
 //  SJAudioPlayer.m
 //  SJAudioPlayer
 //
-//  Created by 张诗健 on 16/4/29.
+//  Created by 张诗健 on 16/12/29.
 //  Copyright © 2016年 张诗健. All rights reserved.
 //
 
@@ -103,7 +103,7 @@ static UInt32 const kDefaultBufferSize = 4096;
 }
 
 
-#pragma mark - Methods
+#pragma mark- Public Methods
 - (void)play
 {
     if (self.started)
@@ -111,12 +111,11 @@ static UInt32 const kDefaultBufferSize = 4096;
         [self resume];
     }else
     {
-        // 监听中断事件
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterreption:) name:AVAudioSessionInterruptionNotification object:[AVAudioSession sharedInstance]];
+        AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         
         NSError *error = nil;
         
-        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:&error];
+        [audioSession setCategory:AVAudioSessionCategoryPlayback error:&error];
         
         if (error)
         {
@@ -127,7 +126,7 @@ static UInt32 const kDefaultBufferSize = 4096;
         }else
         {
             // 激活音频会话控制
-            [[AVAudioSession sharedInstance] setActive:YES error:&error];
+            [audioSession setActive:YES error:&error];
             
             if (error)
             {
@@ -138,11 +137,71 @@ static UInt32 const kDefaultBufferSize = 4096;
             }
         }
         
+        // 监听打断事件
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterreption:) name:AVAudioSessionInterruptionNotification object:nil];
+        
+        // 监听拔出耳机操作
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioSessionRouteDidChange:) name:AVAudioSessionRouteChangeNotification object:nil];
+        
         [self start];
     }
 }
 
+- (void)pause
+{
+    pthread_mutex_lock(&_mutex);
+    if (!self.pauseRequired)
+    {
+        self.pauseRequired = YES;
+    }
+    pthread_mutex_unlock(&_mutex);
+}
 
+
+- (void)resume
+{
+    pthread_mutex_lock(&_mutex);
+    if (self.pauseRequired && self.status != SJAudioPlayerStatusWaiting )
+    {
+        pthread_cond_signal(&_cond);
+    }
+    pthread_mutex_unlock(&_mutex);
+}
+
+
+- (void)stop
+{
+    if (!self.stopRequired)
+    {
+        [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
+    }
+    
+    pthread_mutex_lock(&_mutex);
+    if (!self.stopRequired)
+    {
+        self.stopRequired = YES;
+        
+        if (self.pauseRequired)
+        {
+            pthread_cond_signal(&_cond);
+        }
+    }
+    pthread_mutex_unlock(&_mutex);
+    
+    [NSThread sleepForTimeInterval:0.1];
+}
+
+
+- (void)seekToProgress:(NSTimeInterval)progress
+{
+    self.seekTime = progress;
+    
+    self.seekRequired = YES;
+}
+
+
+
+#pragma mark- Private Methods
 - (void)start
 {
     self.started = YES;
@@ -151,7 +210,17 @@ static UInt32 const kDefaultBufferSize = 4096;
     {
         self.fileHandle = [NSFileHandle fileHandleForReadingAtPath:self.url.path];
         
-        self.contentLength = [[[NSFileManager defaultManager] attributesOfItemAtPath:self.url.path error:nil] fileSize];
+        NSError *error = nil;
+        
+        self.contentLength = [[[NSFileManager defaultManager] attributesOfItemAtPath:self.url.path error:&error] fileSize];
+        
+        if (error)
+        {
+            if (DEBUG)
+            {
+                NSLog(@"NSFileManager: failed to get attributes of the audio file.");
+            }
+        }
         
         self.didDownloadLength = self.contentLength;
         
@@ -202,6 +271,7 @@ static UInt32 const kDefaultBufferSize = 4096;
         
         done = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
         
+        // 避免读取音频数据的频率太快而导致CPU消耗过高
         [NSThread sleepForTimeInterval:0.005];
     }
 }
@@ -433,59 +503,8 @@ static UInt32 const kDefaultBufferSize = 4096;
     [self updateAudioDownloadPercentageWithDataLength:0.0];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
-}
-
-
-- (void)pause
-{
-    pthread_mutex_lock(&_mutex);
-    if (!self.pauseRequired)
-    {
-        self.pauseRequired = YES;
-    }
-    pthread_mutex_unlock(&_mutex);
-}
-
-
-- (void)resume
-{
-    pthread_mutex_lock(&_mutex);
-    if (self.pauseRequired && self.status != SJAudioPlayerStatusWaiting )
-    {
-        pthread_cond_signal(&_cond);
-    }
-    pthread_mutex_unlock(&_mutex);
-}
-
-
-- (void)stop
-{
-    if (!self.stopRequired)
-    {
-        [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
-    }
     
-    pthread_mutex_lock(&_mutex);
-    if (!self.stopRequired)
-    {
-        self.stopRequired = YES;
-        
-        if (self.pauseRequired)
-        {
-            pthread_cond_signal(&_cond);
-        }
-    }
-    pthread_mutex_unlock(&_mutex);
-    
-    [NSThread sleepForTimeInterval:0.1];
-}
-
-
-- (void)seekToProgress:(NSTimeInterval)progress
-{
-    self.seekTime = progress;
-    
-    self.seekRequired = YES;
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionRouteChangeNotification object:nil];
 }
 
 
@@ -695,13 +714,36 @@ static UInt32 const kDefaultBufferSize = 4096;
             {
                 NSLog(@"SJAudioPlayer: Error setting audio session active! %@", error);
             }
-        }
-        
-        if (self.status == SJAudioPlayerStatusPaused && self.pausedByInterrupt)
+        }else
         {
-            [self resume];
-            
-            self.pausedByInterrupt = NO;
+            if (self.status == SJAudioPlayerStatusPaused && self.pausedByInterrupt)
+            {
+                [self resume];
+                
+                self.pausedByInterrupt = NO;
+            }
+        }
+    }
+}
+
+#pragma mark- AVAudioSessionRouteChangeNotification
+- (void)audioSessionRouteDidChange:(NSNotification *)notification
+{
+    NSDictionary *dic = notification.userInfo;
+    
+    NSUInteger changeReason= [dic[AVAudioSessionRouteChangeReasonKey] integerValue];
+    
+    //等于AVAudioSessionRouteChangeReasonOldDeviceUnavailable表示旧输出不可用
+    if (changeReason == AVAudioSessionRouteChangeReasonOldDeviceUnavailable)
+    {
+        AVAudioSessionRouteDescription *routeDescription=dic[AVAudioSessionRouteChangePreviousRouteKey];
+        
+        AVAudioSessionPortDescription *portDescription= [routeDescription.outputs firstObject];
+        
+        //原设备为耳机则暂停
+        if ([portDescription.portType isEqualToString:@"Headphones"])
+        {
+            [self pause];
         }
     }
 }
