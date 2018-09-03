@@ -240,7 +240,7 @@ static UInt32 const kDefaultBufferSize = 4096;
         {
             if (DEBUG)
             {
-                NSLog(@"NSFileManager: failed to get attributes of the audio file.");
+                NSLog(@"SJAudioPlayer: failed to get attributes of the audio file.");
             }
         }
         
@@ -645,7 +645,7 @@ static UInt32 const kDefaultBufferSize = 4096;
     {
         if (DEBUG)
         {
-            NSLog(@"SJAudioFileStream: failed to read data.");
+            NSLog(@"SJAudioStream: failed to read data.");
         }
     }
     
