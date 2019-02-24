@@ -178,6 +178,18 @@ static int const SJAudioQueueBufferCount = 3;
     }
     
     [self setParameter:kAudioQueueParam_Volume value:self.volume error:NULL];
+    
+    
+    // 设置音频倍速播放
+//    UInt32 enable = true;
+//
+//    [self setProperty:kAudioQueueProperty_EnableTimePitch dataSize:sizeof(enable) data:&enable error:NULL];
+//
+//    UInt32 algorithm = kAudioQueueTimePitchAlgorithm_Spectral;
+//
+//    [self setProperty:kAudioQueueProperty_TimePitchAlgorithm dataSize:sizeof(algorithm) data:&algorithm error:NULL];
+//
+//    [self setParameter:kAudioQueueParam_PlayRate value:1.5 error:NULL];
 }
 
 

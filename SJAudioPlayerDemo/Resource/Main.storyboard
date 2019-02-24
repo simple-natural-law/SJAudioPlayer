@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14113" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="eVa-CY-Nae">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="eVa-CY-Nae">
     <device id="retina5_9" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14088"/>
-        <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14460.20"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -61,7 +60,7 @@
                                 <rect key="frame" x="0.0" y="44" width="375" height="45"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="asX-KC-gxh">
-                                        <rect key="frame" x="10" y="7" width="46" height="30"/>
+                                        <rect key="frame" x="10" y="7.6666666666666643" width="46" height="30"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="30" id="b1H-YI-76F"/>
                                             <constraint firstAttribute="width" constant="46" id="m7V-4R-She"/>
@@ -81,7 +80,7 @@
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="1Qm-Oe-F7x">
-                                        <rect key="frame" x="319" y="7" width="46" height="30"/>
+                                        <rect key="frame" x="319" y="7.6666666666666643" width="46" height="30"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="30" id="2Ft-tX-g9G"/>
                                             <constraint firstAttribute="width" constant="46" id="5fw-xw-9au"/>
@@ -109,7 +108,7 @@
                                 <rect key="frame" x="0.0" y="89" width="375" height="481"/>
                                 <subviews>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="music_placeholder" translatesAutoresizingMaskIntoConstraints="NO" id="fzG-5a-IF7">
-                                        <rect key="frame" x="35" y="88.666666666666657" width="305" height="305"/>
+                                        <rect key="frame" x="35" y="88" width="305" height="305"/>
                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         <constraints>
                                             <constraint firstAttribute="width" secondItem="fzG-5a-IF7" secondAttribute="height" multiplier="1:1" id="KGH-S0-7I6"/>
@@ -197,7 +196,7 @@
                                         <rect key="frame" x="8" y="0.0" width="359" height="36"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="00:00" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Hlb-s4-6cd">
-                                                <rect key="frame" x="0.0" y="7" width="35" height="21"/>
+                                                <rect key="frame" x="0.0" y="7.6666666666666288" width="35" height="21"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="21" id="Rxk-dj-chO"/>
                                                     <constraint firstAttribute="width" constant="35" id="UQc-T7-7b1"/>
@@ -207,7 +206,7 @@
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="00:00" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2O5-yw-xLd">
-                                                <rect key="frame" x="324" y="7" width="35" height="21"/>
+                                                <rect key="frame" x="324" y="7.6666666666666288" width="35" height="21"/>
                                                 <constraints>
                                                     <constraint firstAttribute="width" constant="35" id="C2s-LG-3Dm"/>
                                                     <constraint firstAttribute="height" constant="21" id="S17-Z3-nvo"/>
@@ -221,7 +220,7 @@
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="2" id="uCX-GB-fTC"/>
                                                 </constraints>
-                                                <color key="progressTintColor" red="1" green="1" blue="1" alpha="0.40000000000000002" colorSpace="custom" customColorSpace="sRGB"/>
+                                                <color key="progressTintColor" red="1" green="1" blue="1" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <color key="trackTintColor" red="1" green="1" blue="1" alpha="0.20000000000000001" colorSpace="custom" customColorSpace="sRGB"/>
                                             </progressView>
                                             <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="TUu-of-1Uc">
@@ -267,7 +266,7 @@
                                 <rect key="frame" x="0.0" y="570" width="375" height="80"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fE4-kx-vCa">
-                                        <rect key="frame" x="30" y="14" width="315" height="25"/>
+                                        <rect key="frame" x="30" y="14.666666666666629" width="315" height="25"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="25" id="bhT-c8-Hd9"/>
                                         </constraints>
@@ -276,7 +275,7 @@
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Tl0-TT-dkd">
-                                        <rect key="frame" x="30" y="43" width="315" height="20"/>
+                                        <rect key="frame" x="30" y="43.666666666666629" width="315" height="20"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="20" id="5zn-Ml-QAC"/>
                                         </constraints>

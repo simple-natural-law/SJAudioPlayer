@@ -79,9 +79,7 @@
     
     NSURL *url = [NSURL URLWithString:self.currentMusicInfo[@"music_url"]];
     
-    self.player = [[SJAudioPlayer alloc] initWithUrl:url];
-    
-    self.player.delegate = self;
+    self.player = [[SJAudioPlayer alloc] initWithUrl:url delegate:self];
     
     [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(updateProgress) userInfo:nil repeats:YES];
 }
@@ -136,9 +134,7 @@
     
     NSURL *url = [NSURL URLWithString:self.currentMusicInfo[@"music_url"]];
     
-    self.player = [[SJAudioPlayer alloc] initWithUrl:url];
-    
-    self.player.delegate = self;
+    self.player = [[SJAudioPlayer alloc] initWithUrl:url delegate:self];
     
     [self.player play];
 }
@@ -159,9 +155,7 @@
     
     NSURL *url = [NSURL URLWithString:self.currentMusicInfo[@"music_url"]];
     
-    self.player = [[SJAudioPlayer alloc] initWithUrl:url];
-    
-    self.player.delegate = self;
+    self.player = [[SJAudioPlayer alloc] initWithUrl:url delegate:self];
     
     [self.player play];
 }

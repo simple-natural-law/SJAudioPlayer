@@ -34,6 +34,7 @@
 		340A554E21379A53003502C2 /* SJAudioQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554A21379A52003502C2 /* SJAudioQueue.m */; };
 		340A55572137FBF7003502C2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 340A55512137FBF7003502C2 /* Assets.xcassets */; };
 		340A55582137FBF7003502C2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 340A55522137FBF7003502C2 /* LaunchScreen.storyboard */; };
+		345AFF9A222258AC001543C9 /* AudioPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 345AFF99222258AC001543C9 /* AudioPlayer.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -90,6 +91,8 @@
 		340A554A21379A52003502C2 /* SJAudioQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioQueue.m; sourceTree = "<group>"; };
 		340A55512137FBF7003502C2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		340A55532137FBF7003502C2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		345AFF98222258AC001543C9 /* AudioPlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AudioPlayer.h; sourceTree = "<group>"; };
+		345AFF99222258AC001543C9 /* AudioPlayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AudioPlayer.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -188,6 +191,8 @@
 				340A554A21379A52003502C2 /* SJAudioQueue.m */,
 				340A554821379A52003502C2 /* SJAudioPlayer.h */,
 				340A554321379A52003502C2 /* SJAudioPlayer.m */,
+				345AFF98222258AC001543C9 /* AudioPlayer.h */,
+				345AFF99222258AC001543C9 /* AudioPlayer.m */,
 			);
 			path = SJAudioPlayer;
 			sourceTree = "<group>";
@@ -279,6 +284,7 @@
 			files = (
 				34052130213940FA00453F36 /* UIImage+MultiFormat.m in Sources */,
 				340A554E21379A53003502C2 /* SJAudioQueue.m in Sources */,
+				345AFF9A222258AC001543C9 /* AudioPlayer.m in Sources */,
 				3405212B213940FA00453F36 /* SDWebImageManager.m in Sources */,
 				1AB0EA2420736C17002070E3 /* PlayMusicViewController.m in Sources */,
 				34052139213940FA00453F36 /* UIView+WebCacheOperation.m in Sources */,

@@ -1,13 +1,14 @@
 //
-//  SJAudioPlayer.h
-//  SJAudioPlayer
+//  AudioPlayer.h
+//  SJAudioPlayerDemo
 //
-//  Created by 张诗健 on 16/12/29.
-//  Copyright © 2016年 张诗健. All rights reserved.
+//  Created by 张诗健 on 2019/2/24.
+//  Copyright © 2019年 张诗健. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 {
@@ -19,20 +20,20 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 };
 
 
-@class SJAudioPlayer;
+@class AudioPlayer;
 
 @protocol SJAudioPlayerDelegate <NSObject>
 
 @optional
 
-- (void)audioPlayer:(SJAudioPlayer *)audioPlayer updateAudioDownloadPercentage:(float)percentage;
+- (void)audioPlayer:(AudioPlayer *)audioPlayer updateAudioDownloadPercentage:(float)percentage;
 
-- (void)audioPlayer:(SJAudioPlayer *)audioPlayer statusDidChanged:(SJAudioPlayerStatus)status;
+- (void)audioPlayer:(AudioPlayer *)audioPlayer statusDidChanged:(SJAudioPlayerStatus)status;
 
 @end
 
 
-@interface SJAudioPlayer : NSObject
+@interface AudioPlayer : NSObject
 
 @property (nonatomic, readonly, strong) NSURL *url;
 
@@ -55,3 +56,5 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 - (BOOL)isPlaying;
 
 @end
+
+NS_ASSUME_NONNULL_END
