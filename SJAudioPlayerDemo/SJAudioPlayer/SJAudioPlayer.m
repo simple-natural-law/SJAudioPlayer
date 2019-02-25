@@ -802,8 +802,8 @@ static UInt32 const kDefaultBufferSize = 4096;
     }
     
     [self.writeFileHandle closeFile];
-    [self.readFileHandle closeFile];
     self.writeFileHandle = nil;
+    [self.readFileHandle closeFile];
     self.readFileHandle = nil;
 }
 
