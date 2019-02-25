@@ -3,9 +3,13 @@
 
 ## 介绍
 
-`SJAudioPlayer`是一个基于 Audio Queue 实现的音频流播放器。其能够播放本地音频文件和远程音频文件，支持对打断音频事件和拔出耳机事件的处理，并支持监听音频数据下载进度和播放器状态的更改。相较于系统提供的`AVPlayer`和`AVAudioPlayer`，使用`SJAudioPlayer`播放音频时，CPU 的消耗更低。
+`SJAudioPlayer`是一个基于 Audio Queue 实现的音频流播放器，相较于系统提供的`AVPlayer`和`AVAudioPlayer`，使用`SJAudioPlayer`播放音频时，CPU 的消耗更低。`SJAudioPlayer`支持以下功能：
+- 播放本地音频文件和远程音频文件；
+- 缓存远程音频数据到本地；
+- 倍速播放音频；
+- 处理打断事件和拔出耳机事件；
+- 监听远程音频数据的下载进度和播放状态的切换；
 
-`SJAudioPlayer`暂不支持将音频数据缓存到本地，其只是将音频数据下载并保存到内存缓存中，并在下载音频数据的同时，从内存缓存中读取数据并解析和播放音频数据。因此`SJAudioPlayer`暂时也还不适合播放数据量较大的远程音频文件，如果需要实现缓存，可以联系我，我会尽快完善。（要实现缓存，只需要将原先保存到内存缓存中的音频数据改为写入文件，然后从文件中读取数据来播放，你完全可以在该项目源代码的基础之上改动少量代码来实现缓存需求。）
 
 <img src="https://github.com/zhangshijian/SJAudioPlayer/raw/master/Images/IMG_1.PNG" width="375" height="667" />
 
@@ -17,9 +21,9 @@ NSString *path = [[NSBundle mainBundle] pathForResource:@"Sample" ofType:@"mp3"]
 
 NSURL *url = [NSURL fileURLWithPath:path];
 
-SJAudioPlayer *player = [[SJAudioPlayer alloc] initWithUrl:url];
+SJAudioPlayer *player = [[SJAudioPlayer alloc] initWithUrl:url delegate:self];
 
-player.delegate = self;
+[self.player setAudioPlayRate:1.0];
 
 [player play];
 ```
@@ -28,11 +32,16 @@ player.delegate = self;
 ```
 NSURL *url = [NSURL URLWithString:urlString];
 
-SJAudioPlayer *player = [[SJAudioPlayer alloc] initWithUrl:url];
+SJAudioPlayer *player = [[SJAudioPlayer alloc] initWithUrl:url delegate:self];
 
-player.delegate = self;
+[self.player setAudioPlayRate:1.0];
 
 [player play];
+```
+
+设置音频播放速率：
+```
+[self.player setAudioPlayRate:1.5];
 ```
 
 实现`SJAudioPlayerDelegate`协议方法来监听播放器状态：
