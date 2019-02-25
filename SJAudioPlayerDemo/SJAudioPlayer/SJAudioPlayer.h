@@ -54,4 +54,7 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 - (BOOL)isPlaying;
 
+// playRate是0.5~2.0之间的值
+- (void)setAudioPlayRate:(float)playRate;
+
 @end

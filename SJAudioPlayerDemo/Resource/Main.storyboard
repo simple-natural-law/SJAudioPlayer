@@ -165,6 +165,9 @@
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="wXY-17-pXR">
                                                 <rect key="frame" x="300" y="0.0" width="75" height="64"/>
                                                 <state key="normal" image="more_icon"/>
+                                                <connections>
+                                                    <action selector="setPlayerPlayRate:" destination="eVa-CY-Nae" eventType="touchUpInside" id="GJh-AR-4ys"/>
+                                                </connections>
                                             </button>
                                         </subviews>
                                         <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>

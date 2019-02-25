@@ -118,6 +118,10 @@
     
 }
 
+- (IBAction)setPlayerPlayRate:(id)sender
+{
+    [self.player setAudioPlayRate:1.5];
+}
 
 - (IBAction)lastMusic:(id)sender
 {

@@ -41,4 +41,6 @@
 
 - (void)disposeAudioQueue;
 
+- (void)setAudioQueuePlayRate:(float)playRate;
+
 @end

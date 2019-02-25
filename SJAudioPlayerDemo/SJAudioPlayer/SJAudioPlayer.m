@@ -80,6 +80,8 @@ static UInt32 const kDefaultBufferSize = 4096;
 // 实际下载的数据长度
 @property (nonatomic, assign) unsigned long long currentFileSize;
 
+@property (nonatomic, assign) float playRate;
+
 @end
 
 
@@ -105,6 +107,7 @@ static UInt32 const kDefaultBufferSize = 4096;
         self.started  = NO;
         self.url      = url;
         self.delegate = delegate;
+        self.playRate = 1.0;
         
         if ([self.url isFileURL])
         {
@@ -251,6 +254,15 @@ static UInt32 const kDefaultBufferSize = 4096;
     self.seekRequired = YES;
 }
 
+- (void)setAudioPlayRate:(float)playRate
+{
+    self.playRate = playRate;
+    
+    if (self.audioQueue)
+    {
+        [self.audioQueue setAudioQueuePlayRate:playRate];
+    }
+}
 
 
 #pragma mark- Private Methods
@@ -917,6 +929,8 @@ static UInt32 const kDefaultBufferSize = 4096;
     AudioStreamBasicDescription format = self.audioFileStream.format;
     
     self.audioQueue = [[SJAudioQueue alloc] initWithFormat:format bufferSize:kDefaultBufferSize macgicCookie:magicCookie];
+    
+    [self.audioQueue setAudioQueuePlayRate:self.playRate];
     
     self.duration = self.audioFileStream.duration;
 }
