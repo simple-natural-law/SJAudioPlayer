@@ -258,8 +258,6 @@ static UInt32 const kDefaultBufferSize = 4096;
 {
     self.started = YES;
     
-    [self updateAudioDownloadPercentageWithDataLength:0];
-    
     if (self.readDataFormLocalFile)
     {
         NSError *error = nil;
@@ -324,7 +322,9 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     BOOL done = YES;
     
-    while (done && !self.finishedDownload && !self.stopReadHTTPData)
+    BOOL stopReadHTTPData = self.stopReadHTTPData;
+    
+    while (done && !self.finishedDownload && !stopReadHTTPData)
     {
         if (!self.audioStream)
         {
@@ -335,6 +335,10 @@ static UInt32 const kDefaultBufferSize = 4096;
         
         // 避免读取音频数据的频率太快而导致CPU消耗过高
         [NSThread sleepForTimeInterval:0.01];
+        
+        pthread_mutex_lock(&_mutex);
+        stopReadHTTPData = self.stopReadHTTPData;
+        pthread_mutex_unlock(&_mutex);
     }
 }
 
@@ -378,7 +382,9 @@ static UInt32 const kDefaultBufferSize = 4096;
                 {
                     [self.audioQueue stop:YES];
                     
+                    pthread_mutex_lock(&_mutex);
                     self.stopReadHTTPData = YES;
+                    pthread_mutex_unlock(&_mutex);
                     
                     self.started = NO;
                     
@@ -400,7 +406,9 @@ static UInt32 const kDefaultBufferSize = 4096;
             {
                 [self.audioQueue stop:YES];
                 
+                pthread_mutex_lock(&_mutex);
                 self.stopReadHTTPData = YES;
+                pthread_mutex_unlock(&_mutex);
                 
                 self.started = NO;
                 
@@ -761,6 +769,19 @@ static UInt32 const kDefaultBufferSize = 4096;
     return fileTypeHint;
 }
 
+- (NSString *)getMD5StringForString:(NSString *) str
+{
+    const char *cStr = [str UTF8String];
+    
+    unsigned char result[16];
+    
+    CC_MD5(cStr, (CC_LONG)strlen(cStr), result);
+    
+    NSString *md5String = [NSString stringWithFormat:@"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",result[0], result[1], result[2], result[3],result[4], result[5], result[6], result[7],result[8], result[9], result[10], result[11],result[12], result[13], result[14], result[15]];
+    
+    return md5String;
+}
+
 
 - (void)updateAudioDownloadPercentageWithDataLength:(unsigned long long)dataLength
 {
@@ -989,20 +1010,6 @@ static UInt32 const kDefaultBufferSize = 4096;
             [self pause];
         }
     }
-}
-
-#pragma mark- MD5
-- (NSString *)getMD5StringForString:(NSString *) str
-{
-    const char *cStr = [str UTF8String];
-    
-    unsigned char result[16];
-    
-    CC_MD5(cStr, (CC_LONG)strlen(cStr), result);
-    
-    NSString *md5String = [NSString stringWithFormat:@"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",result[0], result[1], result[2], result[3],result[4], result[5], result[6], result[7],result[8], result[9], result[10], result[11],result[12], result[13], result[14], result[15]];
-    
-    return md5String;
 }
 
 @end
