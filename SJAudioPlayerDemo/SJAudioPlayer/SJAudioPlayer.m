@@ -258,6 +258,8 @@ static UInt32 const kDefaultBufferSize = 4096;
 {
     self.started = YES;
     
+    [self updateAudioDownloadPercentageWithDataLength:0];
+    
     if (self.readDataFormLocalFile)
     {
         NSError *error = nil;
@@ -386,7 +388,19 @@ static UInt32 const kDefaultBufferSize = 4096;
                     self.stopReadHTTPData = YES;
                     pthread_mutex_unlock(&_mutex);
                     
-                    self.started = NO;
+                    if (!self.readDataFormLocalFile)
+                    {
+                        pthread_mutex_lock(&_mutex);
+                        unsigned long long currentFileSize = self.currentFileSize;
+                        pthread_mutex_unlock(&_mutex);
+                        
+                        if (currentFileSize < self.contentLength)
+                        {
+                            [self removeAudioCache];
+                        }
+                    }
+                    
+                    [self cleanUp];
                     
                     break;
                     
@@ -410,10 +424,6 @@ static UInt32 const kDefaultBufferSize = 4096;
                 self.stopReadHTTPData = YES;
                 pthread_mutex_unlock(&_mutex);
                 
-                self.started = NO;
-                
-                [self.readFileHandle closeFile];
-                
                 if (!self.readDataFormLocalFile)
                 {
                     pthread_mutex_lock(&_mutex);
@@ -422,17 +432,11 @@ static UInt32 const kDefaultBufferSize = 4096;
                     
                     if (currentFileSize < self.contentLength)
                     {
-                        BOOL success = [[NSFileManager defaultManager] removeItemAtPath:self.cachePath error:nil];
-                        
-                        if (!success)
-                        {
-                            if (DEBUG)
-                            {
-                                NSLog(@"SJAudioPlayer: failed to remove file.");
-                            }
-                        }
+                        [self removeAudioCache];
                     }
                 }
+                
+                [self cleanUp];
                 
                 break;
             }
@@ -460,23 +464,14 @@ static UInt32 const kDefaultBufferSize = 4096;
                             self.byteOffset = offset;
                             pthread_mutex_unlock(&_mutex);
                             
-                            BOOL success = [[NSFileManager defaultManager] removeItemAtPath:self.cachePath error:nil];
-                            
-                            if (!success)
-                            {
-                                if (DEBUG)
-                                {
-                                    NSLog(@"SJAudioPlayer: failed to remove file.");
-                                }
-                            }
+                            [self removeAudioCache];
                             
                             self.readOffset = 0;
                             self.currentFileSize = 0;
                             
-                            [self.writeFileHandle closeFile];
-                            [self.readFileHandle closeFile];
-                            self.writeFileHandle = nil;
-                            self.readFileHandle = nil;
+                            self.finishedDownload = NO;
+                            
+                            [self startDownloadAudioData];
                         }else
                         {
                             pthread_mutex_lock(&_mutex);
@@ -499,23 +494,10 @@ static UInt32 const kDefaultBufferSize = 4096;
                             self.byteOffset = offset;
                             pthread_mutex_unlock(&_mutex);
                             
-                            BOOL success = [[NSFileManager defaultManager] removeItemAtPath:self.cachePath error:nil];
-                            
-                            if (!success)
-                            {
-                                if (DEBUG)
-                                {
-                                    NSLog(@"SJAudioPlayer: failed to remove file.");
-                                }
-                            }
+                            [self removeAudioCache];
                             
                             self.readOffset = 0;
                             self.currentFileSize = 0;
-                            
-                            [self.writeFileHandle closeFile];
-                            [self.readFileHandle closeFile];
-                            self.writeFileHandle = nil;
-                            self.readFileHandle = nil;
                         }else
                         {
                             if (offset < self.byteOffset)
@@ -526,23 +508,10 @@ static UInt32 const kDefaultBufferSize = 4096;
                                 self.byteOffset = offset;
                                 pthread_mutex_unlock(&_mutex);
                                 
-                                BOOL success = [[NSFileManager defaultManager] removeItemAtPath:self.cachePath error:nil];
-                                
-                                if (!success)
-                                {
-                                    if (DEBUG)
-                                    {
-                                        NSLog(@"SJAudioPlayer: failed to remove file.");
-                                    }
-                                }
+                                [self removeAudioCache];
                                 
                                 self.readOffset = 0;
                                 self.currentFileSize = 0;
-                                
-                                [self.writeFileHandle closeFile];
-                                [self.readFileHandle closeFile];
-                                self.writeFileHandle = nil;
-                                self.readFileHandle = nil;
                             }else
                             {
                                 pthread_mutex_lock(&_mutex);
@@ -576,8 +545,6 @@ static UInt32 const kDefaultBufferSize = 4096;
                 if (self.readOffset >= self.contentLength)
                 {
                     self.isEof = YES;
-                    
-                    [self.readFileHandle closeFile];
                 }
                 
             }else
@@ -594,19 +561,9 @@ static UInt32 const kDefaultBufferSize = 4096;
                         
                         self.isEof = YES;
                         
-                        [self.readFileHandle closeFile];
-                        
                         if (currentFileSize < self.contentLength)
                         {
-                            BOOL success = [[NSFileManager defaultManager] removeItemAtPath:self.cachePath error:nil];
-                            
-                            if (!success)
-                            {
-                                if (DEBUG)
-                                {
-                                    NSLog(@"SJAudioPlayer: failed to remove file.");
-                                }
-                            }
+                            [self removeAudioCache];
                         }
                         
                     }else
@@ -667,9 +624,9 @@ static UInt32 const kDefaultBufferSize = 4096;
     if (self.isEof)
     {
         [self setAudioPlayerStatus:SJAudioPlayerStatusFinished];
+        
+        [self cleanUp];
     }
-    
-    [self cleanUp];
 }
 
 
@@ -684,8 +641,11 @@ static UInt32 const kDefaultBufferSize = 4096;
     [self.audioQueue disposeAudioQueue];
     self.audioQueue = nil;
     
+    [self.writeFileHandle closeFile];
+    self.writeFileHandle = nil;
+    
     [self.readFileHandle closeFile];
-    self.readFileHandle = nil;
+    self.readFileHandle  = nil;
     
     [self.audioStream closeReadStream];
     self.audioStream = nil;
@@ -702,11 +662,6 @@ static UInt32 const kDefaultBufferSize = 4096;
     self.readOffset        = 0;
     self.currentFileSize   = 0;
     self.cachePath         = nil;
-    
-    [self.writeFileHandle closeFile];
-    self.writeFileHandle = nil;
-    [self.readFileHandle closeFile];
-    self.readFileHandle  = nil;
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
     
@@ -820,6 +775,24 @@ static UInt32 const kDefaultBufferSize = 4096;
             [self.delegate audioPlayer:self statusDidChanged:status];
         });
     }
+}
+
+- (void)removeAudioCache
+{
+    BOOL success = [[NSFileManager defaultManager] removeItemAtPath:self.cachePath error:nil];
+    
+    if (!success)
+    {
+        if (DEBUG)
+        {
+            NSLog(@"SJAudioPlayer: failed to remove file.");
+        }
+    }
+    
+    [self.writeFileHandle closeFile];
+    [self.readFileHandle closeFile];
+    self.writeFileHandle = nil;
+    self.readFileHandle = nil;
 }
 
 
