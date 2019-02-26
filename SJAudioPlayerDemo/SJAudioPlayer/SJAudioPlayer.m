@@ -45,7 +45,7 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 @property (nonatomic, assign) BOOL isEof;
 
-@property (nonatomic, assign) BOOL readDataFormLocalFile;
+@property (nonatomic, assign) BOOL readDataFromLocalFile;
 
 @property (nonatomic, assign) BOOL pausedByInterrupt;
 
@@ -111,20 +111,20 @@ static UInt32 const kDefaultBufferSize = 4096;
         
         if ([self.url isFileURL])
         {
-            self.readDataFormLocalFile = YES;
+            self.readDataFromLocalFile = YES;
         }else
         {
             NSString *filePath = [[[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:@"Audio"] stringByAppendingPathComponent:[self getMD5StringForString:url.absoluteString]];
             
             if ([[NSFileManager defaultManager] fileExistsAtPath:filePath])
             {
-                self.readDataFormLocalFile = YES;
+                self.readDataFromLocalFile = YES;
                 
                 self.cachePath = filePath;
                 
             }else
             {
-                self.readDataFormLocalFile = NO;
+                self.readDataFromLocalFile = NO;
             }
         }
         
@@ -272,7 +272,7 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     [self updateAudioDownloadPercentageWithDataLength:0];
     
-    if (self.readDataFormLocalFile)
+    if (self.readDataFromLocalFile)
     {
         NSError *error = nil;
         
@@ -400,7 +400,7 @@ static UInt32 const kDefaultBufferSize = 4096;
                     self.stopReadHTTPData = YES;
                     pthread_mutex_unlock(&_mutex);
                     
-                    if (!self.readDataFormLocalFile)
+                    if (!self.readDataFromLocalFile)
                     {
                         pthread_mutex_lock(&_mutex);
                         unsigned long long currentFileSize = self.currentFileSize;
@@ -436,7 +436,7 @@ static UInt32 const kDefaultBufferSize = 4096;
                 self.stopReadHTTPData = YES;
                 pthread_mutex_unlock(&_mutex);
                 
-                if (!self.readDataFormLocalFile)
+                if (!self.readDataFromLocalFile)
                 {
                     pthread_mutex_lock(&_mutex);
                     unsigned long long currentFileSize = self.currentFileSize;
@@ -457,7 +457,7 @@ static UInt32 const kDefaultBufferSize = 4096;
             {
                 NSUInteger offset = [self.audioFileStream seekToTime:&_seekTime];
                 
-                if (self.readDataFormLocalFile)
+                if (self.readDataFromLocalFile)
                 {
                     pthread_mutex_lock(&_mutex);
                     self.readOffset = offset;
@@ -546,7 +546,7 @@ static UInt32 const kDefaultBufferSize = 4096;
             
             NSData *data = nil;
             
-            if (self.readDataFormLocalFile)
+            if (self.readDataFromLocalFile)
             {
                 data = [self.readFileHandle readDataOfLength:kDefaultBufferSize];
                 
@@ -602,7 +602,7 @@ static UInt32 const kDefaultBufferSize = 4096;
             {
                 if (!self.audioFileStream)
                 {
-                    if (!self.readDataFormLocalFile)
+                    if (!self.readDataFromLocalFile)
                     {
                         self.contentLength = self.audioStream.contentLength;
                     }
