@@ -226,24 +226,26 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (void)stop
 {
-    if (!self.stopRequired)
+    pthread_mutex_lock(&_mutex);
+    BOOL stopRequired = self.stopRequired;
+    pthread_mutex_unlock(&_mutex);
+    
+    if (!stopRequired)
     {
         [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
-    }
-    
-    pthread_mutex_lock(&_mutex);
-    if (!self.stopRequired)
-    {
-        self.stopRequired = YES;
         
-        if (self.pauseRequired)
+        pthread_mutex_lock(&_mutex);
+        self.stopRequired = YES;
+        BOOL pauseRequired = self.pauseRequired;
+        pthread_mutex_unlock(&_mutex);
+        
+        if (pauseRequired)
         {
             pthread_cond_signal(&_cond);
         }
+        
+        [NSThread sleepForTimeInterval:0.1];
     }
-    pthread_mutex_unlock(&_mutex);
-    
-    [NSThread sleepForTimeInterval:0.1];
 }
 
 
