@@ -226,14 +226,8 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (void)stop
 {
-    pthread_mutex_lock(&_mutex);
-    BOOL stopRequired = self.stopRequired;
-    pthread_mutex_unlock(&_mutex);
-    
-    if (!stopRequired)
+    if (self.audioQueue && self.status != SJAudioPlayerStatusIdle)
     {
-        [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
-        
         pthread_mutex_lock(&_mutex);
         self.stopRequired = YES;
         BOOL pauseRequired = self.pauseRequired;
@@ -244,7 +238,14 @@ static UInt32 const kDefaultBufferSize = 4096;
             pthread_cond_signal(&_cond);
         }
         
-        [NSThread sleepForTimeInterval:0.1];
+        // 同步播放权状态切换
+        while (self.status != SJAudioPlayerStatusIdle)
+        {
+            [NSThread sleepForTimeInterval:0.05];
+        }
+    }else
+    {
+        [self cleanUp];
     }
 }
 
@@ -273,6 +274,8 @@ static UInt32 const kDefaultBufferSize = 4096;
     self.started = YES;
     
     [self updateAudioDownloadPercentageWithDataLength:0];
+    
+    [self setAudioPlayerStatus:SJAudioPlayerStatusWaiting];
     
     if (self.readDataFromLocalFile)
     {
@@ -680,6 +683,8 @@ static UInt32 const kDefaultBufferSize = 4096;
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionRouteChangeNotification object:nil];
+    
+    [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
 }
 
 
@@ -935,6 +940,8 @@ static UInt32 const kDefaultBufferSize = 4096;
     [self.audioQueue setAudioQueuePlayRate:self.playRate];
     
     self.duration = self.audioFileStream.duration;
+    
+    [self setAudioPlayerStatus:SJAudioPlayerStatusPlaying];
 }
 
 
