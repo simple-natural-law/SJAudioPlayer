@@ -486,6 +486,7 @@ static UInt32 const kDefaultBufferSize = 4096;
                     [self.audioQueue stop:YES];
                     
                     pthread_mutex_lock(&_mutex);
+#warning - 待改进同步停止读取和缓存数据
                     self.stopReadHTTPData = YES;
                     pthread_mutex_unlock(&_mutex);
                     
@@ -520,6 +521,7 @@ static UInt32 const kDefaultBufferSize = 4096;
                 [self.audioQueue stop:YES];
                 
                 pthread_mutex_lock(&_mutex);
+#warning - 待改进同步停止读取和缓存数据
                 self.stopReadHTTPData = YES;
                 pthread_mutex_unlock(&_mutex);
                 
