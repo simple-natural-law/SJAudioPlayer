@@ -957,18 +957,6 @@ static UInt32 const kDefaultBufferSize = 4096;
     {
         if (self.status == SJAudioPlayerStatusPaused && self.pausedByInterrupt)
         {
-            NSError *error = nil;
-            
-            [[AVAudioSession sharedInstance] setActive:YES error:&error];
-            
-            if (error)
-            {
-                if (DEBUG)
-                {
-                    NSLog(@"SJAudioPlayer: Error setting audio session active! %@", error);
-                }
-            }
-            
             [self.audioQueue resume];
             
             [self setAudioPlayerStatus:SJAudioPlayerStatusPlaying];
