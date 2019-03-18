@@ -405,8 +405,7 @@ static void SJAudioFileStreamPropertyListener(void *inClientData, AudioFileStrea
 
 
 /*
- 读取格式信息完成之后，继续调用`AudioFileStreamParseBytes`方法可以对帧进行分离，每解析出一部分帧就会同步
- 调用一次此方法。
+ 读取格式信息完成之后，继续调用`AudioFileStreamParseBytes`方法可以对帧进行分离，每解析出一部分帧就会同步调用一次此方法。
  
  inNumberBytes :　本次处理的数据大小
  inNumberPackets　:　本次总共处理了多少帧（即代码里的packet）
