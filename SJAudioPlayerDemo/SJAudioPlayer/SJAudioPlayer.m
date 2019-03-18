@@ -500,9 +500,7 @@ static UInt32 const kDefaultBufferSize = 4096;
                             [self removeAudioCache];
                         }
                     }
-                    
-                    [self cleanUp];
-                    
+
                     break;
                     
                 }else
@@ -536,8 +534,6 @@ static UInt32 const kDefaultBufferSize = 4096;
                         [self removeAudioCache];
                     }
                 }
-                
-                [self cleanUp];
                 
                 break;
             }
@@ -637,9 +633,9 @@ static UInt32 const kDefaultBufferSize = 4096;
     if (self.isEof)
     {
         [self setAudioPlayerStatus:SJAudioPlayerStatusFinished];
-        
-        [self cleanUp];
     }
+    
+    [self cleanUp];
 }
 
 
