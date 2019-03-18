@@ -375,8 +375,6 @@ static UInt32 const kDefaultBufferSize = 4096;
             {
                 [self.audioQueue stop:NO];
                 
-                self.started = NO;
-                
                 break;
             }
             
@@ -636,6 +634,8 @@ static UInt32 const kDefaultBufferSize = 4096;
     }
     
     [self cleanUp];
+    
+    NSLog(@"❤️❤️❤️❤️❤️");
 }
 
 
