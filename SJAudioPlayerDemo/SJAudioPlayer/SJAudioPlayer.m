@@ -951,7 +951,6 @@ static UInt32 const kDefaultBufferSize = 4096;
             self.pausedByInterrupt = YES;
             
             [self setAudioPlayerStatus:SJAudioPlayerStatusPaused];
-            
         }
         
     }else if (interruptionType == AVAudioSessionInterruptionTypeEnded)
