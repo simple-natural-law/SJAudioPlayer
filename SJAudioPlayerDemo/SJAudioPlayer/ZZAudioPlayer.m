@@ -137,7 +137,6 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
         }
     }else
     {
-        // 激活音频会话控制
         [audioSession setActive:YES error:&error];
         
         if (error)
@@ -149,10 +148,8 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
         }
     }
     
-    // 监听打断事件
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterreption:) name:AVAudioSessionInterruptionNotification object:nil];
     
-    // 监听拔出耳机操作
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioSessionRouteDidChange:) name:AVAudioSessionRouteChangeNotification object:nil];
 }
 
@@ -240,10 +237,12 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
 
 - (void)seekToProgress:(NSTimeInterval)progress
 {
+    pthread_mutex_lock(&_mutex);
     self.seekTime = progress;
-    
     self.seekRequired = YES;
+    pthread_mutex_unlock(&_mutex);
 }
+
 
 - (void)setAudioPlayRate:(float)playRate
 {
