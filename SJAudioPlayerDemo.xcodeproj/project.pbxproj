@@ -34,6 +34,10 @@
 		340A554E21379A53003502C2 /* SJAudioQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 340A554A21379A52003502C2 /* SJAudioQueue.m */; };
 		340A55572137FBF7003502C2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 340A55512137FBF7003502C2 /* Assets.xcassets */; };
 		340A55582137FBF7003502C2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 340A55522137FBF7003502C2 /* LaunchScreen.storyboard */; };
+		3434D0FC24777957005F3971 /* SJAudioDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3434D0FB24777957005F3971 /* SJAudioDecoder.m */; };
+		3434D0FF2477D460005F3971 /* ZZAudioPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3434D0FE2477D460005F3971 /* ZZAudioPlayer.m */; };
+		3434D1022477F378005F3971 /* SJAudioCache.m in Sources */ = {isa = PBXBuildFile; fileRef = 3434D1012477F378005F3971 /* SJAudioCache.m */; };
+		34BD2A022475599E00DA9487 /* SJAudioDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 34BD2A012475599D00DA9487 /* SJAudioDownloader.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -90,6 +94,14 @@
 		340A554A21379A52003502C2 /* SJAudioQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SJAudioQueue.m; sourceTree = "<group>"; };
 		340A55512137FBF7003502C2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		340A55532137FBF7003502C2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		3434D0FA24777956005F3971 /* SJAudioDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SJAudioDecoder.h; sourceTree = "<group>"; };
+		3434D0FB24777957005F3971 /* SJAudioDecoder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SJAudioDecoder.m; sourceTree = "<group>"; };
+		3434D0FD2477D460005F3971 /* ZZAudioPlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZZAudioPlayer.h; sourceTree = "<group>"; };
+		3434D0FE2477D460005F3971 /* ZZAudioPlayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ZZAudioPlayer.m; sourceTree = "<group>"; };
+		3434D1002477F378005F3971 /* SJAudioCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SJAudioCache.h; sourceTree = "<group>"; };
+		3434D1012477F378005F3971 /* SJAudioCache.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SJAudioCache.m; sourceTree = "<group>"; };
+		34BD2A002475599D00DA9487 /* SJAudioDownloader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SJAudioDownloader.h; sourceTree = "<group>"; };
+		34BD2A012475599D00DA9487 /* SJAudioDownloader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SJAudioDownloader.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -188,6 +200,14 @@
 				340A554A21379A52003502C2 /* SJAudioQueue.m */,
 				340A554821379A52003502C2 /* SJAudioPlayer.h */,
 				340A554321379A52003502C2 /* SJAudioPlayer.m */,
+				34BD2A002475599D00DA9487 /* SJAudioDownloader.h */,
+				34BD2A012475599D00DA9487 /* SJAudioDownloader.m */,
+				3434D0FA24777956005F3971 /* SJAudioDecoder.h */,
+				3434D0FB24777957005F3971 /* SJAudioDecoder.m */,
+				3434D1002477F378005F3971 /* SJAudioCache.h */,
+				3434D1012477F378005F3971 /* SJAudioCache.m */,
+				3434D0FD2477D460005F3971 /* ZZAudioPlayer.h */,
+				3434D0FE2477D460005F3971 /* ZZAudioPlayer.m */,
 			);
 			path = SJAudioPlayer;
 			sourceTree = "<group>";
@@ -281,9 +301,12 @@
 				340A554E21379A53003502C2 /* SJAudioQueue.m in Sources */,
 				3405212B213940FA00453F36 /* SDWebImageManager.m in Sources */,
 				1AB0EA2420736C17002070E3 /* PlayMusicViewController.m in Sources */,
+				3434D1022477F378005F3971 /* SJAudioCache.m in Sources */,
+				34BD2A022475599E00DA9487 /* SJAudioDownloader.m in Sources */,
 				34052139213940FA00453F36 /* UIView+WebCacheOperation.m in Sources */,
 				34052135213940FA00453F36 /* NSData+ImageContentType.m in Sources */,
 				3405212E213940FA00453F36 /* SDWebImageDownloader.m in Sources */,
+				3434D0FF2477D460005F3971 /* ZZAudioPlayer.m in Sources */,
 				34052131213940FA00453F36 /* SDWebImageCompat.m in Sources */,
 				34052132213940FA00453F36 /* SDWebImagePrefetcher.m in Sources */,
 				34052133213940FA00453F36 /* SDImageCache.m in Sources */,
@@ -294,6 +317,7 @@
 				34052136213940FA00453F36 /* UIImageView+WebCache.m in Sources */,
 				1AB0EA2F20736C29002070E3 /* main.m in Sources */,
 				340A554B21379A53003502C2 /* SJAudioPlayer.m in Sources */,
+				3434D0FC24777957005F3971 /* SJAudioDecoder.m in Sources */,
 				3405212F213940FA00453F36 /* UIImage+GIF.m in Sources */,
 				34052137213940FA00453F36 /* NSImage+WebCache.m in Sources */,
 				340A554D21379A53003502C2 /* SJAudioFileStream.m in Sources */,

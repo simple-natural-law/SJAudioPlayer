@@ -1,51 +1,47 @@
 //
-//  SJAudioPlayer.m
-//  SJAudioPlayer
+//  ZZAudioPlayer.m
+//  SJAudioPlayerDemo
 //
-//  Created by 张诗健 on 16/12/29.
-//  Copyright © 2016年 张诗健. All rights reserved.
+//  Created by 张诗健 on 2020/5/22.
+//  Copyright © 2020 张诗健. All rights reserved.
 //
 
-#import "SJAudioPlayer.h"
+#import "ZZAudioPlayer.h"
 #import <pthread.h>
 #import <AVFoundation/AVFoundation.h>
-#import "SJAudioStream.h"
-#import "SJAudioFileStream.h"
+#import "SJAudioDownloader.h"
+#import "SJAudioDecoder.h"
 #import "SJAudioQueue.h"
-#import <CommonCrypto/CommonDigest.h>
+#import "SJAudioCache.h"
 
 
-static UInt32 const kDefaultBufferSize = 4096;
+static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
 
-@interface SJAudioPlayer ()<SJAudioFileStreamDelegate, SJAudioStreamDelegate>
+@interface ZZAudioPlayer ()<SJAudioDecoderDelegate, SJAudioDownloaderDelegate>
 {
     pthread_mutex_t _mutex;
     pthread_cond_t  _cond;
 }
 
-@property (nonatomic, weak) id<SJAudioPlayerDelegate> delegate;
+@property (nonatomic, strong) dispatch_semaphore_t semaphore;
+
+@property (nonatomic, weak) id<ZZAudioPlayerDelegate> delegate;
 
 @property (nonatomic, strong) NSURL *url;
 
-@property (nonatomic, strong) SJAudioStream *audioStream;
+@property (nonatomic, strong) SJAudioDownloader *audioDownloader;
 
-@property (nonatomic, strong) NSFileHandle *readFileHandle;
+@property (nonatomic, strong) SJAudioCache *audioCache;
 
-@property (nonatomic, strong) NSFileHandle *writeFileHandle;
-
-@property (nonatomic, strong) NSString *cachePath;
-
-@property (nonatomic, strong) SJAudioFileStream *audioFileStream;
+@property (nonatomic, strong) SJAudioDecoder *audioDecoder;
 
 @property (nonatomic, strong) SJAudioQueue *audioQueue;
 
-@property (nonatomic, assign) SJAudioPlayerStatus status;
+@property (nonatomic, assign) ZZAudioPlayerStatus status;
 
 @property (nonatomic, assign) BOOL started;
 
 @property (nonatomic, assign) BOOL isEof;
-
-@property (nonatomic, assign) BOOL readDataFromLocalFile;
 
 @property (nonatomic, assign) BOOL pausedByInterrupt;
 
@@ -57,7 +53,7 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 @property (nonatomic, assign) BOOL finishedDownload;
 
-@property (nonatomic, assign) BOOL stopReadHTTPData;
+@property (nonatomic, assign) BOOL stopDownload;
 
 @property (nonatomic, assign) SInt64 byteOffset;
 
@@ -86,19 +82,25 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 
 
-@implementation SJAudioPlayer
+@implementation ZZAudioPlayer
 
 
 - (void)dealloc
 {
     pthread_mutex_destroy(&_mutex);
     pthread_cond_destroy(&_cond);
+    
+    if (DEBUG)
+    {
+        NSLog(@"dealloc: %@",self);
+    }
 }
 
 
-- (instancetype)initWithUrl:(NSURL *)url delegate:(nonnull id<SJAudioPlayerDelegate>)delegate
+
+- (instancetype)initWithUrl:(NSURL *)url delegate:(nonnull id<ZZAudioPlayerDelegate>)delegate
 {
-    NSAssert(url, @"SJAudioPlayer: url should be not nil.");
+    NSAssert(url, @"SJAudioPlayer: url should not be nil.");
     
     self = [super init];
     
@@ -109,24 +111,7 @@ static UInt32 const kDefaultBufferSize = 4096;
         self.delegate = delegate;
         self.playRate = 1.0;
         
-        if ([self.url isFileURL])
-        {
-            self.readDataFromLocalFile = YES;
-        }else
-        {
-            NSString *filePath = [[[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:@"Audio"] stringByAppendingPathComponent:[self getMD5StringForString:url.absoluteString]];
-            
-            if ([[NSFileManager defaultManager] fileExistsAtPath:filePath])
-            {
-                self.readDataFromLocalFile = YES;
-                
-                self.cachePath = filePath;
-                
-            }else
-            {
-                self.readDataFromLocalFile = NO;
-            }
-        }
+        self.semaphore = dispatch_semaphore_create(1);
         
         pthread_mutex_init(&_mutex, NULL);
         pthread_cond_init(&_cond, NULL);
@@ -134,6 +119,43 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     return self;
 }
+
+
+- (void)activateAudioSession
+{
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    
+    NSError *error = nil;
+    
+    [audioSession setCategory:AVAudioSessionCategoryPlayback error:&error];
+    
+    if (error)
+    {
+        if (DEBUG)
+        {
+            NSLog(@"SJAudioPlayer: error setting audio session category! %@",error);
+        }
+    }else
+    {
+        // 激活音频会话控制
+        [audioSession setActive:YES error:&error];
+        
+        if (error)
+        {
+            if (DEBUG)
+            {
+                NSLog(@"SJAudioPlayer: error setting audio session active! %@", error);
+            }
+        }
+    }
+    
+    // 监听打断事件
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterreption:) name:AVAudioSessionInterruptionNotification object:nil];
+    
+    // 监听拔出耳机操作
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioSessionRouteDidChange:) name:AVAudioSessionRouteChangeNotification object:nil];
+}
+
 
 
 #pragma mark- Public Methods
@@ -144,41 +166,12 @@ static UInt32 const kDefaultBufferSize = 4096;
         [self resume];
     }else
     {
-        AVAudioSession *audioSession = [AVAudioSession sharedInstance];
-        
-        NSError *error = nil;
-        
-        [audioSession setCategory:AVAudioSessionCategoryPlayback error:&error];
-        
-        if (error)
-        {
-            if (DEBUG)
-            {
-                NSLog(@"SJAudioPlayer: error setting audio session category! %@",error);
-            }
-        }else
-        {
-            // 激活音频会话控制
-            [audioSession setActive:YES error:&error];
-            
-            if (error)
-            {
-                if (DEBUG)
-                {
-                    NSLog(@"SJAudioPlayer: error setting audio session active! %@", error);
-                }
-            }
-        }
-        
-        // 监听打断事件
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterreption:) name:AVAudioSessionInterruptionNotification object:nil];
-        
-        // 监听拔出耳机操作
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioSessionRouteDidChange:) name:AVAudioSessionRouteChangeNotification object:nil];
+        [self activateAudioSession];
         
         [self start];
     }
 }
+
 
 - (void)pause
 {
@@ -193,7 +186,7 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (void)resume
 {
-    if (self.pausedByInterrupt && self.status == SJAudioPlayerStatusPaused)
+    if (self.pausedByInterrupt && self.status == ZZAudioPlayerStatusPaused)
     {
         NSError *error = nil;
         
@@ -209,13 +202,13 @@ static UInt32 const kDefaultBufferSize = 4096;
         
         [self.audioQueue resume];
         
-        [self setAudioPlayerStatus:SJAudioPlayerStatusPlaying];
+        [self setAudioPlayerStatus:ZZAudioPlayerStatusPlaying];
         
         self.pausedByInterrupt = NO;
     }else
     {
         pthread_mutex_lock(&_mutex);
-        if (self.pauseRequired && self.status != SJAudioPlayerStatusWaiting )
+        if (self.pauseRequired && self.status != ZZAudioPlayerStatusWaiting )
         {
             pthread_cond_signal(&_cond);
         }
@@ -226,20 +219,18 @@ static UInt32 const kDefaultBufferSize = 4096;
 
 - (void)stop
 {
-    if (self.status != SJAudioPlayerStatusIdle)
+    if (self.status != ZZAudioPlayerStatusIdle)
     {
         pthread_mutex_lock(&_mutex);
         self.stopRequired = YES;
-        BOOL pauseRequired = self.pauseRequired;
-        pthread_mutex_unlock(&_mutex);
-        
-        if (pauseRequired)
+        if (self.pauseRequired)
         {
             pthread_cond_signal(&_cond);
         }
+        pthread_mutex_unlock(&_mutex);
         
         // 同步播放器状态切换
-        while (self.status != SJAudioPlayerStatusIdle)
+        while (self.status != ZZAudioPlayerStatusIdle)
         {
             [NSThread sleepForTimeInterval:0.05];
         }
@@ -258,10 +249,7 @@ static UInt32 const kDefaultBufferSize = 4096;
 {
     self.playRate = playRate;
     
-    if (self.audioQueue)
-    {
-        [self.audioQueue setAudioQueuePlayRate:playRate];
-    }
+    [self.audioQueue setAudioQueuePlayRate:playRate];
 }
 
 
@@ -272,42 +260,23 @@ static UInt32 const kDefaultBufferSize = 4096;
     
     [self updateAudioDownloadPercentageWithDataLength:0];
     
-    [self setAudioPlayerStatus:SJAudioPlayerStatusWaiting];
+    [self setAudioPlayerStatus:ZZAudioPlayerStatusWaiting];
     
-    if (self.readDataFromLocalFile)
+    self.audioCache = [[SJAudioCache alloc] initWithURL:self.url];
+    
+    if ([self.audioCache isExistDiskCache])
     {
-        NSError *error = nil;
-        
-        if ([self.url isFileURL])
-        {
-            self.readFileHandle = [NSFileHandle fileHandleForReadingAtPath:self.url.path];
-            
-            self.contentLength = [[[NSFileManager defaultManager] attributesOfItemAtPath:self.url.path error:&error] fileSize];
-        }else
-        {
-            self.readFileHandle = [NSFileHandle fileHandleForReadingAtPath:self.cachePath];
-            
-            self.contentLength = [[[NSFileManager defaultManager] attributesOfItemAtPath:self.cachePath error:&error] fileSize];
-        }
-        
-        if (error)
-        {
-            if (DEBUG)
-            {
-                NSLog(@"SJAudioPlayer: failed to get attributes of the audio file.");
-            }
-        }
+        self.contentLength = [self.audioCache getAudioDiskCacheContentLength];
         
         self.didDownloadLength = self.contentLength;
         
         [self updateAudioDownloadPercentageWithDataLength:self.didDownloadLength];
-        
     }else
     {
         [self startDownloadAudioData];
     }
     
-    [self startPlayAudioData];
+    [self startPlayAudio];
 }
 
 
@@ -315,17 +284,17 @@ static UInt32 const kDefaultBufferSize = 4096;
 {
     NSThread *downloadThread = [[NSThread alloc] initWithTarget:self selector:@selector(downloadAudioData) object:nil];
     
-    [downloadThread setName:@"com.downloadData.thread"];
+    [downloadThread setName:@"com.audioplayer.download"];
     
     [downloadThread start];
 }
 
 
-- (void)startPlayAudioData
+- (void)startPlayAudio
 {
-    NSThread *playAudioThread = [[NSThread alloc] initWithTarget:self selector:@selector(playAudioData) object:nil];
+    NSThread *playAudioThread = [[NSThread alloc] initWithTarget:self selector:@selector(playAudio) object:nil];
     
-    [playAudioThread setName:@"com.playAudio.thread"];
+    [playAudioThread setName:@"com.audioplayer.play"];
     
     [playAudioThread start];
 }
@@ -334,39 +303,34 @@ static UInt32 const kDefaultBufferSize = 4096;
 - (void)downloadAudioData
 {
     self.finishedDownload = NO;
-    self.stopReadHTTPData = NO;
+    self.stopDownload     = NO;
     
     BOOL done = YES;
     
-    BOOL stopReadHTTPData = self.stopReadHTTPData;
+    BOOL stopDownload = self.stopDownload;
     
-    while (done && !self.finishedDownload && !stopReadHTTPData)
+    while (done && !self.finishedDownload && !stopDownload)
     {
-        if (!self.audioStream)
+        if (self.audioDownloader == nil)
         {
-            self.audioStream = [[SJAudioStream alloc] initWithURL:self.url byteOffset:self.byteOffset delegate:self];
+            self.audioDownloader = [SJAudioDownloader downloadAudioWithURL:self.url byteOffset:self.byteOffset delegate:self];
         }
         
-        done = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+        done = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:2.0]];
         
         // 避免读取音频数据的频率太快而导致CPU消耗过高
         [NSThread sleepForTimeInterval:0.02];
         
         pthread_mutex_lock(&_mutex);
-        stopReadHTTPData = self.stopReadHTTPData;
+        stopDownload = self.stopDownload;
         pthread_mutex_unlock(&_mutex);
     }
 }
 
-- (void)playAudioData
+
+
+- (void)playAudio
 {
-    NSError *openAudioFileStreamError = nil;
-    NSError *parseDataError = nil;
-    
-    self.isEof = NO;
-    self.stopRequired  = NO;
-    self.pauseRequired = NO;
-    
     while (self.started)
     {
         @autoreleasepool
@@ -380,41 +344,41 @@ static UInt32 const kDefaultBufferSize = 4096;
             
             NSData *data = nil;
             
-            if (self.readDataFromLocalFile)
+            if ([self.audioCache isExistDiskCache])
             {
-                data = [self.readFileHandle readDataOfLength:kDefaultBufferSize];
+                data = [self.audioCache getAudioDataWithLength:kDefaultBufferSize];
                 
                 pthread_mutex_lock(&_mutex);
                 self.readOffset += [data length];
-                pthread_mutex_unlock(&_mutex);
-                
                 if (self.readOffset >= self.contentLength)
                 {
                     self.isEof = YES;
                 }
+                pthread_mutex_unlock(&_mutex);
                 
             }else
             {
                 pthread_mutex_lock(&_mutex);
                 unsigned long long currentFileSize = self.currentFileSize;
+                unsigned long long readOffset = self.readOffset;
                 pthread_mutex_unlock(&_mutex);
                 
-                if (currentFileSize < (self.readOffset + kDefaultBufferSize))
+                if (currentFileSize < (readOffset + kDefaultBufferSize))
                 {
                     if (self.finishedDownload)
                     {
-                        data = [self.readFileHandle readDataOfLength:currentFileSize - self.readOffset];
+                        data = [self.audioCache getAudioDataWithLength:currentFileSize - readOffset];
                         
                         self.isEof = YES;
                         
                         if (currentFileSize < self.contentLength)
                         {
-                            [self removeAudioCache];
+                            [self.audioCache removeAudioCache];
                         }
                         
                     }else
                     {
-                        [self setAudioPlayerStatus:SJAudioPlayerStatusWaiting];
+                        [self setAudioPlayerStatus:ZZAudioPlayerStatusWaiting];
                         
                         pthread_mutex_lock(&_mutex);
                         pthread_cond_wait(&_cond, &_mutex);
@@ -422,7 +386,7 @@ static UInt32 const kDefaultBufferSize = 4096;
                     }
                 }else
                 {
-                    data = [self.readFileHandle readDataOfLength:kDefaultBufferSize];
+                    data = [self.audioCache getAudioDataWithLength:kDefaultBufferSize];
                 }
                 
                 pthread_mutex_lock(&_mutex);
@@ -432,35 +396,32 @@ static UInt32 const kDefaultBufferSize = 4096;
             
             if (data.length)
             {
-                [self setAudioPlayerStatus:SJAudioPlayerStatusPlaying];
+                [self setAudioPlayerStatus:ZZAudioPlayerStatusPlaying];
                 
-                if (!self.audioFileStream)
+                if (self.audioDecoder == nil)
                 {
-                    if (!self.readDataFromLocalFile)
-                    {
-                        self.contentLength = self.audioStream.contentLength;
-                    }
+                    self.audioDecoder = [SJAudioDecoder startDecodeAudioWithAudioType:self.url.pathExtension audioContentLength:self.contentLength delegate:self];
                     
-                    self.audioFileStream = [[SJAudioFileStream alloc] initWithFileType:[self getAudioFileTypeIdForFileExtension:self.url.pathExtension] fileSize:self.contentLength error:&openAudioFileStreamError];
-                    
-                    if (openAudioFileStreamError)
+                    if (self.audioDecoder == nil)
                     {
                         if (DEBUG)
                         {
-                            NSLog(@"SJAudioFileStream: failed to open AudioFileStream.");
+                            NSLog(@"SJAudioDecoder: failed to open AudioFileStream.");
                         }
                     }
-                    
-                    self.audioFileStream.delegate = self;
                 }
                 
-                [self.audioFileStream parseData:data error:&parseDataError];
+                BOOL success = [self.audioDecoder parseAudioData:data];
                 
-                if (parseDataError)
+                if (!success)
                 {
+                    self.started = NO;
+                    
+                    [self setAudioPlayerStatus:ZZAudioPlayerStatusError];
+                    
                     if (DEBUG)
                     {
-                        NSLog(@"SJAudioFileStream: failed to parse audio data.");
+                        NSLog(@"SJAudioDecoder: failed to parse audio data.");
                     }
                 }
             }
@@ -473,21 +434,25 @@ static UInt32 const kDefaultBufferSize = 4096;
             {
                 [self.audioQueue pause];
                 
-                [self setAudioPlayerStatus:SJAudioPlayerStatusPaused];
+                [self setAudioPlayerStatus:ZZAudioPlayerStatusPaused];
                 
                 pthread_mutex_lock(&_mutex);
                 pthread_cond_wait(&_cond, &_mutex);
                 pthread_mutex_unlock(&_mutex);
                 
-                if (self.stopRequired)
+                pthread_mutex_lock(&_mutex);
+                BOOL stopRequired = self.stopRequired;
+                pthread_mutex_unlock(&_mutex);
+                
+                if (stopRequired)
                 {
                     [self.audioQueue stop:YES];
                     
                     pthread_mutex_lock(&_mutex);
-                    self.stopReadHTTPData = YES;
+                    self.stopDownload = YES;
                     pthread_mutex_unlock(&_mutex);
                     
-                    if (!self.readDataFromLocalFile)
+                    if (![self.audioCache isExistDiskCache])
                     {
                         pthread_mutex_lock(&_mutex);
                         unsigned long long currentFileSize = self.currentFileSize;
@@ -495,10 +460,10 @@ static UInt32 const kDefaultBufferSize = 4096;
                         
                         if (currentFileSize < self.contentLength || self.contentLength == 0)
                         {
-                            [self removeAudioCache];
+                            [self.audioCache removeAudioCache];
                         }
                     }
-
+                    
                     break;
                     
                 }else
@@ -509,19 +474,23 @@ static UInt32 const kDefaultBufferSize = 4096;
                     self.pauseRequired = NO;
                     pthread_mutex_unlock(&_mutex);
                     
-                    [self setAudioPlayerStatus:SJAudioPlayerStatusPlaying];
+                    [self setAudioPlayerStatus:ZZAudioPlayerStatusPlaying];
                 }
             }
             
-            if (self.stopRequired)
+            pthread_mutex_lock(&_mutex);
+            BOOL stopRequired = self.stopRequired;
+            pthread_mutex_unlock(&_mutex);
+            
+            if (stopRequired)
             {
                 [self.audioQueue stop:YES];
                 
                 pthread_mutex_lock(&_mutex);
-                self.stopReadHTTPData = YES;
+                self.stopDownload = YES;
                 pthread_mutex_unlock(&_mutex);
                 
-                if (!self.readDataFromLocalFile)
+                if (![self.audioCache isExistDiskCache])
                 {
                     pthread_mutex_lock(&_mutex);
                     unsigned long long currentFileSize = self.currentFileSize;
@@ -529,42 +498,48 @@ static UInt32 const kDefaultBufferSize = 4096;
                     
                     if (currentFileSize < self.contentLength || self.contentLength == 0)
                     {
-                        [self removeAudioCache];
+                        [self.audioCache removeAudioCache];
                     }
                 }
                 
                 break;
             }
             
-            if (self.seekRequired)
+            pthread_mutex_lock(&_mutex);
+            BOOL seekRequired = self.seekRequired;
+            pthread_mutex_unlock(&_mutex);
+            
+            if (seekRequired)
             {
-                NSUInteger offset = [self.audioFileStream seekToTime:&_seekTime];
+                SInt64 offset = [self.audioDecoder seekToTime:&_seekTime];
                 
-                if (self.readDataFromLocalFile)
+                if ([self.audioCache isExistDiskCache])
                 {
                     pthread_mutex_lock(&_mutex);
                     self.readOffset = offset;
                     pthread_mutex_unlock(&_mutex);
                     
-                    [self.readFileHandle seekToFileOffset:offset];
+                    [self.audioCache seekToOffset:offset];
                 }else
                 {
-                    if (self.finishedDownload)
+                    pthread_mutex_lock(&_mutex);
+                    BOOL finishedDownload = self.finishedDownload;
+                    pthread_mutex_unlock(&_mutex);
+                    
+                    if (finishedDownload)
                     {
                         if (offset < self.byteOffset)
                         {
                             pthread_mutex_lock(&_mutex);
-                            [self.audioStream closeReadStream];
-                            self.audioStream = nil;
+                            [self.audioDownloader cancel];
+                            self.audioDownloader = nil;
                             self.byteOffset = offset;
-                            pthread_mutex_unlock(&_mutex);
-                            
-                            [self removeAudioCache];
-                            
                             self.readOffset = 0;
                             self.currentFileSize = 0;
-                            
                             self.finishedDownload = NO;
+                            pthread_mutex_unlock(&_mutex);
+                            
+                            [self.audioCache removeAudioCache];
                             
                             [self startDownloadAudioData];
                         }else
@@ -573,7 +548,7 @@ static UInt32 const kDefaultBufferSize = 4096;
                             self.readOffset = offset - self.byteOffset;
                             pthread_mutex_unlock(&_mutex);
                             
-                            [self.readFileHandle seekToFileOffset:self.readOffset];
+                            [self.audioCache seekToOffset:self.readOffset];
                         }
                     }else
                     {
@@ -584,36 +559,34 @@ static UInt32 const kDefaultBufferSize = 4096;
                         if (offset > didDownloadLength)
                         {
                             pthread_mutex_lock(&_mutex);
-                            [self.audioStream closeReadStream];
-                            self.audioStream = nil;
+                            [self.audioDownloader cancel];
+                            self.audioDownloader = nil;
                             self.byteOffset = offset;
-                            pthread_mutex_unlock(&_mutex);
-                            
-                            [self removeAudioCache];
-                            
                             self.readOffset = 0;
                             self.currentFileSize = 0;
+                            pthread_mutex_unlock(&_mutex);
+                            
+                            [self.audioCache removeAudioCache];
                         }else
                         {
                             if (offset < self.byteOffset)
                             {
                                 pthread_mutex_lock(&_mutex);
-                                [self.audioStream closeReadStream];
-                                self.audioStream = nil;
+                                [self.audioDownloader cancel];
+                                self.audioDownloader = nil;
                                 self.byteOffset = offset;
-                                pthread_mutex_unlock(&_mutex);
-                                
-                                [self removeAudioCache];
-                                
                                 self.readOffset = 0;
                                 self.currentFileSize = 0;
+                                pthread_mutex_unlock(&_mutex);
+                                
+                                [self.audioCache removeAudioCache];
                             }else
                             {
                                 pthread_mutex_lock(&_mutex);
                                 self.readOffset = offset - self.byteOffset;
                                 pthread_mutex_unlock(&_mutex);
                                 
-                                [self.readFileHandle seekToFileOffset:self.readOffset];
+                                [self.audioCache seekToOffset:self.readOffset];
                             }
                         }
                     }
@@ -623,19 +596,19 @@ static UInt32 const kDefaultBufferSize = 4096;
                 
                 [self.audioQueue reset];
                 
+                pthread_mutex_lock(&_mutex);
                 self.seekRequired = NO;
+                pthread_mutex_unlock(&_mutex);
             }
         }
     }
     
     if (self.isEof)
     {
-        [self setAudioPlayerStatus:SJAudioPlayerStatusFinished];
+        [self setAudioPlayerStatus:ZZAudioPlayerStatusFinished];
     }
     
     [self cleanUp];
-    
-    NSLog(@"❤️❤️❤️❤️❤️");
 }
 
 
@@ -650,17 +623,14 @@ static UInt32 const kDefaultBufferSize = 4096;
     [self.audioQueue disposeAudioQueue];
     self.audioQueue = nil;
     
-    [self.writeFileHandle closeFile];
-    self.writeFileHandle = nil;
+    [self.audioCache closeWriteAndReadCache];
+    self.audioCache = nil;
     
-    [self.readFileHandle closeFile];
-    self.readFileHandle  = nil;
+    [self.audioDownloader cancel];
+    self.audioDownloader = nil;
     
-    [self.audioStream closeReadStream];
-    self.audioStream = nil;
-    
-    [self.audioFileStream close];
-    self.audioFileStream = nil;
+    [self.audioDecoder endDecode];
+    self.audioDecoder = nil;
     
     self.byteOffset        = 0;
     self.duration          = 0.0;
@@ -670,13 +640,12 @@ static UInt32 const kDefaultBufferSize = 4096;
     self.didDownloadLength = 0;
     self.readOffset        = 0;
     self.currentFileSize   = 0;
-    self.cachePath         = nil;
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionRouteChangeNotification object:nil];
     
-    [self setAudioPlayerStatus:SJAudioPlayerStatusIdle];
+    [self setAudioPlayerStatus:ZZAudioPlayerStatusIdle];
 }
 
 
@@ -689,64 +658,12 @@ static UInt32 const kDefaultBufferSize = 4096;
     return self.timingOffset + self.audioQueue.playedTime;
 }
 
+
 - (BOOL)isPlaying
 {
-    return (self.status == SJAudioPlayerStatusPlaying);
+    return (self.status == ZZAudioPlayerStatusPlaying);
 }
 
-
-- (AudioFileTypeID)getAudioFileTypeIdForFileExtension:(NSString *)fileExtension
-{
-    AudioFileTypeID fileTypeHint = 0;
-    
-    if ([fileExtension isEqualToString:@"mp3"])
-    {
-        fileTypeHint = kAudioFileMP3Type;
-        
-    }else if ([fileExtension isEqualToString:@"wav"])
-    {
-        fileTypeHint = kAudioFileWAVEType;
-        
-    }else if ([fileExtension isEqualToString:@"aifc"])
-    {
-        fileTypeHint = kAudioFileAIFCType;
-        
-    }else if ([fileExtension isEqualToString:@"aiff"])
-    {
-        fileTypeHint = kAudioFileAIFFType;
-        
-    }else if ([fileExtension isEqualToString:@"m4a"])
-    {
-        fileTypeHint = kAudioFileM4AType;
-        
-    }else if ([fileExtension isEqualToString:@"mp4"])
-    {
-        fileTypeHint = kAudioFileMPEG4Type;
-        
-    }else if ([fileExtension isEqualToString:@"caf"])
-    {
-        fileTypeHint = kAudioFileCAFType;
-        
-    }else if ([fileExtension isEqualToString:@"aac"])
-    {
-        fileTypeHint = kAudioFileAAC_ADTSType;
-    }
-    
-    return fileTypeHint;
-}
-
-- (NSString *)getMD5StringForString:(NSString *) str
-{
-    const char *cStr = [str UTF8String];
-    
-    unsigned char result[16];
-    
-    CC_MD5(cStr, (CC_LONG)strlen(cStr), result);
-    
-    NSString *md5String = [NSString stringWithFormat:@"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",result[0], result[1], result[2], result[3],result[4], result[5], result[6], result[7],result[8], result[9], result[10], result[11],result[12], result[13], result[14], result[15]];
-    
-    return md5String;
-}
 
 
 - (void)updateAudioDownloadPercentageWithDataLength:(unsigned long long)dataLength
@@ -770,7 +687,7 @@ static UInt32 const kDefaultBufferSize = 4096;
 }
 
 
-- (void)setAudioPlayerStatus:(SJAudioPlayerStatus)status
+- (void)setAudioPlayerStatus:(ZZAudioPlayerStatus)status
 {
     if (self.status == status)
     {
@@ -788,120 +705,57 @@ static UInt32 const kDefaultBufferSize = 4096;
     }
 }
 
-- (void)removeAudioCache
+
+
+#pragma mark- SJAudioDownloaderDelegate
+- (void)downloader:(SJAudioDownloader *)downloader getAudioContentLength:(unsigned long long)contentLength
 {
-    BOOL success = [[NSFileManager defaultManager] removeItemAtPath:self.cachePath error:nil];
-    
-    if (!success)
-    {
-        if (DEBUG)
-        {
-            NSLog(@"SJAudioPlayer: failed to remove file.");
-        }
-    }
-    
-    [self.writeFileHandle closeFile];
-    self.writeFileHandle = nil;
-    [self.readFileHandle closeFile];
-    self.readFileHandle = nil;
+    self.contentLength = contentLength;
 }
 
 
-#pragma mark- SJAudioStreamDelegate
-- (void)audioStreamHasBytesAvailable:(SJAudioStream *)audioStream
+- (void)downloader:(SJAudioDownloader *)downloader didReceiveData:(NSData *)data
 {
-    if (self.stopReadHTTPData)
+    if (self.stopDownload)
     {
         return;
     }
     
-    NSError *readDataError = nil;
-    
-    // 每次读取 20KB 的数据（长度太小，`audioStreamHasBytesAvailable`方法调用次数太频繁，会导致CPU占用率过高）
-    NSData *data = [self.audioStream readDataWithMaxLength:(kDefaultBufferSize * 5) error:&readDataError];
-    
-    if (readDataError)
-    {
-        if (DEBUG)
-        {
-            NSLog(@"SJAudioStream: failed to read data.");
-        }
-    }
-    
-    if (self.writeFileHandle == nil)
-    {
-        NSString *directryPath = [[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:@"Audio"];
-        
-        if (![[NSFileManager defaultManager] fileExistsAtPath:directryPath])
-        {
-            BOOL success = [[NSFileManager defaultManager] createDirectoryAtPath:directryPath withIntermediateDirectories:YES attributes:nil error:nil];
-            
-            if (!success)
-            {
-                if (DEBUG)
-                {
-                    NSLog(@"SJAudioStream: failed to create directry.");
-                }
-            }
-        }
-        
-        NSString *filePath = [directryPath stringByAppendingPathComponent:[self getMD5StringForString:self.url.absoluteString]];
-        
-        BOOL success = [[NSFileManager defaultManager] createFileAtPath:filePath contents:nil attributes:nil];
-        
-        if (!success)
-        {
-            if (DEBUG)
-            {
-                NSLog(@"SJAudioStream: failed to create file.");
-            }
-        }
-        
-        self.cachePath = filePath;
-        
-        self.writeFileHandle = [NSFileHandle fileHandleForWritingAtPath:filePath];
-        
-        self.readFileHandle = [NSFileHandle fileHandleForReadingAtPath:filePath];
-    }
-    
-    [self.writeFileHandle seekToEndOfFile];
-    
-    [self.writeFileHandle writeData:data];
+    [self.audioCache storeAudioData:data];
     
     pthread_mutex_lock(&_mutex);
+    
     self.currentFileSize += [data length];
+    
     unsigned long long unreadDataLength = (self.currentFileSize - self.readOffset);
-    pthread_mutex_unlock(&_mutex);
     
     self.didDownloadLength = self.currentFileSize + self.byteOffset;
     
     if (unreadDataLength >= kDefaultBufferSize)
     {
-        if (self.status == SJAudioPlayerStatusWaiting)
+        if (self.status == ZZAudioPlayerStatusWaiting)
         {
-            pthread_mutex_lock(&_mutex);
             pthread_cond_signal(&_cond);
-            pthread_mutex_unlock(&_mutex);
         }
     }
+    
+    pthread_mutex_unlock(&_mutex);
     
     [self updateAudioDownloadPercentageWithDataLength:self.didDownloadLength];
 }
 
-- (void)audioStreamEndEncountered:(SJAudioStream *)audioStream
+
+- (void)downloaderDidFinished:(SJAudioDownloader *)downloader
 {
     self.finishedDownload = YES;
-    
-    [self.writeFileHandle closeFile];
 }
 
-- (void)audioStreamErrorOccurred:(SJAudioStream *)audioStream
+
+- (void)downloaderErrorOccurred:(SJAudioDownloader *)downloader
 {
-    [self.audioStream closeReadStream];
-    
     [NSThread sleepForTimeInterval:1.0];
     
-    self.audioStream = [[SJAudioStream alloc] initWithURL:self.url byteOffset:self.currentFileSize delegate:self];
+    self.audioDownloader = [SJAudioDownloader downloadAudioWithURL:self.url byteOffset:self.currentFileSize delegate:self];
     
     if (DEBUG)
     {
@@ -909,8 +763,9 @@ static UInt32 const kDefaultBufferSize = 4096;
     }
 }
 
-#pragma mark- SJAudioFileStreamDelegate
-- (void)audioFileStream:(SJAudioFileStream *)audioFileStream receiveInputData:(const void *)inputData numberOfBytes:(UInt32)numberOfBytes numberOfPackets:(UInt32)numberOfPackets packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions
+
+#pragma mark- SJAudioDecoderDelegate
+- (void)audioDecoder:(SJAudioDecoder *)audioDecoder receiveInputData:(const void *)inputData numberOfBytes:(UInt32)numberOfBytes numberOfPackets:(UInt32)numberOfPackets packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions
 {
     BOOL success = [self.audioQueue playData:[NSData dataWithBytes:inputData length:numberOfBytes] packetCount:numberOfPackets packetDescriptions:packetDescriptions isEof:self.isEof];
     
@@ -924,18 +779,18 @@ static UInt32 const kDefaultBufferSize = 4096;
 }
 
 
-- (void)audioFileStreamReadyToProducePackets:(SJAudioFileStream *)audioFileStream
+- (void)audioDecoder:(SJAudioDecoder *)audioDecoder readyToProducePacketsAndGetMagicCookieData:(NSData *)magicCookieData
 {
-    NSData *magicCookie = [self.audioFileStream getMagicCookieData];
+    AudioStreamBasicDescription format = self.audioDecoder.format;
     
-    AudioStreamBasicDescription format = self.audioFileStream.format;
-    
-    self.audioQueue = [[SJAudioQueue alloc] initWithFormat:format bufferSize:kDefaultBufferSize macgicCookie:magicCookie];
+    self.audioQueue = [[SJAudioQueue alloc] initWithFormat:format bufferSize:kDefaultBufferSize macgicCookie:magicCookieData];
     
     [self.audioQueue setAudioQueuePlayRate:self.playRate];
     
-    self.duration = self.audioFileStream.duration;
+    self.duration = self.audioDecoder.duration;
 }
+
+
 
 
 #pragma mark- AVAudioSessionInterruptionNotification
@@ -946,20 +801,20 @@ static UInt32 const kDefaultBufferSize = 4096;
     if (interruptionType == AVAudioSessionInterruptionTypeBegan)
     {
         // AudioQueue此时已经被系统暂停，这个时候AudioQueue由于没有可以复用的Buffer，会阻塞播放音频的线程。
-        if (self.status == SJAudioPlayerStatusPlaying || self.status == SJAudioPlayerStatusWaiting)
+        if (self.status == ZZAudioPlayerStatusPlaying || self.status == ZZAudioPlayerStatusWaiting)
         {
             self.pausedByInterrupt = YES;
             
-            [self setAudioPlayerStatus:SJAudioPlayerStatusPaused];
+            [self setAudioPlayerStatus:ZZAudioPlayerStatusPaused];
         }
         
     }else if (interruptionType == AVAudioSessionInterruptionTypeEnded)
     {
-        if (self.status == SJAudioPlayerStatusPaused && self.pausedByInterrupt)
+        if (self.status == ZZAudioPlayerStatusPaused && self.pausedByInterrupt)
         {
             [self.audioQueue resume];
             
-            [self setAudioPlayerStatus:SJAudioPlayerStatusPlaying];
+            [self setAudioPlayerStatus:ZZAudioPlayerStatusPlaying];
             
             self.pausedByInterrupt = NO;
         }

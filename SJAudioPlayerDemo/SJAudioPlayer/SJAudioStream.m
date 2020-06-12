@@ -8,8 +8,6 @@
 
 #import "SJAudioStream.h"
 #import <CFNetwork/CFNetwork.h>
-#import <pthread.h>
-
 
 @interface SJAudioStream ()
 

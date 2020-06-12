@@ -10,8 +10,9 @@
 #import "SJAudioPlayer/SJAudioPlayer.h"
 #import "SDWebImage/UIImageView+WebCache.h"
 #import <MediaPlayer/MediaPlayer.h>
+#import "SJAudioPlayer/ZZAudioPlayer.h"
 
-@interface PlayMusicViewController ()<SJAudioPlayerDelegate>
+@interface PlayMusicViewController ()<SJAudioPlayerDelegate, ZZAudioPlayerDelegate>
 
 @property (weak, nonatomic) IBOutlet UIImageView *backgroundImageView;
 
@@ -33,7 +34,9 @@
 
 @property (weak, nonatomic) IBOutlet UIButton *playOrPauseButton;
 
-@property (nonatomic, strong) SJAudioPlayer *player;
+//@property (nonatomic, strong) SJAudioPlayer *player;
+
+@property (nonatomic, strong) ZZAudioPlayer *player;
 
 @property (nonatomic, strong) NSArray *musicList;
 
@@ -69,17 +72,25 @@
     /*
      播放远程音频文件
     */
-    self.musicList = @[@{@"music_url":@"http://music.163.com/song/media/outer/url?id=166321.mp3", @"pic":@"http://imgsrc.baidu.com/forum/w=580/sign=0828c5ea79ec54e741ec1a1689399bfd/e3d9f2d3572c11df80fbf7f7612762d0f703c238.jpg", @"artist":@"毛阿敏", @"music_name":@"爱上张无忌"},
-                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=27902537.mp3", @"pic":@"http://attach.bbs.miui.com/forum/201401/10/225901w011gxc00mz0gao9.jpg", @"artist":@"杨宗纬 / 叶蓓", @"music_name":@"我们好像在哪见过"},
-                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=166317.mp3", @"pic":@"https://imgcache.cjmx.com/tv/201605/20160522195825907.jpg", @"artist":@"金学峰", @"music_name":@"心爱"}];
+//    self.musicList = @[@{@"music_url":@"http://music.163.com/song/media/outer/url?id=166321.mp3", @"pic":@"http://imgsrc.baidu.com/forum/w=580/sign=0828c5ea79ec54e741ec1a1689399bfd/e3d9f2d3572c11df80fbf7f7612762d0f703c238.jpg", @"artist":@"毛阿敏", @"music_name":@"爱上张无忌"},
+//                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=27902537.mp3", @"pic":@"http://attach.bbs.miui.com/forum/201401/10/225901w011gxc00mz0gao9.jpg", @"artist":@"杨宗纬 / 叶蓓", @"music_name":@"我们好像在哪见过"},
+//                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=166317.mp3", @"pic":@"https://imgcache.cjmx.com/tv/201605/20160522195825907.jpg", @"artist":@"金学峰", @"music_name":@"心爱"}];
     
+    self.musicList = @[
+                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=29723022.mp3", @"pic":@"https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=2904967709,1533413265&fm=26&gp=0.jpg", @"artist":@"刘德华", @"music_name":@"暗里着迷"},
+                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=235690.mp3", @"pic":@"https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=2223849947,4164002656&fm=26&gp=0.jpg", @"artist":@"关淑怡", @"music_name":@"难得有情人"},
+                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=263720.mp3", @"pic":@"https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=806489170,327517180&fm=26&gp=0.jpg", @"artist":@"刘小慧", @"music_name":@"初恋情人"},
+                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=166321.mp3", @"pic":@"http://imgsrc.baidu.com/forum/w=580/sign=0828c5ea79ec54e741ec1a1689399bfd/e3d9f2d3572c11df80fbf7f7612762d0f703c238.jpg", @"artist":@"毛阿敏", @"music_name":@"爱上张无忌"}
+                       ];
     
     self.currentIndex = 0;
     self.currentMusicInfo = self.musicList.firstObject;
     
     NSURL *url = [NSURL URLWithString:self.currentMusicInfo[@"music_url"]];
     
-    self.player = [[SJAudioPlayer alloc] initWithUrl:url delegate:self];
+    //self.player = [[SJAudioPlayer alloc] initWithUrl:url delegate:self];
+    
+    self.player = [[ZZAudioPlayer alloc] initWithUrl:url delegate:self];
     
     [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(updateProgress) userInfo:nil repeats:YES];
 }
@@ -138,7 +149,9 @@
     
     NSURL *url = [NSURL URLWithString:self.currentMusicInfo[@"music_url"]];
     
-    self.player = [[SJAudioPlayer alloc] initWithUrl:url delegate:self];
+    //self.player = [[SJAudioPlayer alloc] initWithUrl:url delegate:self];
+    
+    self.player = [[ZZAudioPlayer alloc] initWithUrl:url delegate:self];
     
     [self.player play];
 }
@@ -159,7 +172,9 @@
     
     NSURL *url = [NSURL URLWithString:self.currentMusicInfo[@"music_url"]];
     
-    self.player = [[SJAudioPlayer alloc] initWithUrl:url delegate:self];
+    //self.player = [[SJAudioPlayer alloc] initWithUrl:url delegate:self];
+    
+    self.player = [[ZZAudioPlayer alloc] initWithUrl:url delegate:self];
     
     [self.player play];
 }
@@ -216,26 +231,92 @@
 
 
 #pragma mark- SJAudioPlayerDelegate
-- (void)audioPlayer:(SJAudioPlayer *)audioPlayer updateAudioDownloadPercentage:(float)percentage
+//- (void)audioPlayer:(SJAudioPlayer *)audioPlayer updateAudioDownloadPercentage:(float)percentage
+//{
+//    self.progressView.progress = percentage;
+//}
+//
+//- (void)audioPlayer:(SJAudioPlayer *)audioPlayer statusDidChanged:(SJAudioPlayerStatus)status
+//{
+//    switch (status)
+//    {
+//        case SJAudioPlayerStatusIdle:
+//        {
+//            if (DEBUG)
+//            {
+//                NSLog(@"SJAudioPlayer: Idle");
+//            }
+//
+//            self.playOrPauseButton.selected = NO;
+//        }
+//            break;
+//        case SJAudioPlayerStatusWaiting:
+//        {
+//            if (DEBUG)
+//            {
+//                NSLog(@"SJAudioPlayer: Waiting");
+//            }
+//        }
+//            break;
+//        case SJAudioPlayerStatusPlaying:
+//        {
+//            if (DEBUG)
+//            {
+//                NSLog(@"SJAudioPlayer: Playing");
+//            }
+//
+//            self.playOrPauseButton.selected = YES;
+//        }
+//            break;
+//        case SJAudioPlayerStatusPaused:
+//        {
+//            if (DEBUG)
+//            {
+//                NSLog(@"SJAudioPlayer: Paused");
+//            }
+//
+//            self.playOrPauseButton.selected = NO;
+//        }
+//            break;
+//        case SJAudioPlayerStatusFinished:
+//        {
+//            if (DEBUG)
+//            {
+//                NSLog(@"SJAudioPlayer: Finished");
+//            }
+//
+//            self.playOrPauseButton.selected = NO;
+//
+//            [self nextMusic:nil];
+//        }
+//            break;
+//        default:
+//            break;
+//    }
+//}
+
+
+#pragma mark- ZZAudioPlayerDelegate
+- (void)audioPlayer:(ZZAudioPlayer *)audioPlayer updateAudioDownloadPercentage:(float)percentage
 {
     self.progressView.progress = percentage;
 }
 
-- (void)audioPlayer:(SJAudioPlayer *)audioPlayer statusDidChanged:(SJAudioPlayerStatus)status
+- (void)audioPlayer:(ZZAudioPlayer *)audioPlayer statusDidChanged:(ZZAudioPlayerStatus)status
 {
     switch (status)
     {
-        case SJAudioPlayerStatusIdle:
+        case ZZAudioPlayerStatusIdle:
         {
             if (DEBUG)
             {
                 NSLog(@"SJAudioPlayer: Idle");
             }
-            
+
             self.playOrPauseButton.selected = NO;
         }
             break;
-        case SJAudioPlayerStatusWaiting:
+        case ZZAudioPlayerStatusWaiting:
         {
             if (DEBUG)
             {
@@ -243,35 +324,35 @@
             }
         }
             break;
-        case SJAudioPlayerStatusPlaying:
+        case ZZAudioPlayerStatusPlaying:
         {
             if (DEBUG)
             {
                 NSLog(@"SJAudioPlayer: Playing");
             }
-            
+
             self.playOrPauseButton.selected = YES;
         }
             break;
-        case SJAudioPlayerStatusPaused:
+        case ZZAudioPlayerStatusPaused:
         {
             if (DEBUG)
             {
                 NSLog(@"SJAudioPlayer: Paused");
             }
-            
+
             self.playOrPauseButton.selected = NO;
         }
             break;
-        case SJAudioPlayerStatusFinished:
+        case ZZAudioPlayerStatusFinished:
         {
             if (DEBUG)
             {
                 NSLog(@"SJAudioPlayer: Finished");
             }
-            
+
             self.playOrPauseButton.selected = NO;
-            
+
             [self nextMusic:nil];
         }
             break;
