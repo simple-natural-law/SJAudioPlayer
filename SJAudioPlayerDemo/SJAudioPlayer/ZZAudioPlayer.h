@@ -65,7 +65,6 @@ typedef NS_ENUM(NSUInteger, ZZAudioPlayerError)
 
 - (BOOL)isPlaying;
 
-// playRate是0.5~2.0之间的值，默认为1.0。
 - (void)setAudioPlayRate:(float)playRate;
 
 @end
