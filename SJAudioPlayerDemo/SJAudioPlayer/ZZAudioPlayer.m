@@ -23,8 +23,6 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
     pthread_cond_t  _cond;
 }
 
-@property (nonatomic, strong) dispatch_semaphore_t semaphore;
-
 @property (nonatomic, weak) id<ZZAudioPlayerDelegate> delegate;
 
 @property (nonatomic, strong) NSURL *url;
@@ -111,8 +109,6 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
         self.delegate = delegate;
         self.playRate = 1.0;
         
-        self.semaphore = dispatch_semaphore_create(1);
-        
         pthread_mutex_init(&_mutex, NULL);
         pthread_cond_init(&_cond, NULL);
     }
@@ -151,6 +147,8 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterreption:) name:AVAudioSessionInterruptionNotification object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioSessionRouteDidChange:) name:AVAudioSessionRouteChangeNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillTerminate:) name:UIApplicationWillTerminateNotification object:nil];
 }
 
 
@@ -248,7 +246,10 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
 {
     self.playRate = playRate;
     
-    [self.audioQueue setAudioQueuePlayRate:playRate];
+    if (self.audioQueue)
+    {
+        [self.audioQueue setAudioQueuePlayRate:playRate];
+    }
 }
 
 
@@ -306,9 +307,7 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
     
     BOOL done = YES;
     
-    BOOL stopDownload = self.stopDownload;
-    
-    while (done && !self.finishedDownload && !stopDownload)
+    while (done && !self.finishedDownload && !self.stopDownload)
     {
         if (self.audioDownloader == nil)
         {
@@ -317,12 +316,8 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
         
         done = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:2.0]];
         
-        // 避免读取音频数据的频率太快而导致CPU消耗过高
-        [NSThread sleepForTimeInterval:0.02];
-        
-        pthread_mutex_lock(&_mutex);
-        stopDownload = self.stopDownload;
-        pthread_mutex_unlock(&_mutex);
+//        // 避免读取音频数据的频率太快而导致CPU消耗过高
+//        [NSThread sleepForTimeInterval:0.02];
     }
 }
 
@@ -447,9 +442,7 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
                 {
                     [self.audioQueue stop:YES];
                     
-                    pthread_mutex_lock(&_mutex);
                     self.stopDownload = YES;
-                    pthread_mutex_unlock(&_mutex);
                     
                     if (![self.audioCache isExistDiskCache])
                     {
@@ -485,9 +478,7 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
             {
                 [self.audioQueue stop:YES];
                 
-                pthread_mutex_lock(&_mutex);
                 self.stopDownload = YES;
-                pthread_mutex_unlock(&_mutex);
                 
                 if (![self.audioCache isExistDiskCache])
                 {
@@ -521,11 +512,7 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
                     [self.audioCache seekToOffset:offset];
                 }else
                 {
-                    pthread_mutex_lock(&_mutex);
-                    BOOL finishedDownload = self.finishedDownload;
-                    pthread_mutex_unlock(&_mutex);
-                    
-                    if (finishedDownload)
+                    if (self.finishedDownload)
                     {
                         if (offset < self.byteOffset)
                         {
@@ -643,6 +630,8 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionRouteChangeNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillTerminateNotification object:nil];
     
     [self setAudioPlayerStatus:ZZAudioPlayerStatusIdle];
 }
@@ -820,6 +809,7 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
     }
 }
 
+
 #pragma mark- AVAudioSessionRouteChangeNotification
 - (void)audioSessionRouteDidChange:(NSNotification *)notification
 {
@@ -840,6 +830,13 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
             [self pause];
         }
     }
+}
+
+
+#pragma mark- UIApplicationWillTerminateNotification
+- (void)applicationWillTerminate:(NSNotification *)notification
+{
+    [self stop];
 }
 
 @end
