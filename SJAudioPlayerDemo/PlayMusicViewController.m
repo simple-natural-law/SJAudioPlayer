@@ -356,6 +356,14 @@
             [self nextMusic:nil];
         }
             break;
+        case ZZAudioPlayerStatusError:
+        {
+            if (DEBUG)
+            {
+                NSLog(@"SJAudioPlayer: Error");
+            }
+        }
+            break;
         default:
             break;
     }

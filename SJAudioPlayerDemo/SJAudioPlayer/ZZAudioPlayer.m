@@ -13,11 +13,13 @@
 #import "SJAudioDecoder.h"
 #import "SJAudioQueue.h"
 #import "SJAudioCache.h"
+#import <UIKit/UIApplication.h>
 
 
 static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
 
-static NSString *applicationWillTerminateNotification = @"UIApplicationWillTerminateNotification";
+static NSString * const SJAudioPlayerErrorDomin = @"com.SJAudioPlayer.error";
+
 
 @interface ZZAudioPlayer ()<SJAudioDecoderDelegate, SJAudioDownloaderDelegate>
 {
@@ -77,6 +79,8 @@ static NSString *applicationWillTerminateNotification = @"UIApplicationWillTermi
 @property (nonatomic, assign) unsigned long long currentFileSize;
 
 @property (nonatomic, assign) float playRate;
+
+@property (nonatomic, assign) NSUInteger downloadRepeatCount;
 
 @end
 
@@ -150,7 +154,7 @@ static NSString *applicationWillTerminateNotification = @"UIApplicationWillTermi
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioSessionRouteDidChange:) name:AVAudioSessionRouteChangeNotification object:nil];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillTerminate:) name:applicationWillTerminateNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillTerminate:) name:UIApplicationWillTerminateNotification object:nil];
 }
 
 
@@ -630,7 +634,7 @@ static NSString *applicationWillTerminateNotification = @"UIApplicationWillTermi
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionRouteChangeNotification object:nil];
     
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:applicationWillTerminateNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillTerminateNotification object:nil];
     
     [self setAudioPlayerStatus:ZZAudioPlayerStatusIdle];
 }
@@ -742,11 +746,21 @@ static NSString *applicationWillTerminateNotification = @"UIApplicationWillTermi
 {
     [NSThread sleepForTimeInterval:1.0];
     
-    self.audioDownloader = [SJAudioDownloader downloadAudioWithURL:self.url byteOffset:self.currentFileSize delegate:self];
+    self.downloadRepeatCount++;
     
-    if (DEBUG)
+    if (self.downloadRepeatCount == 4)
     {
-        NSLog(@"SJAudioStream: error occurred.");
+        [self setAudioPlayerStatus:ZZAudioPlayerStatusError];
+        
+        if ([self.delegate respondsToSelector:@selector(audioPlayer:errorOccurred:)])
+        {
+            NSError *error = [NSError errorWithDomain:NSCocoaErrorDomain code:-6000 userInfo:@{NSLocalizedDescriptionKey: @"SJAudioPlayer: error downloading audio!",NSURLErrorFailingURLErrorKey: self.url}];
+            
+            [self.delegate audioPlayer:self errorOccurred:error];
+        }
+    }else
+    {
+        self.audioDownloader = [SJAudioDownloader downloadAudioWithURL:self.url byteOffset:self.byteOffset delegate:self];
     }
 }
 

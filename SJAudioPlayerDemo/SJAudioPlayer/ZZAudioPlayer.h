@@ -38,6 +38,8 @@ typedef NS_ENUM(NSUInteger, ZZAudioPlayerError)
 
 - (void)audioPlayer:(ZZAudioPlayer *)audioPlayer statusDidChanged:(ZZAudioPlayerStatus)status;
 
+- (void)audioPlayer:(ZZAudioPlayer *)audioPlayer errorOccurred:(NSError *)error;
+
 @end
 
 
