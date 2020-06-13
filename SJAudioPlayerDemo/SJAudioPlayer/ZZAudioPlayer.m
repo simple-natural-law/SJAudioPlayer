@@ -18,7 +18,7 @@
 
 static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
 
-static NSString * const SJAudioPlayerErrorDomin = @"com.SJAudioPlayer.error";
+static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
 
 
 @interface ZZAudioPlayer ()<SJAudioDecoderDelegate, SJAudioDownloaderDelegate>
@@ -127,28 +127,10 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.SJAudioPlayer.error";
 {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     
-    NSError *error = nil;
+    [audioSession setCategory:AVAudioSessionCategoryPlayback error:nil];
     
-    [audioSession setCategory:AVAudioSessionCategoryPlayback error:&error];
+    [audioSession setActive:YES error:nil];
     
-    if (error)
-    {
-        if (DEBUG)
-        {
-            NSLog(@"SJAudioPlayer: error setting audio session category! %@",error);
-        }
-    }else
-    {
-        [audioSession setActive:YES error:&error];
-        
-        if (error)
-        {
-            if (DEBUG)
-            {
-                NSLog(@"SJAudioPlayer: error setting audio session active! %@", error);
-            }
-        }
-    }
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterreption:) name:AVAudioSessionInterruptionNotification object:nil];
     
@@ -189,17 +171,7 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.SJAudioPlayer.error";
 {
     if (self.pausedByInterrupt && self.status == ZZAudioPlayerStatusPaused)
     {
-        NSError *error = nil;
-        
-        [[AVAudioSession sharedInstance] setActive:YES error:&error];
-        
-        if (error)
-        {
-            if (DEBUG)
-            {
-                NSLog(@"SJAudioPlayer: Error setting audio session active! %@", error);
-            }
-        }
+        [[AVAudioSession sharedInstance] setActive:YES error:nil];
         
         [self.audioQueue resume];
         
@@ -233,7 +205,7 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.SJAudioPlayer.error";
         // 同步播放器状态切换
         while (self.status != ZZAudioPlayerStatusIdle)
         {
-            [NSThread sleepForTimeInterval:0.05];
+            [NSThread sleepForTimeInterval:0.1];
         }
     }
 }
@@ -321,6 +293,8 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.SJAudioPlayer.error";
         }
         
         done = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:2.0]];
+        
+        [NSThread sleepForTimeInterval:0.005];
     }
 }
 
@@ -754,9 +728,12 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.SJAudioPlayer.error";
         
         if ([self.delegate respondsToSelector:@selector(audioPlayer:errorOccurred:)])
         {
-            NSError *error = [NSError errorWithDomain:NSCocoaErrorDomain code:-6000 userInfo:@{NSLocalizedDescriptionKey: @"SJAudioPlayer: error downloading audio!",NSURLErrorFailingURLErrorKey: self.url}];
-            
-            [self.delegate audioPlayer:self errorOccurred:error];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                
+                NSError *error = [NSError errorWithDomain:NSCocoaErrorDomain code:-6000 userInfo:@{NSLocalizedDescriptionKey: @"SJAudioDownloader: error downloading audio!",NSURLErrorFailingURLErrorKey: self.url}];
+                
+                [self.delegate audioPlayer:self errorOccurred:error];
+            });
         }
     }else
     {
