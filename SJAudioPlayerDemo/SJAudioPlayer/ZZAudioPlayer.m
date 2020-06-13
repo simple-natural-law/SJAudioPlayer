@@ -17,6 +17,8 @@
 
 static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
 
+static NSString *applicationWillTerminateNotification = @"UIApplicationWillTerminateNotification";
+
 @interface ZZAudioPlayer ()<SJAudioDecoderDelegate, SJAudioDownloaderDelegate>
 {
     pthread_mutex_t _mutex;
@@ -148,7 +150,7 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioSessionRouteDidChange:) name:AVAudioSessionRouteChangeNotification object:nil];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillTerminate:) name:UIApplicationWillTerminateNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillTerminate:) name:applicationWillTerminateNotification object:nil];
 }
 
 
@@ -315,9 +317,6 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
         }
         
         done = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:2.0]];
-        
-//        // 避免读取音频数据的频率太快而导致CPU消耗过高
-//        [NSThread sleepForTimeInterval:0.02];
     }
 }
 
@@ -631,7 +630,7 @@ static UInt32 const kDefaultBufferSize = 4096; // 1024 * 4
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionRouteChangeNotification object:nil];
     
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillTerminateNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:applicationWillTerminateNotification object:nil];
     
     [self setAudioPlayerStatus:ZZAudioPlayerStatusIdle];
 }
