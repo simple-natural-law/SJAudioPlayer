@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="eVa-CY-Nae">
-    <device id="retina5_9" orientation="portrait">
-        <adaptation id="fullscreen"/>
-    </device>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="16097" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="eVa-CY-Nae">
+    <device id="retina5_9" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14460.20"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -233,9 +231,6 @@
                                                     <constraint firstAttribute="height" constant="32" id="WSa-Ma-eSy"/>
                                                 </constraints>
                                                 <color key="maximumTrackTintColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                                <connections>
-                                                    <action selector="seek:" destination="eVa-CY-Nae" eventType="valueChanged" id="xxR-2z-61F"/>
-                                                </connections>
                                             </slider>
                                         </subviews>
                                         <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
@@ -341,13 +336,13 @@
     <resources>
         <image name="big_pause_button" width="60" height="60"/>
         <image name="big_play_button" width="60" height="60"/>
-        <image name="empty_heart" width="23" height="21"/>
-        <image name="menu" width="25" height="17"/>
-        <image name="more_icon" width="25" height="23"/>
+        <image name="empty_heart" width="23" height="21.5"/>
+        <image name="menu" width="25" height="17.5"/>
+        <image name="more_icon" width="25" height="23.5"/>
         <image name="music_placeholder" width="308" height="308"/>
         <image name="next_song" width="20" height="28"/>
         <image name="prev_song" width="20" height="28"/>
-        <image name="red_heart" width="23" height="21"/>
-        <image name="shuffle_icon" width="17" height="14"/>
+        <image name="red_heart" width="23" height="21.5"/>
+        <image name="shuffle_icon" width="17.5" height="14"/>
     </resources>
 </document>

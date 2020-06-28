@@ -278,7 +278,7 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
         
         done = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:2.0]];
         
-        [NSThread sleepForTimeInterval:0.01];
+        [NSThread sleepForTimeInterval:0.005];
     }
 }
 
@@ -456,7 +456,10 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
     [self.audioCache closeWriteAndReadCache];
     self.audioCache = nil;
     
-    [self.audioDownloader cancelDownload];
+    if (!self.finishedDownload)
+    {
+        [self.audioDownloader cancelDownload];
+    }
     self.audioDownloader = nil;
     
     [self.audioDecoder endDecode];
@@ -548,6 +551,8 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
                 
                 [self.audioCache removeAudioCache];
                 
+                self.audioCache = [[SJAudioCache alloc] initWithURL:self.url];
+                
                 self.readOffset = 0;
                 self.currentFileSize = 0;
                 self.finishedDownload = NO;
@@ -577,6 +582,8 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
 
                 [self.audioCache removeAudioCache];
                 
+                self.audioCache = [[SJAudioCache alloc] initWithURL:self.url];
+                
                 self.readOffset = 0;
                 self.currentFileSize = 0;
                 
@@ -591,6 +598,8 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
                     pthread_mutex_unlock(&_mutex);
 
                     [self.audioCache removeAudioCache];
+                    
+                    self.audioCache = [[SJAudioCache alloc] initWithURL:self.url];
                     
                     self.readOffset = 0;
                     self.currentFileSize = 0;

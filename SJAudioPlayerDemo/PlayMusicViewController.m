@@ -59,6 +59,8 @@
     // 允许接受远程控制
     [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
     
+    [self.slider addTarget:self action:@selector(sliderValueChanged:forEvent:) forControlEvents:UIControlEventValueChanged];
+    
     /*
      播放本地音频文件
      
@@ -195,10 +197,12 @@
     }
 }
 
-
-- (IBAction)seek:(UISlider *)sender
+- (void)sliderValueChanged:(UISlider *)slider forEvent:(UIEvent *)event
 {
-    [self.player seekToProgress:(sender.value * self.player.duration)];
+    if ([[event allTouches] anyObject].phase == UITouchPhaseEnded)
+    {
+        [self.player seekToProgress:(slider.value * self.player.duration)];
+    }
 }
 
 
