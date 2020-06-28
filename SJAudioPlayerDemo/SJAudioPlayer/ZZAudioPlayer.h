@@ -17,16 +17,7 @@ typedef NS_ENUM(NSUInteger, ZZAudioPlayerStatus)
     ZZAudioPlayerStatusWaiting  = 1,
     ZZAudioPlayerStatusPlaying  = 2,
     ZZAudioPlayerStatusPaused   = 3,
-    ZZAudioPlayerStatusFinished = 4,
-    ZZAudioPlayerStatusError    = 5
-};
-
-
-typedef NS_ENUM(NSUInteger, ZZAudioPlayerError)
-{
-    ZZAudioPlayerDownloaderError = 0,
-    ZZAudioPlayerDecoderError = 1,
-    ZZAudioPlayerAudioQueueError = 2
+    ZZAudioPlayerStatusFinished = 4
 };
 
 
@@ -53,6 +44,8 @@ typedef NS_ENUM(NSUInteger, ZZAudioPlayerError)
 
 @property (nonatomic, readonly, assign) ZZAudioPlayerStatus status;
 
+@property (nonatomic, readwrite,assign) float playRate;
+
 - (instancetype)initWithUrl:(NSURL *)url delegate:(id<ZZAudioPlayerDelegate>)delegate;
 
 - (void)play;
@@ -64,8 +57,6 @@ typedef NS_ENUM(NSUInteger, ZZAudioPlayerError)
 - (void)stop;
 
 - (BOOL)isPlaying;
-
-- (void)setAudioPlayRate:(float)playRate;
 
 @end
 

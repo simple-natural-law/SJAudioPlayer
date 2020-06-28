@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
                             delegate:(id<SJAudioDownloaderDelegate>)delegate;
 
 
-- (void)cancel;
+- (void)cancelDownload;
 
 @end
 

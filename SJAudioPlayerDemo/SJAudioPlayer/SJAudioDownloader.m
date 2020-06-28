@@ -15,8 +15,6 @@ static UInt32 const kReadDataMaxLength = 4096; // 1024 * 4
 
 @interface SJAudioDownloader()
 
-@property (nonatomic, assign) BOOL isCancel;
-
 @property (nonatomic, strong) NSURL *url;
 
 @property (nonatomic, assign) SInt64 byteOffset;
@@ -26,8 +24,6 @@ static UInt32 const kReadDataMaxLength = 4096; // 1024 * 4
 @property (nonatomic, assign) CFReadStreamRef readStream;
 
 @property (nonatomic, strong) NSDictionary *httpHeaders;
-
-@property (nonatomic, strong) dispatch_semaphore_t semaphore;
 
 @end
 
@@ -61,10 +57,6 @@ static UInt32 const kReadDataMaxLength = 4096; // 1024 * 4
         self.byteOffset = byteOffset;
         
         self.delegate = delegate;
-        
-        self.isCancel = NO;
-        
-        self.semaphore = dispatch_semaphore_create(1);
     }
     
     return self;
@@ -170,11 +162,9 @@ static UInt32 const kReadDataMaxLength = 4096; // 1024 * 4
 
 
 
-- (void)cancel
+- (void)cancelDownload
 {
-    dispatch_semaphore_wait(self.semaphore, DISPATCH_TIME_FOREVER);
-    self.isCancel = YES;
-    dispatch_semaphore_signal(self.semaphore);
+    [self closeReadStream];
 }
 
 
@@ -204,17 +194,6 @@ static void SJReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
 
 - (void)handleReadFromStream:(CFReadStreamRef)stream eventType:(CFStreamEventType)eventType
 {
-    dispatch_semaphore_wait(self.semaphore, DISPATCH_TIME_FOREVER);
-    BOOL isCancel = self.isCancel;
-    dispatch_semaphore_signal(self.semaphore);
-    
-    if (isCancel)
-    {
-        [self closeReadStream];
-        
-        return;
-    }
-    
     switch (eventType)
     {
         case kCFStreamEventHasBytesAvailable:
@@ -230,17 +209,17 @@ static void SJReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
             
         case kCFStreamEventErrorOccurred:
         {
-            [self.delegate downloaderErrorOccurred:self];
-            
             [self closeReadStream];
+            
+            [self.delegate downloaderErrorOccurred:self];
         }
             break;
             
         case kCFStreamEventEndEncountered:
         {
-            [self.delegate downloaderDidFinished:self];
-            
             [self closeReadStream];
+            
+            [self.delegate downloaderDidFinished:self];
         }
             break;
             

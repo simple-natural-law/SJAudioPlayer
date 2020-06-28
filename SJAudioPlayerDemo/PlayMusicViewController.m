@@ -131,7 +131,7 @@
 
 - (IBAction)setPlayerPlayRate:(id)sender
 {
-    [self.player setAudioPlayRate:1.5];
+    self.player.playRate = self.player.playRate > 1.0 ? 1.0 : 2.0;
 }
 
 - (IBAction)lastMusic:(id)sender
@@ -356,17 +356,14 @@
             [self nextMusic:nil];
         }
             break;
-        case ZZAudioPlayerStatusError:
-        {
-            if (DEBUG)
-            {
-                NSLog(@"SJAudioPlayer: Error");
-            }
-        }
-            break;
         default:
             break;
     }
+}
+
+- (void)audioPlayer:(ZZAudioPlayer *)audioPlayer errorOccurred:(NSError *)error
+{
+    NSLog(@"%@",error);
 }
 
 
