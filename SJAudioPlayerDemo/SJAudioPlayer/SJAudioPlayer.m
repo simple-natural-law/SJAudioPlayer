@@ -744,17 +744,19 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
 - (void)downloaderDidFinished:(SJAudioDownloader *)downloader
 {
     self.finishedDownload = YES;
+    
+    if (self.status == SJAudioPlayerStatusWaiting)
+    {
+        pthread_mutex_lock(&_mutex);
+        pthread_cond_signal(&_cond);
+        pthread_mutex_unlock(&_mutex);
+    }
 }
 
 
 - (void)downloaderErrorOccurred:(SJAudioDownloader *)downloader
 {
     [NSThread sleepForTimeInterval:1.0];
-    
-    if (self.stopDownload)
-    {
-        return;
-    }
     
     self.downloadRepeatCount++;
     

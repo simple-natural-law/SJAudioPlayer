@@ -59,15 +59,6 @@ static int const SJAudioQueueBufferCount = 3;
 }
 
 
-- (void)errorForOSStatus:(OSStatus)status error:(NSError *__autoreleasing *)outError
-{
-    if (status != noErr && outError != NULL)
-    {
-        *outError = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-    }
-}
-
-
 - (instancetype)initWithFormat:(AudioStreamBasicDescription)format bufferSize:(UInt32)bufferSize macgicCookie:(NSData *)macgicCookie
 {
     self = [super init];
@@ -532,8 +523,6 @@ static void SJAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, A
 {
     OSStatus status = AudioQueueSetProperty(self.audioQueue, propertyID, data, dataSize);
 
-    [self errorForOSStatus:status error:outError];
-
     return status == noErr;
 }
 
@@ -541,8 +530,6 @@ static void SJAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, A
 - (BOOL)getProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32 *)dataSize data:(void *)data error:(NSError *__autoreleasing *)outError
 {
     OSStatus status = AudioQueueGetProperty(self.audioQueue, propertyID, data, dataSize);
-
-    [self errorForOSStatus:status error:outError];
 
     return status == noErr;
 }
@@ -553,8 +540,6 @@ static void SJAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, A
 {
     OSStatus status = AudioQueueSetParameter(self.audioQueue, parameterID, value);
 
-    [self errorForOSStatus:status error:outError];
-
     return status == noErr;
 }
 
@@ -563,8 +548,6 @@ static void SJAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, A
 - (BOOL)getParameter:(AudioQueueParameterID)parameterID value:(AudioQueueParameterValue *)value error:(NSError *__autoreleasing *)outError
 {
     OSStatus status = AudioQueueGetParameter(self.audioQueue, parameterID, value);
-
-    [self errorForOSStatus:status error:outError];
 
     return status == noErr;
 }
