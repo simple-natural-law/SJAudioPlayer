@@ -15,7 +15,7 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
     SJAudioPlayerStatusWaiting  = 1,
     SJAudioPlayerStatusPlaying  = 2,
     SJAudioPlayerStatusPaused   = 3,
-    SJAudioPlayerStatusFinished = 4,
+    SJAudioPlayerStatusFinished = 4
 };
 
 
@@ -23,11 +23,11 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 @protocol SJAudioPlayerDelegate <NSObject>
 
-@optional
-
 - (void)audioPlayer:(SJAudioPlayer *)audioPlayer updateAudioDownloadPercentage:(float)percentage;
 
 - (void)audioPlayer:(SJAudioPlayer *)audioPlayer statusDidChanged:(SJAudioPlayerStatus)status;
+
+- (void)audioPlayer:(SJAudioPlayer *)audioPlayer errorOccurred:(NSError *)error;
 
 @end
 
@@ -42,6 +42,8 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 
 @property (nonatomic, readonly, assign) SJAudioPlayerStatus status;
 
+@property (nonatomic, readwrite,assign) float playRate;
+
 - (instancetype)initWithUrl:(NSURL *)url delegate:(id<SJAudioPlayerDelegate>)delegate;
 
 - (void)play;
@@ -53,8 +55,5 @@ typedef NS_ENUM(NSUInteger, SJAudioPlayerStatus)
 - (void)stop;
 
 - (BOOL)isPlaying;
-
-// playRate是0.5~2.0之间的值，默认为1.0。
-- (void)setAudioPlayRate:(float)playRate;
 
 @end
