@@ -106,11 +106,9 @@
 }
 
 
-- (BOOL)removeAudioCache
+- (void)removeAudioCache
 {
-    BOOL success = [[NSFileManager defaultManager] removeItemAtPath:self.cachePath error:nil];
-    
-    return success;
+    [[NSFileManager defaultManager] removeItemAtPath:self.cachePath error:nil];
 }
 
 

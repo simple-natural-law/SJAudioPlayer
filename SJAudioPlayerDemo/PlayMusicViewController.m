@@ -74,10 +74,6 @@
     /*
      播放远程音频文件
     */
-//    self.musicList = @[@{@"music_url":@"http://music.163.com/song/media/outer/url?id=166321.mp3", @"pic":@"http://imgsrc.baidu.com/forum/w=580/sign=0828c5ea79ec54e741ec1a1689399bfd/e3d9f2d3572c11df80fbf7f7612762d0f703c238.jpg", @"artist":@"毛阿敏", @"music_name":@"爱上张无忌"},
-//                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=27902537.mp3", @"pic":@"http://attach.bbs.miui.com/forum/201401/10/225901w011gxc00mz0gao9.jpg", @"artist":@"杨宗纬 / 叶蓓", @"music_name":@"我们好像在哪见过"},
-//                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=166317.mp3", @"pic":@"https://imgcache.cjmx.com/tv/201605/20160522195825907.jpg", @"artist":@"金学峰", @"music_name":@"心爱"}];
-    
     self.musicList = @[
                        @{@"music_url":@"http://music.163.com/song/media/outer/url?id=29723022.mp3", @"pic":@"https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=2904967709,1533413265&fm=26&gp=0.jpg", @"artist":@"刘德华", @"music_name":@"暗里着迷"},
                        @{@"music_url":@"http://music.163.com/song/media/outer/url?id=235690.mp3", @"pic":@"https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=2223849947,4164002656&fm=26&gp=0.jpg", @"artist":@"关淑怡", @"music_name":@"难得有情人"},
@@ -133,7 +129,7 @@
 
 - (IBAction)setPlayerPlayRate:(id)sender
 {
-    self.player.playRate = self.player.playRate > 1.0 ? 1.0 : 2.0;
+    self.player.playRate = self.player.playRate > 1.0 ? 1.0 : 1.5;
 }
 
 - (IBAction)lastMusic:(id)sender

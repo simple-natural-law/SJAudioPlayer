@@ -10,7 +10,7 @@
 #import <CFNetwork/CFNetwork.h>
 
 
-static UInt32 const kReadDataMaxLength = 4096; // 1024 * 4
+static UInt32 const kReadDataMaxLength = 10240; // 1024 * 10
 
 
 @interface SJAudioDownloader()

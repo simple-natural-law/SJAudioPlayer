@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)seekToOffset:(unsigned long long)offset;
 
-- (BOOL)removeAudioCache;
+- (void)removeAudioCache;
 
 - (unsigned long long)getAudioDiskCacheContentLength;
 

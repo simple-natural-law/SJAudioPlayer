@@ -171,11 +171,16 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
 
 - (void)stop
 {
+    if (self.status == ZZAudioPlayerStatusFinished)
+    {
+        return;
+    }
+    
     if (self.status != ZZAudioPlayerStatusIdle)
     {
         pthread_mutex_lock(&_mutex);
         self.stopRequired = YES;
-        if (self.pauseRequired)
+        if (self.pauseRequired || self.status == ZZAudioPlayerStatusWaiting)
         {
             pthread_cond_signal(&_cond);
         }
@@ -267,18 +272,19 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
     self.finishedDownload = NO;
     self.stopDownload     = NO;
     
-    BOOL done = YES;
+    NSRunLoop *runloop = [NSRunLoop currentRunLoop];
+    NSDate *date = [NSDate dateWithTimeIntervalSinceNow:2.0];
     
-    while (done && !self.finishedDownload && !self.stopDownload)
+    while (!self.finishedDownload && !self.stopDownload)
     {
         if (self.audioDownloader == nil)
         {
             self.audioDownloader = [SJAudioDownloader downloadAudioWithURL:self.url byteOffset:self.byteOffset delegate:self];
         }
         
-        done = [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:2.0]];
+        [runloop runMode:NSDefaultRunLoopMode beforeDate:date];
         
-        [NSThread sleepForTimeInterval:0.005];
+        [NSThread sleepForTimeInterval:0.01];
     }
 }
 
@@ -386,19 +392,25 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
             
             if (pauseRequired)
             {
+                if (self.stopRequired)
+                {
+                    [self stopAudioQueueNow];
+                    
+                    break;
+                }
+                
+                pthread_mutex_lock(&_mutex);
+                
                 [self.audioQueue pause];
                 
                 [self setAudioPlayerStatus:ZZAudioPlayerStatusPaused];
                 
-                pthread_mutex_lock(&_mutex);
                 pthread_cond_wait(&_cond, &_mutex);
+                
                 pthread_mutex_unlock(&_mutex);
                 
-                pthread_mutex_lock(&_mutex);
-                BOOL stopRequired = self.stopRequired;
-                pthread_mutex_unlock(&_mutex);
                 
-                if (stopRequired)
+                if (self.stopRequired)
                 {
                     [self stopAudioQueueNow];
                     
@@ -444,12 +456,6 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
 
 - (void)cleanUp
 {
-//    self.started       = NO;
-//    self.stopRequired  = NO;
-//    self.pauseRequired = NO;
-//    self.seekRequired  = NO;
-//    self.pausedByInterrupt = NO;
-    
     [self.audioQueue disposeAudioQueue];
     self.audioQueue = nil;
     
@@ -464,15 +470,6 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
     
     [self.audioDecoder endDecode];
     self.audioDecoder = nil;
-    
-//    self.byteOffset        = 0;
-//    self.duration          = 0.0;
-//    self.timingOffset      = 0.0;
-//    self.seekTime          = 0.0;
-//    self.contentLength     = 0;
-//    self.didDownloadLength = 0;
-//    self.readOffset        = 0;
-//    self.currentFileSize   = 0;
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
     
@@ -547,18 +544,24 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
             {
                 pthread_mutex_lock(&_mutex);
                 self.byteOffset = offset;
+                self.readOffset = 0;
+                self.currentFileSize = 0;
+                self.finishedDownload = NO;
                 pthread_mutex_unlock(&_mutex);
+                
+                [self.audioCache closeWriteAndReadCache];
                 
                 [self.audioCache removeAudioCache];
                 
                 self.audioCache = [[SJAudioCache alloc] initWithURL:self.url];
                 
-                self.readOffset = 0;
-                self.currentFileSize = 0;
-                self.finishedDownload = NO;
-                
                 self.audioDownloader = nil;
-                [self startDownloadAudioData];
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                   
+                    [self startDownloadAudioData];
+                });
+                
             }else
             {
                 pthread_mutex_lock(&_mutex);
@@ -578,31 +581,34 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
                 [self.audioDownloader cancelDownload];
                 pthread_mutex_lock(&_mutex);
                 self.byteOffset = offset;
+                self.readOffset = 0;
+                self.currentFileSize = 0;
                 pthread_mutex_unlock(&_mutex);
 
+                [self.audioCache closeWriteAndReadCache];
+                
                 [self.audioCache removeAudioCache];
                 
                 self.audioCache = [[SJAudioCache alloc] initWithURL:self.url];
-                
-                self.readOffset = 0;
-                self.currentFileSize = 0;
                 
                 self.audioDownloader = nil;
             }else
             {
                 if (offset < self.byteOffset)
                 {
-                    pthread_mutex_lock(&_mutex);
                     [self.audioDownloader cancelDownload];
+                    
+                    pthread_mutex_lock(&_mutex);
                     self.byteOffset = offset;
+                    self.currentFileSize = 0;
+                    self.readOffset = 0;
                     pthread_mutex_unlock(&_mutex);
-
+                    
+                    [self.audioCache closeWriteAndReadCache];
+                    
                     [self.audioCache removeAudioCache];
                     
                     self.audioCache = [[SJAudioCache alloc] initWithURL:self.url];
-                    
-                    self.readOffset = 0;
-                    self.currentFileSize = 0;
                     
                     self.audioDownloader = nil;
                 }else
@@ -744,6 +750,11 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
 - (void)downloaderErrorOccurred:(SJAudioDownloader *)downloader
 {
     [NSThread sleepForTimeInterval:1.0];
+    
+    if (self.stopDownload)
+    {
+        return;
+    }
     
     self.downloadRepeatCount++;
     
