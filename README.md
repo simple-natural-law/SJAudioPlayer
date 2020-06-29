@@ -3,7 +3,7 @@
 
 ## 介绍
 
-`SJAudioPlayer`是一个基于 Audio Queue 实现的音频流播放器，相较于系统提供的`AVPlayer`和`AVAudioPlayer`，使用`SJAudioPlayer`播放音频时，CPU的消耗更低。`SJAudioPlayer`支持以下功能：
+`SJAudioPlayer`是一个基于 Audio Queue 实现的音频流播放器，其支持以下功能：
 - 播放本地音频文件和远程音频文件；
 - 缓存远程音频数据到本地；
 - 倍速播放音频；
@@ -57,7 +57,7 @@ self.player.playRate = 1.5;
 }
 ```
 
-### 监听音频文件数据下载进度：
+### 监听音频播放错误
 ```
 - (void)audioPlayer:(SJAudioPlayer *)audioPlayer errorOccurred:(NSError *)error
 {
