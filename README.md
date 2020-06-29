@@ -12,7 +12,7 @@
 - 监听远程音频数据的下载进度和播放状态的切换；
 
 
-<img src="https://github.com/zhangshijian/SJAudioPlayer/raw/master/Images/IMG_1.PNG" width="375" height="667" />
+<img src="https://github.com/Jen668/SJAudioPlayer/raw/master/Images/IMG_1.PNG" width="375" height="667" />
 
 ## 使用
 
