@@ -7,7 +7,7 @@
 - 播放本地音频文件和远程音频文件；
 - 缓存远程音频数据到本地；
 - 倍速播放音频；
-- 暂停播放音频时，音频音量淡出；
+- 恢复或暂停播放音频时，音频音量淡入淡出；
 - 处理打断事件和拔出耳机事件；
 - 监听远程音频数据的下载进度和播放状态的切换；
 
@@ -16,7 +16,7 @@
 
 ## 使用
 
-播放本地音频文件：
+### 播放本地音频文件
 ```
 NSString *path = [[NSBundle mainBundle] pathForResource:@"Sample" ofType:@"mp3"];
 
@@ -24,28 +24,24 @@ NSURL *url = [NSURL fileURLWithPath:path];
 
 SJAudioPlayer *player = [[SJAudioPlayer alloc] initWithUrl:url delegate:self];
 
-[self.player setAudioPlayRate:1.0];
-
 [player play];
 ```
 
-播放远程音频文件：
+### 播放远程音频文件
 ```
 NSURL *url = [NSURL URLWithString:urlString];
 
 SJAudioPlayer *player = [[SJAudioPlayer alloc] initWithUrl:url delegate:self];
 
-[self.player setAudioPlayRate:1.0];
-
 [player play];
 ```
 
-设置音频播放速率：
+### 设置音频播放速率
 ```
-[self.player setAudioPlayRate:1.5];
+self.player.playRate = 1.5;
 ```
 
-实现`SJAudioPlayerDelegate`协议方法来监听播放器状态：
+### 监听播放器状态
 ```
 - (void)audioPlayer:(SJAudioPlayer *)audioPlayer statusDidChanged:(SJAudioPlayerStatus)status
 {
@@ -53,9 +49,17 @@ SJAudioPlayer *player = [[SJAudioPlayer alloc] initWithUrl:url delegate:self];
 }
 ```
 
-实现`SJAudioPlayerDelegate`协议方法来监听音频文件数据下载进度：
+### 监听音频文件数据下载进度
 ```
 - (void)audioPlayer:(SJAudioPlayer *)audioPlayer updateAudioDownloadPercentage:(float)percentage
+{
+
+}
+```
+
+### 监听音频文件数据下载进度：
+```
+- (void)audioPlayer:(SJAudioPlayer *)audioPlayer errorOccurred:(NSError *)error
 {
 
 }
