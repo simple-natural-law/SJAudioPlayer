@@ -456,20 +456,20 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
 
 - (void)cleanUp
 {
-    [self.audioQueue disposeAudioQueue];
-    self.audioQueue = nil;
-    
-    [self.audioCache closeWriteAndReadCache];
-    self.audioCache = nil;
-    
     if (!self.finishedDownload)
     {
         [self.audioDownloader cancelDownload];
     }
     self.audioDownloader = nil;
     
+    [self.audioCache closeWriteAndReadCache];
+    self.audioCache = nil;
+    
     [self.audioDecoder endDecode];
     self.audioDecoder = nil;
+    
+    [self.audioQueue disposeAudioQueue];
+    self.audioQueue = nil;
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
     
