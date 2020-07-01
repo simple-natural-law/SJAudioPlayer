@@ -284,7 +284,7 @@ static NSString * const SJAudioPlayerErrorDomin = @"com.audioplayer.error";
         
         [runloop runMode:NSDefaultRunLoopMode beforeDate:date];
         
-        [NSThread sleepForTimeInterval:0.01];
+        [NSThread sleepForTimeInterval:0.02];
     }
 }
 
