@@ -58,13 +58,6 @@
     
     [self.slider addTarget:self action:@selector(sliderValueChanged:forEvent:) forControlEvents:UIControlEventValueChanged];
 
-    self.musicList = @[
-                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=29723022.mp3", @"pic":@"https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=2904967709,1533413265&fm=26&gp=0.jpg", @"artist":@"刘德华", @"music_name":@"暗里着迷"},
-                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=235690.mp3", @"pic":@"https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=2223849947,4164002656&fm=26&gp=0.jpg", @"artist":@"关淑怡", @"music_name":@"难得有情人"},
-                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=263720.mp3", @"pic":@"https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=806489170,327517180&fm=26&gp=0.jpg", @"artist":@"刘小慧", @"music_name":@"初恋情人"},
-                       @{@"music_url":@"http://music.163.com/song/media/outer/url?id=166321.mp3", @"pic":@"http://5b0988e595225.cdn.sohucs.com/q_70,c_zoom,w_640/images/20180718/996debe474dd456ba2275c6c2c718b74.jpeg", @"artist":@"毛阿敏", @"music_name":@"爱上张无忌"}
-                       ];
-
     self.currentIndex = 0;
     self.currentMusicInfo = self.musicList.firstObject;
 
@@ -340,6 +333,20 @@
 }
 
 
+
+- (NSArray *)musicList
+{
+    if (_musicList == nil)
+    {
+        _musicList = @[
+        @{@"music_url":@"http://music.163.com/song/media/outer/url?id=29723022.mp3", @"pic":@"https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=2904967709,1533413265&fm=26&gp=0.jpg", @"artist":@"刘德华", @"music_name":@"暗里着迷"},
+        @{@"music_url":@"http://music.163.com/song/media/outer/url?id=235690.mp3", @"pic":@"https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=2223849947,4164002656&fm=26&gp=0.jpg", @"artist":@"关淑怡", @"music_name":@"难得有情人"},
+        @{@"music_url":@"http://music.163.com/song/media/outer/url?id=263720.mp3", @"pic":@"https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=806489170,327517180&fm=26&gp=0.jpg", @"artist":@"刘小慧", @"music_name":@"初恋情人"},
+        @{@"music_url":@"http://music.163.com/song/media/outer/url?id=166321.mp3", @"pic":@"http://5b0988e595225.cdn.sohucs.com/q_70,c_zoom,w_640/images/20180718/996debe474dd456ba2275c6c2c718b74.jpeg", @"artist":@"毛阿敏", @"music_name":@"爱上张无忌"}
+        ];
+    }
+    return _musicList;
+}
 
 
 - (void)didReceiveMemoryWarning {
